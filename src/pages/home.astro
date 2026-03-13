@@ -1,0 +1,163 @@
+---
+/**
+ * home.astro — Página principal protegida (placeholder para Fase 3)
+ */
+import MainLayout from '../layouts/MainLayout.astro';
+
+const user = Astro.locals.user;
+const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador';
+---
+
+<MainLayout title="Home — Gamio 🚀">
+  <section class="home-page">
+    <div class="container">
+      <div class="welcome-section animate-fade-in-up">
+        <div class="welcome-badge">
+          <span class="badge-dot"></span>
+          Sesión activa
+        </div>
+        <h1>
+          Hola, <span class="gradient-text">{userName}</span> 👋
+        </h1>
+        <p class="welcome-subtitle">
+          Bienvenido a Gamio. Aquí encontrarás todo lo que necesitas para disfrutar de la mejor experiencia de juego.
+        </p>
+      </div>
+
+      <!-- Placeholder cards (se expandirá en Fase 3) -->
+      <div class="quick-actions animate-fade-in-up" style="animation-delay: 0.2s;">
+        <div class="action-card card">
+          <span class="action-icon">🎮</span>
+          <h3>Juegos</h3>
+          <p>Explora nuestro catálogo</p>
+        </div>
+        <div class="action-card card">
+          <span class="action-icon">💬</span>
+          <h3>Chat</h3>
+          <p>Habla con otros jugadores</p>
+        </div>
+        <div class="action-card card">
+          <span class="action-icon">🏆</span>
+          <h3>Ranking</h3>
+          <p>Consulta tu posición</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-glow home-glow-1"></div>
+    <div class="home-glow home-glow-2"></div>
+  </section>
+</MainLayout>
+
+<style>
+  .home-page {
+    min-height: 100vh;
+    padding: 8rem 0 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .welcome-section {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .welcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #86EFAC;
+    margin-bottom: 1.5rem;
+  }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: #22C55E;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .welcome-section h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  .welcome-subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ── Quick Actions ── */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .action-card {
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .action-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .action-card h3 {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .action-card p {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+  }
+
+  /* ── Glows ── */
+  .home-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.1;
+    pointer-events: none;
+  }
+
+  .home-glow-1 {
+    width: 500px;
+    height: 500px;
+    background: var(--color-primary);
+    top: -100px;
+    right: -150px;
+  }
+
+  .home-glow-2 {
+    width: 400px;
+    height: 400px;
+    background: var(--color-teal);
+    bottom: -100px;
+    left: -100px;
+  }
+
+  @media (max-width: 768px) {
+    .quick-actions {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,263 @@
+---
+/**
+ * soporte.astro — Página de Soporte de Gamio
+ */
+import MainLayout from '../layouts/MainLayout.astro';
+
+const faqs = [
+  {
+    question: '¿Cómo creo mi cuenta en Gamio?',
+    answer: 'Haz clic en "Crear cuenta" en la página principal, introduce tu nombre, email y contraseña, y ya estarás listo para jugar.',
+  },
+  {
+    question: '¿Es gratis usar Gamio?',
+    answer: 'Sí, Gamio es completamente gratuito. Puedes acceder a todos los juegos y funcionalidades sin coste alguno.',
+  },
+  {
+    question: '¿Cómo funciona el chat en tiempo real?',
+    answer: 'Nuestro chat utiliza tecnología WebSocket para que puedas comunicarte con otros jugadores al instante, sin retrasos.',
+  },
+  {
+    question: '¿Puedo jugar desde mi teléfono móvil?',
+    answer: 'Sí, Gamio está optimizado para funcionar en cualquier dispositivo: ordenador, tablet o móvil.',
+  },
+  {
+    question: '¿Cómo puedo reportar un problema?',
+    answer: 'Puedes usar el formulario de la página de Contacto o escribir directamente a soporte@gamio.com con los detalles del problema.',
+  },
+  {
+    question: '¿Mis datos están seguros?',
+    answer: 'Absolutamente. Utilizamos Supabase con autenticación segura y cifrado de datos para proteger tu información.',
+  },
+];
+---
+
+<MainLayout title="Soporte — Gamio 🚀">
+  <section class="page-hero">
+    <div class="container">
+      <h1 class="page-title animate-fade-in-up">
+        Centro de <span class="gradient-text">Soporte</span>
+      </h1>
+      <p class="page-subtitle animate-fade-in-up" style="animation-delay: 0.1s;">
+        Encuentra respuestas a las preguntas más frecuentes
+        o contacta con nuestro equipo de soporte.
+      </p>
+    </div>
+    <div class="hero-glow hero-glow-1"></div>
+    <div class="hero-glow hero-glow-2"></div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq-section">
+    <div class="container">
+      <h2 class="section-title">Preguntas Frecuentes</h2>
+      <div class="faq-list">
+        {faqs.map((faq, idx) => (
+          <details class="faq-item animate-fade-in-up" style={`animation-delay: ${0.05 * idx}s;`}>
+            <summary class="faq-question">
+              <span>{faq.question}</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </summary>
+            <div class="faq-answer">
+              <p>{faq.answer}</p>
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Help CTA -->
+  <section class="help-section">
+    <div class="container">
+      <div class="help-grid">
+        <div class="help-card card animate-fade-in-up">
+          <span class="help-icon">📧</span>
+          <h3>Escríbenos</h3>
+          <p>Envía un email detallado y te responderemos en 24-48h.</p>
+          <a href="/contacto" class="btn-secondary">Ir a Contacto</a>
+        </div>
+        <div class="help-card card animate-fade-in-up" style="animation-delay: 0.1s;">
+          <span class="help-icon">💬</span>
+          <h3>Discord</h3>
+          <p>Únete a nuestra comunidad en Discord para ayuda en directo.</p>
+          <a href="#" class="btn-secondary">Unirse a Discord</a>
+        </div>
+        <div class="help-card card animate-fade-in-up" style="animation-delay: 0.2s;">
+          <span class="help-icon">📖</span>
+          <h3>Documentación</h3>
+          <p>Consulta nuestras guías y tutoriales detallados.</p>
+          <a href="#" class="btn-secondary">Ver documentación</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</MainLayout>
+
+<style>
+  .page-hero {
+    position: relative;
+    padding: 10rem 0 3rem;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .page-title {
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    margin-bottom: 1rem;
+  }
+
+  .page-subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-secondary);
+    max-width: 550px;
+    margin: 0 auto;
+  }
+
+  .hero-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.1;
+    pointer-events: none;
+  }
+
+  .hero-glow-1 {
+    width: 400px;
+    height: 400px;
+    background: var(--color-teal);
+    top: -150px;
+    right: -100px;
+  }
+
+  .hero-glow-2 {
+    width: 300px;
+    height: 300px;
+    background: var(--color-primary);
+    bottom: -50px;
+    left: -50px;
+  }
+
+  /* ── FAQ ── */
+  .faq-section {
+    padding: 3rem 0 4rem;
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 3rem;
+  }
+
+  .faq-list {
+    max-width: 750px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .faq-item {
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .faq-item:hover {
+    border-color: var(--color-primary);
+  }
+
+  .faq-item[open] {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 20px rgba(30, 136, 229, 0.08);
+  }
+
+  .faq-question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition: background 0.2s ease;
+  }
+
+  .faq-question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-question:hover {
+    background: rgba(148, 163, 184, 0.04);
+  }
+
+  .faq-chevron {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    transition: transform 0.3s ease;
+  }
+
+  .faq-item[open] .faq-chevron {
+    transform: rotate(180deg);
+    color: var(--color-primary);
+  }
+
+  .faq-answer {
+    padding: 0 1.5rem 1.25rem;
+  }
+
+  .faq-answer p {
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+
+  /* ── Help ── */
+  .help-section {
+    padding: 2rem 0 6rem;
+  }
+
+  .help-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .help-card {
+    padding: 2.5rem 2rem;
+    text-align: center;
+  }
+
+  .help-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .help-card h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+
+  .help-card p {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .help-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

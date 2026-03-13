@@ -1,0 +1,258 @@
+---
+/**
+ * quienes-somos.astro — Página "Quiénes Somos" de Gamio
+ */
+import MainLayout from '../layouts/MainLayout.astro';
+
+const teamValues = [
+  {
+    icon: '🎯',
+    title: 'Nuestra Misión',
+    description: 'Crear la mejor plataforma de juegos interactiva, donde la diversión y la comunidad se unen en una experiencia única.',
+  },
+  {
+    icon: '🌟',
+    title: 'Nuestra Visión',
+    description: 'Ser la referencia en entretenimiento digital interactivo, conectando jugadores de todo el mundo en tiempo real.',
+  },
+  {
+    icon: '🤝',
+    title: 'Nuestros Valores',
+    description: 'Innovación, comunidad, fair play y pasión por los videojuegos. Cada decisión que tomamos se basa en estos pilares.',
+  },
+];
+
+const features = [
+  { icon: '⚡', title: 'Rendimiento', desc: 'Tecnología de vanguardia para la mejor experiencia' },
+  { icon: '🔒', title: 'Seguridad', desc: 'Protección de datos y juego seguro' },
+  { icon: '🌍', title: 'Global', desc: 'Conecta con jugadores de todo el mundo' },
+  { icon: '📱', title: 'Multiplataforma', desc: 'Juega desde cualquier dispositivo' },
+];
+---
+
+<MainLayout title="Quiénes Somos — Gamio 🚀">
+  <section class="page-hero">
+    <div class="container">
+      <h1 class="page-title animate-fade-in-up">
+        Quiénes <span class="gradient-text">Somos</span>
+      </h1>
+      <p class="page-subtitle animate-fade-in-up" style="animation-delay: 0.1s;">
+        Somos un equipo apasionado por los videojuegos y la tecnología,
+        dedicados a crear experiencias de juego inolvidables.
+      </p>
+    </div>
+    <div class="hero-glow hero-glow-1"></div>
+    <div class="hero-glow hero-glow-2"></div>
+  </section>
+
+  <!-- Values -->
+  <section class="values-section">
+    <div class="container">
+      <div class="values-grid">
+        {teamValues.map((value, idx) => (
+          <div class="value-card card animate-fade-in-up" style={`animation-delay: ${0.1 * idx}s;`}>
+            <div class="value-icon">{value.icon}</div>
+            <h3>{value.title}</h3>
+            <p>{value.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features-section">
+    <div class="container">
+      <h2 class="section-title">¿Por qué <span class="gradient-text">Gamio</span>?</h2>
+      <div class="features-grid">
+        {features.map((feat, idx) => (
+          <div class="feature-item animate-fade-in-up" style={`animation-delay: ${0.1 * idx}s;`}>
+            <span class="feature-icon-lg">{feat.icon}</span>
+            <h4>{feat.title}</h4>
+            <p>{feat.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="cta-banner">
+    <div class="container">
+      <div class="cta-card glass">
+        <h2>¿Te unes a la aventura?</h2>
+        <p>Forma parte de la comunidad de Gamio y vive la experiencia.</p>
+        <a href="/login" class="btn-primary">Unirse ahora</a>
+      </div>
+    </div>
+  </section>
+</MainLayout>
+
+<style>
+  .page-hero {
+    position: relative;
+    padding: 10rem 0 4rem;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .page-title {
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  .page-subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  .hero-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  .hero-glow-1 {
+    width: 400px;
+    height: 400px;
+    background: var(--color-purple);
+    top: -100px;
+    right: -100px;
+  }
+
+  .hero-glow-2 {
+    width: 350px;
+    height: 350px;
+    background: var(--color-teal);
+    bottom: -50px;
+    left: -50px;
+  }
+
+  /* ── Values ── */
+  .values-section {
+    padding: 4rem 0;
+  }
+
+  .values-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .value-card {
+    padding: 2.5rem 2rem;
+    text-align: center;
+  }
+
+  .value-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .value-card h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+
+  .value-card p {
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  /* ── Features ── */
+  .features-section {
+    padding: 4rem 0;
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 3rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+
+  .feature-item {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-radius: 12px;
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid var(--color-border);
+    transition: all 0.3s ease;
+  }
+
+  .feature-item:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-4px);
+  }
+
+  .feature-icon-lg {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .feature-item h4 {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-item p {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+  }
+
+  /* ── CTA ── */
+  .cta-banner {
+    padding: 4rem 0 6rem;
+  }
+
+  .cta-card {
+    text-align: center;
+    padding: 4rem 2rem;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(0, 191, 165, 0.08));
+    border: 1px solid rgba(124, 77, 255, 0.2);
+  }
+
+  .cta-card h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+  }
+
+  .cta-card p {
+    color: var(--color-text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .values-grid {
+      grid-template-columns: 1fr;
+    }
+    .features-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

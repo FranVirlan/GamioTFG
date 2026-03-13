@@ -1,0 +1,48 @@
+---
+/**
+ * MainLayout.astro — Layout principal de Gamio
+ * Incluye meta tags SEO, Google Fonts, estilos globales y Navbar
+ */
+
+import Navbar from '../components/Navbar.astro';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Gamio 🚀 — Tu plataforma de juegos interactiva',
+  description = 'Gamio es una plataforma interactiva de juegos. Regístrate, juega, compite y chatea en tiempo real con otros jugadores.',
+} = Astro.props;
+
+const user = Astro.locals.user;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0F172A" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>{title}</title>
+  </head>
+  <body class="gradient-bg">
+    <Navbar user={user} />
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
