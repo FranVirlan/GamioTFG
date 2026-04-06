@@ -1,0 +1,223 @@
+---
+/**
+ * Topbar.astro — Barra superior para el dashboard autenticado
+ * Buscador global, notificaciones, avatar de usuario
+ */
+
+interface Props {
+  user?: {
+    id: string;
+    email?: string;
+    user_metadata?: {
+      name?: string;
+      [key: string]: any;
+    };
+  } | null;
+}
+
+const { user = null } = Astro.props;
+const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador';
+---
+
+<header class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <!-- Search -->
+    <div class="topbar-search">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        id="globalSearch"
+        placeholder="Buscar juegos, jugadores, comunidades..."
+        autocomplete="off"
+      />
+      <span class="search-shortcut">Ctrl+K</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="topbar-actions">
+      <!-- Notifications -->
+      <button class="topbar-btn" id="notificationsBtn" title="Notificaciones">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="notification-badge">3</span>
+      </button>
+
+      <!-- User Avatar -->
+      <div class="topbar-user" id="topbarUser">
+        <div class="topbar-avatar">
+          {userName.charAt(0).toUpperCase()}
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    height: var(--topbar-height);
+    display: flex;
+    align-items: center;
+    background: rgba(11, 15, 26, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--color-border);
+    z-index: 50;
+    padding: 0 1.5rem;
+  }
+
+  .topbar-inner {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  /* ── Search ── */
+  .topbar-search {
+    position: relative;
+    flex: 1;
+    max-width: 500px;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.6rem 1rem 0.6rem 2.75rem;
+    font-size: 0.85rem;
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .search-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    background: var(--color-bg-secondary);
+  }
+
+  .search-input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .search-shortcut {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    pointer-events: none;
+  }
+
+  /* ── Actions ── */
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .topbar-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .topbar-btn:hover {
+    color: var(--color-text-primary);
+    background: var(--color-surface-hover);
+    border-color: var(--color-border);
+  }
+
+  .notification-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background: var(--color-error);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+  }
+
+  /* ── User Avatar ── */
+  .topbar-user {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .topbar-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: white;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+  }
+
+  .topbar-avatar:hover {
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .topbar {
+      left: 0;
+      padding: 0 1rem 0 3.5rem;
+    }
+
+    .search-shortcut {
+      display: none;
+    }
+  }
+</style>

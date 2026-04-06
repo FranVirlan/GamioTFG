@@ -1,163 +1,395 @@
 ---
 /**
- * home.astro — Página principal protegida (placeholder para Fase 3)
+ * home.astro — Dashboard principal (protegido)
+ * Layout con sidebar: juegos, matchmaking, noticias
  */
 import MainLayout from '../layouts/MainLayout.astro';
+import GameCard from '../components/GameCard.astro';
+import UserCard from '../components/UserCard.astro';
+import NewsCard from '../components/NewsCard.astro';
 
 const user = Astro.locals.user;
 const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador';
+
+// Mock data — se conectará con Supabase en futuras fases
+const games = [
+  { name: 'Valorant', genre: 'FPS Táctico', players: 12453, color: 'violet' },
+  { name: 'League of Legends', genre: 'MOBA', players: 28912, color: 'blue' },
+  { name: 'Fortnite', genre: 'Battle Royale', players: 15678, color: 'green' },
+  { name: 'Apex Legends', genre: 'Battle Royale', players: 8234, color: 'orange' },
+  { name: 'Minecraft', genre: 'Sandbox', players: 19345, color: 'green' },
+  { name: 'Rocket League', genre: 'Deportes', players: 6789, color: 'blue' },
+];
+
+const onlineUsers = [
+  { name: 'DragonSlayer99', level: 42, rank: 'diamond' as const, games: ['Valorant', 'CS2', 'Apex'], region: 'EU West', online: true },
+  { name: 'NightWolf_X', level: 35, rank: 'platinum' as const, games: ['LoL', 'TFT', 'Valorant'], region: 'EU West', online: true },
+  { name: 'StarFire22', level: 28, rank: 'gold' as const, games: ['Fortnite', 'Apex', 'CoD'], region: 'NA East', online: true },
+  { name: 'PhoenixRider', level: 51, rank: 'diamond' as const, games: ['CS2', 'Valorant', 'R6'], region: 'EU West', online: true },
+  { name: 'CyberNinja_7', level: 19, rank: 'silver' as const, games: ['LoL', 'Minecraft'], region: 'LATAM', online: true },
+];
+
+const news = [
+  {
+    title: 'Nuevo sistema de rankings competitivos en Gamio',
+    summary: 'Introducimos el sistema de rangos: desde Bronce hasta Diamante. Escala posiciones y demuestra tu nivel.',
+    tags: ['Actualización', 'Competitivo'],
+    date: '5 Abr 2026',
+  },
+  {
+    title: 'Torneo Gamio Spring Cup — ¡Inscripciones abiertas!',
+    summary: 'Participa en nuestro primer torneo oficial con premios para los mejores equipos.',
+    tags: ['Torneo', 'Valorant'],
+    date: '3 Abr 2026',
+  },
+  {
+    title: 'Matchmaking 2.0: más rápido e inteligente',
+    summary: 'Hemos mejorado nuestro algoritmo para encontrar compañeros más compatibles con tu estilo.',
+    tags: ['Feature', 'Matchmaking'],
+    date: '1 Abr 2026',
+  },
+];
 ---
 
-<MainLayout title="Home — Gamio 🚀">
-  <section class="home-page">
-    <div class="container">
-      <div class="welcome-section animate-fade-in-up">
-        <div class="welcome-badge">
-          <span class="badge-dot"></span>
-          Sesión activa
+<MainLayout title="Dashboard — Gamio 🎮" useSidebar={true}>
+  <div class="dashboard">
+    <!-- Welcome Banner -->
+    <section class="welcome-banner animate-fade-in-up">
+      <div class="welcome-content">
+        <div class="welcome-text">
+          <span class="welcome-greeting">Bienvenido de nuevo</span>
+          <h1>
+            <span class="gradient-text-violet">{userName}</span> 👋
+          </h1>
+          <p>Tu equipo te espera. Encuentra compañeros y empieza a jugar.</p>
         </div>
-        <h1>
-          Hola, <span class="gradient-text">{userName}</span> 👋
-        </h1>
-        <p class="welcome-subtitle">
-          Bienvenido a Gamio. Aquí encontrarás todo lo que necesitas para disfrutar de la mejor experiencia de juego.
-        </p>
-      </div>
-
-      <!-- Placeholder cards (se expandirá en Fase 3) -->
-      <div class="quick-actions animate-fade-in-up" style="animation-delay: 0.2s;">
-        <div class="action-card card">
-          <span class="action-icon">🎮</span>
-          <h3>Juegos</h3>
-          <p>Explora nuestro catálogo</p>
-        </div>
-        <div class="action-card card">
-          <span class="action-icon">💬</span>
-          <h3>Chat</h3>
-          <p>Habla con otros jugadores</p>
-        </div>
-        <div class="action-card card">
-          <span class="action-icon">🏆</span>
-          <h3>Ranking</h3>
-          <p>Consulta tu posición</p>
+        <div class="welcome-stats">
+          <div class="welcome-stat">
+            <span class="ws-value">Nv. 15</span>
+            <span class="ws-label">Tu nivel</span>
+          </div>
+          <div class="welcome-stat">
+            <span class="ws-value">24</span>
+            <span class="ws-label">Partidas</span>
+          </div>
+          <div class="welcome-stat">
+            <span class="ws-value ws-online">
+              <span class="online-dot-sm"></span>
+              12
+            </span>
+            <span class="ws-label">Amigos online</span>
+          </div>
         </div>
       </div>
-    </div>
+      <div class="welcome-glow"></div>
+    </section>
 
-    <div class="home-glow home-glow-1"></div>
-    <div class="home-glow home-glow-2"></div>
-  </section>
+    <!-- Popular Games -->
+    <section class="dashboard-section animate-fade-in-up" style="animation-delay: 0.1s;">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">🎮 Juegos Populares</h2>
+          <p class="section-subtitle">Elige un juego y encuentra compañeros al instante</p>
+        </div>
+        <a href="/juegos" class="btn-secondary btn-sm">Ver todos</a>
+      </div>
+      <div class="games-grid">
+        {games.map((game) => (
+          <GameCard
+            name={game.name}
+            genre={game.genre}
+            players={game.players}
+            color={game.color}
+          />
+        ))}
+      </div>
+    </section>
+
+    <!-- Matchmaking -->
+    <section class="dashboard-section animate-fade-in-up" style="animation-delay: 0.2s;">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">🔍 Matchmaking Rápido</h2>
+          <p class="section-subtitle">Jugadores buscando equipo ahora mismo</p>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="mm-filters">
+        <select class="mm-select" id="filterGame">
+          <option value="">Todos los juegos</option>
+          <option>Valorant</option>
+          <option>League of Legends</option>
+          <option>Fortnite</option>
+          <option>Apex Legends</option>
+        </select>
+        <select class="mm-select" id="filterRank">
+          <option value="">Cualquier rango</option>
+          <option>Bronce</option>
+          <option>Plata</option>
+          <option>Oro</option>
+          <option>Platino</option>
+          <option>Diamante</option>
+        </select>
+        <select class="mm-select" id="filterRegion">
+          <option value="">Todas las regiones</option>
+          <option>EU West</option>
+          <option>EU East</option>
+          <option>NA East</option>
+          <option>NA West</option>
+          <option>LATAM</option>
+        </select>
+      </div>
+
+      <div class="users-list">
+        {onlineUsers.map((u) => (
+          <UserCard
+            name={u.name}
+            level={u.level}
+            rank={u.rank}
+            games={u.games}
+            region={u.region}
+            online={u.online}
+          />
+        ))}
+      </div>
+    </section>
+
+    <!-- News -->
+    <section class="dashboard-section animate-fade-in-up" style="animation-delay: 0.3s;">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">📰 Noticias</h2>
+          <p class="section-subtitle">Lo último de la comunidad Gamio</p>
+        </div>
+        <a href="/noticias" class="btn-secondary btn-sm">Ver todas</a>
+      </div>
+      <div class="news-grid">
+        {news.map((n) => (
+          <NewsCard
+            title={n.title}
+            summary={n.summary}
+            tags={n.tags}
+            date={n.date}
+          />
+        ))}
+      </div>
+    </section>
+  </div>
 </MainLayout>
 
 <style>
-  .home-page {
-    min-height: 100vh;
-    padding: 8rem 0 4rem;
+  .dashboard {
+    padding: 1.5rem;
+    max-width: 1100px;
+  }
+
+  /* ── Welcome Banner ── */
+  .welcome-banner {
     position: relative;
+    padding: 2rem 2.5rem;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(56, 189, 248, 0.06));
+    border: 1px solid rgba(124, 58, 237, 0.2);
     overflow: hidden;
+    margin-bottom: 2rem;
   }
 
-  .welcome-section {
-    text-align: center;
-    margin-bottom: 4rem;
-  }
-
-  .welcome-badge {
-    display: inline-flex;
+  .welcome-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 1rem;
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.2);
-    border-radius: 9999px;
-    font-size: 0.8rem;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .welcome-greeting {
+    font-size: 0.85rem;
     font-weight: 500;
-    color: #86EFAC;
-    margin-bottom: 1.5rem;
-  }
-
-  .badge-dot {
-    width: 6px;
-    height: 6px;
-    background: #22C55E;
-    border-radius: 50%;
-    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-
-  .welcome-section h1 {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 900;
-    margin-bottom: 1rem;
-    letter-spacing: -0.02em;
-  }
-
-  .welcome-subtitle {
-    font-size: 1.1rem;
     color: var(--color-text-secondary);
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  /* ── Quick Actions ── */
-  .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  .action-card {
-    padding: 2rem;
-    text-align: center;
-    cursor: pointer;
-  }
-
-  .action-icon {
-    font-size: 2.5rem;
     display: block;
-    margin-bottom: 1rem;
+    margin-bottom: 0.25rem;
   }
 
-  .action-card h3 {
+  .welcome-text h1 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
   }
 
-  .action-card p {
-    font-size: 0.85rem;
+  .welcome-text p {
+    font-size: 0.9rem;
     color: var(--color-text-secondary);
   }
 
-  /* ── Glows ── */
-  .home-glow {
+  .welcome-stats {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .welcome-stat {
+    text-align: center;
+    padding: 0.75rem 1.25rem;
+    background: rgba(11, 15, 26, 0.4);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+  }
+
+  .ws-value {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 0.2rem;
+  }
+
+  .ws-online {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    color: var(--color-secondary);
+  }
+
+  .ws-label {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .welcome-glow {
     position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: rgba(124, 58, 237, 0.12);
     border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.1;
+    filter: blur(80px);
     pointer-events: none;
   }
 
-  .home-glow-1 {
-    width: 500px;
-    height: 500px;
-    background: var(--color-primary);
-    top: -100px;
-    right: -150px;
+  /* ── Dashboard Sections ── */
+  .dashboard-section {
+    margin-bottom: 2.5rem;
   }
 
-  .home-glow-2 {
-    width: 400px;
-    height: 400px;
-    background: var(--color-teal);
-    bottom: -100px;
-    left: -100px;
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+  }
+
+  .section-title {
+    margin-bottom: 0.25rem;
+  }
+
+  .section-subtitle {
+    margin-bottom: 0;
+  }
+
+  /* ── Games Grid ── */
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  /* ── Matchmaking ── */
+  .mm-filters {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .mm-select {
+    padding: 0.55rem 1rem;
+    font-size: 0.82rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    color: var(--color-text-primary);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.25rem;
+  }
+
+  .mm-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  }
+
+  .users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* ── News Grid ── */
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1024px) {
+    .games-grid,
+    .news-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   @media (max-width: 768px) {
-    .quick-actions {
+    .dashboard {
+      padding: 1rem;
+    }
+
+    .welcome-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .welcome-stats {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .welcome-banner {
+      padding: 1.5rem;
+    }
+
+    .games-grid,
+    .news-grid {
       grid-template-columns: 1fr;
+    }
+
+    .mm-filters {
+      flex-direction: column;
+    }
+
+    .mm-select {
+      width: 100%;
+    }
+
+    .section-header {
+      flex-direction: column;
     }
   }
 </style>

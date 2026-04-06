@@ -1,362 +1,639 @@
 ---
 /**
  * index.astro — Landing Page de Gamio
+ * Gaming social platform - Discord + Steam + Twitch aesthetic
  */
 import MainLayout from '../layouts/MainLayout.astro';
+import Footer from '../components/Footer.astro';
 ---
 
-<MainLayout title="Gamio 🚀 — Tu plataforma de juegos interactiva">
+<MainLayout title="Gamio 🎮 — La plataforma gaming social">
   <!-- Hero Section -->
-  <section class="hero">
+  <section class="hero" id="hero">
+    <div class="hero-bg-image"></div>
+    <div class="hero-overlay"></div>
+    
     <div class="container hero-content">
-      <div class="hero-badge animate-fade-in-up">
-        <span class="badge-dot"></span>
-        Plataforma en desarrollo activo
-      </div>
-      <h1 class="hero-title animate-fade-in-up" style="animation-delay: 0.1s;">
-        Tu próxima aventura<br />
-        <span class="gradient-text">empieza aquí</span>
+      <h1 class="hero-title animate-fade-in-up">
+        BUSCA, AGREGA Y <br />
+        <span class="gradient-text-cyan">JUEGA</span>
       </h1>
-      <p class="hero-subtitle animate-fade-in-up" style="animation-delay: 0.2s;">
-        Juega, compite y conecta con miles de jugadores en tiempo real.
-        Gamio es la plataforma interactiva de juegos que estabas esperando.
+      <p class="hero-subtitle animate-fade-in-up" style="animation-delay: 0.1s;">
+        La red social definitiva para gamers que buscan compañeros de equipo, formar escuadrones y conectar con la comunidad. Si estás cansado de jugar solo, este es tu lugar.
       </p>
-      <div class="hero-actions animate-fade-in-up" style="animation-delay: 0.3s;">
-        <a href="/login" class="btn-primary">
-          Empezar a jugar
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
+      <div class="hero-actions animate-fade-in-up" style="animation-delay: 0.2s;">
+        <a href="/signup" class="btn-primary hero-btn-primary">
+          ÚNETE AHORA
         </a>
-        <a href="/quienes-somos" class="btn-secondary">
-          Conocer más
-        </a>
-      </div>
-
-      <!-- Feature Cards mini -->
-      <div class="hero-features animate-fade-in-up" style="animation-delay: 0.45s;">
-        <div class="feature-chip">
-          <span class="feature-icon">🎮</span>
-          <span>Juegos multijugador</span>
-        </div>
-        <div class="feature-chip">
-          <span class="feature-icon">💬</span>
-          <span>Chat en tiempo real</span>
-        </div>
-        <div class="feature-chip">
-          <span class="feature-icon">🏆</span>
-          <span>Rankings globales</span>
-        </div>
-        <div class="feature-chip">
-          <span class="feature-icon">👥</span>
-          <span>Comunidad activa</span>
-        </div>
       </div>
     </div>
-
-    <!-- Decorative elements -->
-    <div class="hero-glow hero-glow-1"></div>
-    <div class="hero-glow hero-glow-2"></div>
-    <div class="hero-glow hero-glow-3"></div>
+    
+    <!-- Game Posters Decoration -->
+    <div class="hero-games-deco animate-fade-in-up" style="animation-delay: 0.4s;">
+      <div class="game-poster-sm"><span class="placeholder-text">FC 25</span></div>
+      <div class="game-poster-sm active"><span class="placeholder-text">BRAWL STARS</span></div>
+      <div class="game-poster-sm"><span class="placeholder-text">FORTNITE</span></div>
+      <div class="game-poster-sm"><span class="placeholder-text">WARZONE</span></div>
+    </div>
   </section>
 
-  <!-- Stats Section -->
-  <section class="stats-section">
+  <!-- Games Section -->
+  <section class="games-section">
     <div class="container">
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="stat-number gradient-text">10+</span>
-          <span class="stat-label">Juegos disponibles</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number gradient-text">∞</span>
-          <span class="stat-label">Diversión garantizada</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number gradient-text">24/7</span>
-          <span class="stat-label">Disponibilidad</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number gradient-text">🔒</span>
-          <span class="stat-label">Seguro y privado</span>
-        </div>
+      <h2 class="section-title">LOS <span class="gradient-text">MEJORES</span> JUEGOS</h2>
+      <div class="games-carousel">
+        <!-- Mock game posters for Torneum style -->
+        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co1x7d.jpg');"></div>
+        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co1x77.jpg');"></div>
+        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co2lbd.jpg');"></div>
+        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co1tmu.jpg');"></div>
+        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg');"></div>
+        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co20m8.jpg');"></div>
+      </div>
+      <div class="carousel-controls">
+        <button class="nav-arrow">←</button>
+        <button class="nav-arrow">→</button>
       </div>
     </div>
   </section>
 
-  <!-- CTA Section -->
-  <section class="cta-section">
+  <!-- How It Works (Timeline Style) -->
+  <section class="how-section-torneum">
     <div class="container">
-      <div class="cta-card glass">
-        <h2>¿Listo para la acción?</h2>
-        <p>Crea tu cuenta gratis y empieza a disfrutar de la mejor experiencia de juego online.</p>
-        <a href="/login" class="btn-primary">
-          Crear cuenta gratis
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </a>
+      <div class="how-header">
+        <h2 class="section-title banner-title">CÓMO FUNCIONA GAMIO</h2>
+      </div>
+      <div class="how-split">
+        <div class="how-image">
+          <!-- Placeholder for gamer setup image -->
+          <div class="setup-img-placeholder"></div>
+        </div>
+        <div class="how-timeline">
+          <div class="timeline-step">
+            <div class="timeline-dot active"></div>
+            <div class="timeline-content">
+              <h3>Encuentra a tu equipo ideal</h3>
+              <p>Busca jugadores según tu nivel, idioma y estilo de juego.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <h3>Crea o únete a comunidades</h3>
+              <p>Participa en grupos dedicados exclusivamente a tus juegos favoritos.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <h3>Organiza partidas al instante</h3>
+              <p>Usa el chat integrado para coordinar y empezar a jugar sin esperas.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <h3>Sube de nivel y gana reputación</h3>
+              <p>Recibe valoraciones positivas y destaca como el mejor compañero.</p>
+            </div>
+          </div>
+          <a href="/signup" class="btn-primary mt-4">ENCUENTRA TU EQUIPO</a>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container footer-content">
-      <p>&copy; 2026 Gamio. Todos los derechos reservados.</p>
-      <div class="footer-links">
-        <a href="/contacto">Contacto</a>
-        <a href="/soporte">Soporte</a>
+  <!-- Giant Stats Section -->
+  <section class="stats-torneum">
+    <div class="container">
+      <div class="stats-grid-giant">
+        <div class="stat-giant">
+          <span class="stat-num-neon">+10K</span>
+          <span class="stat-label-torneum">Jugadores activos</span>
+        </div>
+        <div class="stat-giant">
+          <span class="stat-num-neon">+50</span>
+          <span class="stat-label-torneum">Juegos soportados</span>
+        </div>
+        <div class="stat-giant">
+          <span class="stat-num-neon">+5K</span>
+          <span class="stat-label-torneum">Partidas jugadas</span>
+        </div>
       </div>
     </div>
-  </footer>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="testimonials-section">
+    <div class="container">
+      <h2 class="section-title" style="text-align: center;">LO QUE DICEN <span class="gradient-text-cyan">NUESTROS JUGADORES</span></h2>
+      <div class="testimonials-grid">
+        <div class="testi-card">
+          <div class="testi-quote">"Gracias a Gamio encontré a mi equipo actual de Valorant. Pasamos de bronce a diamante en un mes."</div>
+          <div class="testi-author">
+            <div class="avatar-placeholder"></div>
+            <div>
+              <strong>@SniperPro</strong>
+              <span>Jugador de Valorant</span>
+            </div>
+          </div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-quote">"La mejor plataforma para encontrar gente rápido. Siempre hay jugadores activos y el ambiente es brutal."</div>
+          <div class="testi-author">
+            <div class="avatar-placeholder"></div>
+            <div>
+              <strong>@AlexGamer</strong>
+              <span>Jugador de FC 25</span>
+            </div>
+          </div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-quote">"El sistema de chat y comunidades es increíble. Es como tener Discord pero integrado directamente con el matchmaking."</div>
+          <div class="testi-author">
+            <div class="avatar-placeholder"></div>
+            <div>
+              <strong>@Marta10</strong>
+              <span>Jugadora de LoL</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Marquee Section -->
+  <div class="marquee-container">
+    <div class="marquee-content">
+      <span>DONDE JUEGAN LOS MEJORES • ÚNETE A LA REVOLUCIÓN • ENCUENTRA TU EQUIPO • DONDE JUEGAN LOS MEJORES • ÚNETE A LA REVOLUCIÓN • ENCUENTRA TU EQUIPO •</span>
+    </div>
+  </div>
+
+  <Footer />
 </MainLayout>
 
 <style>
-  /* ── Hero ── */
+  /* ── Hero Torneum Style ── */
   .hero {
     position: relative;
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     overflow: hidden;
-    padding-top: 5rem;
+    padding-top: 15vh; /* Push content down to match Torneum's vertical alignment */
+  }
+
+  .hero-bg-image {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    /* Dark gradient representing Torneum's dark background */
+    background: radial-gradient(circle at 50% 30%, rgba(108, 58, 255, 0.15), var(--color-bg-primary) 70%);
+    z-index: 0;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    bottom: 0; left: 0; width: 100%; height: 30%;
+    background: linear-gradient(to top, var(--color-bg-primary), transparent);
+    z-index: 1;
   }
 
   .hero-content {
     text-align: center;
     position: relative;
     z-index: 2;
-  }
-
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 1rem;
-    background: rgba(30, 136, 229, 0.1);
-    border: 1px solid rgba(30, 136, 229, 0.2);
-    border-radius: 9999px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--color-primary-light);
-    margin-bottom: 1.5rem;
-  }
-
-  .badge-dot {
-    width: 6px;
-    height: 6px;
-    background: #22C55E;
-    border-radius: 50%;
-    animation: pulse-glow 2s ease-in-out infinite;
-    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+    padding: 0 1rem;
+    max-width: 900px;
   }
 
   .hero-title {
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    font-weight: 900;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
-    margin-bottom: 1.5rem;
+    font-family: var(--font-heading);
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 900; /* Black weight */
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 2rem;
+    color: var(--color-text-primary);
   }
 
   .hero-subtitle {
-    font-size: clamp(1rem, 2vw, 1.2rem);
-    color: var(--color-text-secondary);
-    max-width: 600px;
-    margin: 0 auto 2.5rem;
-    line-height: 1.7;
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: var(--color-text-primary);
+    max-width: 700px;
+    margin: 0 auto 3rem;
+    line-height: 1.6;
+    opacity: 0.9;
   }
 
   .hero-actions {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 3rem;
+    margin-bottom: 4rem;
   }
 
-  .hero-features {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.75rem;
+  .hero-btn-primary {
+    padding: 1rem 3rem;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    box-shadow: 0 0 30px rgba(108, 58, 255, 0.4);
   }
 
-  .feature-chip {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.5rem 1rem;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid var(--color-border);
-    border-radius: 9999px;
-    font-size: 0.82rem;
-    color: var(--color-text-secondary);
-    transition: all 0.3s ease;
+  .hero-btn-primary:hover {
+    box-shadow: 0 0 40px rgba(108, 58, 255, 0.6);
   }
 
-  .feature-chip:hover {
-    border-color: var(--color-primary);
-    color: var(--color-text-primary);
-    transform: translateY(-2px);
-  }
-
-  .feature-icon {
-    font-size: 1rem;
-  }
-
-  /* ── Glows ── */
-  .hero-glow {
+  /* ── Game Posters Deco Hero ── */
+  .hero-games-deco {
     position: absolute;
-    border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.15;
-    pointer-events: none;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1rem;
+    z-index: 2;
+    width: 100%;
+    justify-content: center;
+    align-items: flex-end;
   }
 
-  .hero-glow-1 {
+  .game-poster-sm {
+    width: 140px;
+    height: 180px;
+    background: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--color-border);
+    transform: perspective(500px) rotateX(10deg);
+    transform-origin: bottom center;
+    opacity: 0.7;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 1rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  }
+
+  .game-poster-sm.active {
+    width: 160px;
+    height: 220px;
+    border-color: var(--color-primary);
+    transform: none;
+    opacity: 1;
+    z-index: 3;
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+  }
+
+  .placeholder-text {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  }
+
+  .hero-orb-1 {
     width: 500px;
     height: 500px;
-    background: var(--color-primary);
+    background: rgba(124, 58, 237, 0.15);
     top: -200px;
     right: -100px;
+    animation: float 8s ease-in-out infinite;
   }
 
-  .hero-glow-2 {
+  .hero-orb-2 {
     width: 400px;
     height: 400px;
-    background: var(--color-purple);
-    bottom: -100px;
+    background: rgba(56, 189, 248, 0.1);
+    bottom: -150px;
     left: -100px;
+    animation: float 10s ease-in-out infinite reverse;
   }
 
-  .hero-glow-3 {
+  .hero-orb-3 {
     width: 300px;
     height: 300px;
-    background: var(--color-teal);
+    background: rgba(34, 197, 94, 0.08);
     top: 40%;
     left: 50%;
     transform: translateX(-50%);
   }
 
-  /* ── Stats ── */
-  .stats-section {
-    padding: 4rem 0;
+  .hero-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124, 58, 237, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124, 58, 237, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+    pointer-events: none;
   }
 
-  .stats-grid {
+  /* ── Testimonials ── */
+  .testimonials-section {
+    padding: 6rem 0;
+    background: var(--color-bg-primary);
+  }
+
+  .testimonials-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
+    margin-top: 3rem;
   }
 
-  .stat-item {
-    text-align: center;
-    padding: 2rem 1rem;
-    border-radius: 12px;
-    background: rgba(30, 41, 59, 0.4);
+  .testi-card {
+    background: var(--color-surface-card);
     border: 1px solid var(--color-border);
-    transition: all 0.3s ease;
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 250px;
   }
 
-  .stat-item:hover {
-    border-color: var(--color-primary);
-    transform: translateY(-4px);
-    box-shadow: 0 10px 30px rgba(30, 136, 229, 0.1);
+  .testi-quote {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--color-text-primary);
+    font-style: italic;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+  .testi-quote::before {
+    content: '"';
+    font-family: serif;
+    font-size: 4rem;
+    position: absolute;
+    top: -20px; left: -15px;
+    color: rgba(0, 240, 255, 0.1);
+    z-index: 0;
   }
 
-  .stat-number {
+  .testi-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-top: 1px solid var(--color-border-light);
+    padding-top: 1.5rem;
+  }
+
+  .avatar-placeholder {
+    width: 45px; height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  }
+
+  .testi-author strong {
     display: block;
-    font-size: 2.5rem;
-    font-weight: 900;
-    margin-bottom: 0.5rem;
+    color: white;
+    font-size: 1rem;
   }
-
-  .stat-label {
-    font-size: 0.9rem;
+  .testi-author span {
+    font-size: 0.85rem;
     color: var(--color-text-secondary);
-    font-weight: 500;
   }
 
-  /* ── CTA ── */
-  .cta-section {
+  /* ── Marquee ── */
+  .marquee-container {
+    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light));
+    padding: 1.5rem 0;
+    overflow: hidden;
+    position: relative;
+    transform: rotate(-2deg) scale(1.05); /* Slight slant like Torneum */
+    box-shadow: 0 10px 30px rgba(255, 60, 172, 0.2);
+    z-index: 10;
+    margin-top: -2rem; /* Fix spacing after slant */
+    margin-bottom: 5rem;
+  }
+
+  .marquee-content {
+    white-space: nowrap;
+    animation: marquee 20s linear infinite;
+  }
+
+  .marquee-content span {
+    font-family: var(--font-heading);
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: black;
+    letter-spacing: 2px;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @media (max-width: 768px) {
+    .testimonials-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Typography & Titles ── */
+  .section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    text-transform: uppercase;
+    color: white;
+    letter-spacing: -0.02em;
+    margin-bottom: 2rem;
+  }
+
+  /* ── Games Section ── */
+  .games-section {
+    padding: 6rem 0;
+    background: var(--color-bg-primary);
+  }
+
+  .games-carousel {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 2rem;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none; /* Firefox */
+  }
+  .games-carousel::-webkit-scrollbar {
+    display: none; /* Safari/Chrome */
+  }
+
+  .game-poster {
+    min-width: 200px;
+    height: 280px;
+    background-color: var(--color-surface-card);
+    border-radius: var(--radius-lg);
+    background-size: cover;
+    background-position: center;
+    scroll-snap-align: start;
+    transition: transform 0.3s ease;
+  }
+  .game-poster:hover {
+    transform: translateY(-10px);
+  }
+
+  .carousel-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: -1rem;
+  }
+
+  .nav-arrow {
+    width: 40px; height: 40px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+  }
+  .nav-arrow:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* ── How It Works (Timeline) ── */
+  .how-section-torneum {
     padding: 4rem 0 6rem;
   }
 
-  .cta-card {
-    text-align: center;
-    padding: 4rem 2rem;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(30, 136, 229, 0.08), rgba(124, 77, 255, 0.08));
-    border: 1px solid rgba(30, 136, 229, 0.2);
+  .how-header {
+    background: var(--color-secondary);
+    padding: 1.5rem 3rem;
+    border-radius: 0 50px 50px 0;
+    display: inline-block;
+    margin-bottom: 4rem;
+    margin-left: -5vw;
   }
 
-  .cta-card h2 {
-    font-size: 2rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
+  .banner-title {
+    margin-bottom: 0;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
   }
 
-  .cta-card p {
-    color: var(--color-text-secondary);
-    margin-bottom: 2rem;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  /* ── Footer ── */
-  .footer {
-    padding: 2rem 0;
-    border-top: 1px solid var(--color-border);
-  }
-
-  .footer-content {
-    display: flex;
+  .how-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
     align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
   }
 
-  .footer p {
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
+  .setup-img-placeholder {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, var(--color-surface-hover), var(--color-surface-card));
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
   }
 
-  .footer-links {
-    display: flex;
-    gap: 1.5rem;
+  .how-timeline {
+    position: relative;
+    padding-left: 2rem;
   }
 
-  .footer-links a {
-    font-size: 0.85rem;
+  .how-timeline::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-border-light);
+  }
+
+  .timeline-step {
+    position: relative;
+    margin-bottom: 2.5rem;
+  }
+
+  .timeline-dot {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-border-light);
+    transform: translateX(-50%);
+  }
+
+  .timeline-dot.active {
+    background: var(--color-accent);
+    box-shadow: 0 0 10px var(--color-accent);
+  }
+  .timeline-step:first-child::before {
+    content: '';
+    position: absolute;
+    left: -2rem; top: 0; height: 100%; width: 2px;
+    background: var(--color-accent);
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+
+  .timeline-content h3 {
+    font-family: var(--font-sans);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: white;
+  }
+  .timeline-content p {
     color: var(--color-text-secondary);
-    transition: color 0.2s ease;
   }
 
-  .footer-links a:hover {
+  .mt-4 { margin-top: 2rem; }
+
+  /* ── Stats Giant ── */
+  .stats-torneum {
+    padding: 6rem 0;
+    background: linear-gradient(to bottom, var(--color-bg-secondary), var(--color-bg-primary));
+  }
+
+  .stats-grid-giant {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    text-align: center;
+    gap: 2rem;
+  }
+
+  .stat-giant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stat-num-neon {
+    font-family: var(--font-heading);
+    font-weight: 900;
+    font-size: clamp(3rem, 6vw, 5.5rem);
     color: var(--color-primary);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 40px rgba(0, 240, 255, 0.4);
   }
 
-  /* ── Responsive ── */
+  .stat-label-torneum {
+    font-size: 1.1rem;
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+
   @media (max-width: 768px) {
-    .stats-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .footer-content {
-      justify-content: center;
-      text-align: center;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .stats-grid {
+    .how-split {
       grid-template-columns: 1fr;
+    }
+    .stats-grid-giant {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+    .how-header {
+      margin-left: -1rem;
+      border-radius: var(--radius-sm);
     }
   }
 </style>

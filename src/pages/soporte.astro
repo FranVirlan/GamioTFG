@@ -1,29 +1,31 @@
 ---
 /**
- * soporte.astro — Página de Soporte de Gamio
+ * soporte.astro — Página de Soporte
+ * Gaming aesthetic con nueva paleta violeta/neón
  */
 import MainLayout from '../layouts/MainLayout.astro';
+import Footer from '../components/Footer.astro';
 
 const faqs = [
   {
     question: '¿Cómo creo mi cuenta en Gamio?',
-    answer: 'Haz clic en "Crear cuenta" en la página principal, introduce tu nombre, email y contraseña, y ya estarás listo para jugar.',
+    answer: 'Haz clic en "Crear cuenta" en la página principal, introduce tu gamertag, email y contraseña, y ya estarás listo para jugar.',
   },
   {
     question: '¿Es gratis usar Gamio?',
-    answer: 'Sí, Gamio es completamente gratuito. Puedes acceder a todos los juegos y funcionalidades sin coste alguno.',
+    answer: 'Sí, Gamio es completamente gratuito. Puedes acceder a todas las funcionalidades de matchmaking y comunidad sin coste alguno.',
   },
   {
-    question: '¿Cómo funciona el chat en tiempo real?',
-    answer: 'Nuestro chat utiliza tecnología WebSocket para que puedas comunicarte con otros jugadores al instante, sin retrasos.',
+    question: '¿Cómo funciona el matchmaking?',
+    answer: 'Nuestro sistema analiza tu nivel, región y preferencias para encontrar los compañeros más compatibles con tu estilo de juego.',
   },
   {
-    question: '¿Puedo jugar desde mi teléfono móvil?',
+    question: '¿Puedo usar Gamio desde mi teléfono móvil?',
     answer: 'Sí, Gamio está optimizado para funcionar en cualquier dispositivo: ordenador, tablet o móvil.',
   },
   {
-    question: '¿Cómo puedo reportar un problema?',
-    answer: 'Puedes usar el formulario de la página de Contacto o escribir directamente a soporte@gamio.com con los detalles del problema.',
+    question: '¿Cómo funciona el sistema de rangos?',
+    answer: 'Los rangos van desde Bronce hasta Diamante. Sube de rango participando en partidas, ganando competiciones y contribuyendo a la comunidad.',
   },
   {
     question: '¿Mis datos están seguros?',
@@ -32,7 +34,7 @@ const faqs = [
 ];
 ---
 
-<MainLayout title="Soporte — Gamio 🚀">
+<MainLayout title="Soporte — Gamio 🎮">
   <section class="page-hero">
     <div class="container">
       <h1 class="page-title animate-fade-in-up">
@@ -43,14 +45,14 @@ const faqs = [
         o contacta con nuestro equipo de soporte.
       </p>
     </div>
-    <div class="hero-glow hero-glow-1"></div>
-    <div class="hero-glow hero-glow-2"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
   </section>
 
   <!-- FAQ Section -->
   <section class="faq-section">
     <div class="container">
-      <h2 class="section-title">Preguntas Frecuentes</h2>
+      <h2 class="section-heading">Preguntas Frecuentes</h2>
       <div class="faq-list">
         {faqs.map((faq, idx) => (
           <details class="faq-item animate-fade-in-up" style={`animation-delay: ${0.05 * idx}s;`}>
@@ -77,23 +79,25 @@ const faqs = [
           <span class="help-icon">📧</span>
           <h3>Escríbenos</h3>
           <p>Envía un email detallado y te responderemos en 24-48h.</p>
-          <a href="/contacto" class="btn-secondary">Ir a Contacto</a>
+          <a href="/contacto" class="btn-secondary btn-sm">Ir a Contacto</a>
         </div>
         <div class="help-card card animate-fade-in-up" style="animation-delay: 0.1s;">
           <span class="help-icon">💬</span>
           <h3>Discord</h3>
           <p>Únete a nuestra comunidad en Discord para ayuda en directo.</p>
-          <a href="#" class="btn-secondary">Unirse a Discord</a>
+          <a href="#" class="btn-secondary btn-sm">Unirse a Discord</a>
         </div>
         <div class="help-card card animate-fade-in-up" style="animation-delay: 0.2s;">
           <span class="help-icon">📖</span>
           <h3>Documentación</h3>
           <p>Consulta nuestras guías y tutoriales detallados.</p>
-          <a href="#" class="btn-secondary">Ver documentación</a>
+          <a href="#" class="btn-secondary btn-sm">Ver documentación</a>
         </div>
       </div>
     </div>
   </section>
+
+  <Footer />
 </MainLayout>
 
 <style>
@@ -105,8 +109,9 @@ const faqs = [
   }
 
   .page-title {
+    font-family: var(--font-heading);
     font-size: clamp(2.2rem, 5vw, 3.5rem);
-    font-weight: 900;
+    font-weight: 700;
     margin-bottom: 1rem;
   }
 
@@ -117,26 +122,25 @@ const faqs = [
     margin: 0 auto;
   }
 
-  .hero-glow {
+  .hero-orb {
     position: absolute;
     border-radius: 50%;
     filter: blur(120px);
-    opacity: 0.1;
     pointer-events: none;
   }
 
-  .hero-glow-1 {
+  .hero-orb-1 {
     width: 400px;
     height: 400px;
-    background: var(--color-teal);
+    background: rgba(0, 240, 255, 0.15); /* Torneum cyan */
     top: -150px;
     right: -100px;
   }
 
-  .hero-glow-2 {
+  .hero-orb-2 {
     width: 300px;
     height: 300px;
-    background: var(--color-primary);
+    background: rgba(255, 60, 172, 0.1); /* Torneum coral */
     bottom: -50px;
     left: -50px;
   }
@@ -146,10 +150,11 @@ const faqs = [
     padding: 3rem 0 4rem;
   }
 
-  .section-title {
+  .section-heading {
     text-align: center;
+    font-family: var(--font-heading);
     font-size: 2rem;
-    font-weight: 800;
+    font-weight: 700;
     margin-bottom: 3rem;
   }
 
@@ -164,18 +169,18 @@ const faqs = [
   .faq-item {
     background: var(--color-surface-card);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
   }
 
   .faq-item:hover {
-    border-color: var(--color-primary);
+    border-color: rgba(0, 240, 255, 0.3); /* Cyan hover */
   }
 
   .faq-item[open] {
     border-color: var(--color-primary);
-    box-shadow: 0 0 20px rgba(30, 136, 229, 0.08);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
   }
 
   .faq-question {
@@ -195,13 +200,13 @@ const faqs = [
   }
 
   .faq-question:hover {
-    background: rgba(148, 163, 184, 0.04);
+    background: rgba(0, 240, 255, 0.05);
   }
 
   .faq-chevron {
     flex-shrink: 0;
     color: var(--color-text-muted);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, color 0.3s ease;
   }
 
   .faq-item[open] .faq-chevron {
@@ -221,7 +226,7 @@ const faqs = [
 
   /* ── Help ── */
   .help-section {
-    padding: 2rem 0 6rem;
+    padding: 2rem 0 2rem;
   }
 
   .help-grid {
@@ -242,6 +247,7 @@ const faqs = [
   }
 
   .help-card h3 {
+    font-family: var(--font-heading);
     font-size: 1.2rem;
     font-weight: 700;
     margin-bottom: 0.75rem;
@@ -254,7 +260,6 @@ const faqs = [
     line-height: 1.6;
   }
 
-  /* ── Responsive ── */
   @media (max-width: 768px) {
     .help-grid {
       grid-template-columns: 1fr;

@@ -1,0 +1,128 @@
+---
+/**
+ * GameCard.astro — Card de juego para el dashboard
+ * Imagen portada, nombre, género, jugadores activos, botón matchmaking
+ */
+
+interface Props {
+  name: string;
+  genre: string;
+  players: number;
+  image?: string;
+  color?: string;
+}
+
+const { name, genre, players, image, color = 'violet' } = Astro.props;
+
+const colorMap: Record<string, { bg: string; border: string; text: string }> = {
+  violet: { bg: 'rgba(124, 58, 237, 0.1)', border: 'rgba(124, 58, 237, 0.3)', text: '#8B5CF6' },
+  green: { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.3)', text: '#4ADE80' },
+  blue: { bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.3)', text: '#7DD3FC' },
+  orange: { bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.3)', text: '#FBBF24' },
+};
+const c = colorMap[color] || colorMap.violet;
+---
+
+<div class="game-card">
+  <div class="game-image" style={image ? `background-image: url(${image});` : `background: linear-gradient(135deg, ${c.bg}, var(--color-bg-tertiary));`}>
+    {!image && <span class="game-placeholder">🎮</span>}
+    <div class="game-players">
+      <span class="online-dot-sm"></span>
+      <span>{players.toLocaleString()} jugando</span>
+    </div>
+  </div>
+  <div class="game-info">
+    <h3 class="game-name">{name}</h3>
+    <span class="game-genre tag tag-violet">{genre}</span>
+    <button class="btn-primary btn-sm game-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Encontrar jugadores
+    </button>
+  </div>
+</div>
+
+<style>
+  .game-card {
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .game-card:hover {
+    border-color: rgba(124, 58, 237, 0.4);
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.1), 0 12px 40px rgba(0, 0, 0, 0.25);
+    transform: translateY(-4px) scale(1.01);
+  }
+
+  .game-image {
+    position: relative;
+    height: 160px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .game-image::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60%;
+    background: linear-gradient(to top, var(--color-surface-card), transparent);
+  }
+
+  .game-placeholder {
+    font-size: 3rem;
+    opacity: 0.3;
+  }
+
+  .game-players {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    background: rgba(11, 15, 26, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-secondary-light);
+    z-index: 1;
+  }
+
+  .game-info {
+    padding: 1rem 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .game-name {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  .game-genre {
+    align-self: flex-start;
+  }
+
+  .game-btn {
+    margin-top: 0.25rem;
+    width: 100%;
+  }
+</style>

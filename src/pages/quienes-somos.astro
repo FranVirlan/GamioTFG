@@ -1,36 +1,38 @@
 ---
 /**
- * quienes-somos.astro — Página "Quiénes Somos" de Gamio
+ * quienes-somos.astro — Página "Quiénes Somos"
+ * Gaming aesthetic con nueva paleta violeta/neón
  */
 import MainLayout from '../layouts/MainLayout.astro';
+import Footer from '../components/Footer.astro';
 
 const teamValues = [
   {
     icon: '🎯',
     title: 'Nuestra Misión',
-    description: 'Crear la mejor plataforma de juegos interactiva, donde la diversión y la comunidad se unen en una experiencia única.',
+    description: 'Crear la mejor plataforma social gaming donde encontrar compañeros de juego sea instantáneo y divertido.',
   },
   {
     icon: '🌟',
     title: 'Nuestra Visión',
-    description: 'Ser la referencia en entretenimiento digital interactivo, conectando jugadores de todo el mundo en tiempo real.',
+    description: 'Ser la referencia en matchmaking gamer, conectando millones de jugadores en partidas épicas cada día.',
   },
   {
     icon: '🤝',
     title: 'Nuestros Valores',
-    description: 'Innovación, comunidad, fair play y pasión por los videojuegos. Cada decisión que tomamos se basa en estos pilares.',
+    description: 'Comunidad, fair play, innovación y pasión por los videojuegos. Cada decisión que tomamos se basa en estos pilares.',
   },
 ];
 
 const features = [
-  { icon: '⚡', title: 'Rendimiento', desc: 'Tecnología de vanguardia para la mejor experiencia' },
+  { icon: '⚡', title: 'Rendimiento', desc: 'Matchmaking instantáneo y sin lag' },
   { icon: '🔒', title: 'Seguridad', desc: 'Protección de datos y juego seguro' },
-  { icon: '🌍', title: 'Global', desc: 'Conecta con jugadores de todo el mundo' },
+  { icon: '🌍', title: 'Global', desc: 'Jugadores de todo el mundo' },
   { icon: '📱', title: 'Multiplataforma', desc: 'Juega desde cualquier dispositivo' },
 ];
 ---
 
-<MainLayout title="Quiénes Somos — Gamio 🚀">
+<MainLayout title="Quiénes Somos — Gamio 🎮">
   <section class="page-hero">
     <div class="container">
       <h1 class="page-title animate-fade-in-up">
@@ -38,11 +40,11 @@ const features = [
       </h1>
       <p class="page-subtitle animate-fade-in-up" style="animation-delay: 0.1s;">
         Somos un equipo apasionado por los videojuegos y la tecnología,
-        dedicados a crear experiencias de juego inolvidables.
+        dedicados a conectar gamers de todo el mundo.
       </p>
     </div>
-    <div class="hero-glow hero-glow-1"></div>
-    <div class="hero-glow hero-glow-2"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
   </section>
 
   <!-- Values -->
@@ -63,7 +65,7 @@ const features = [
   <!-- Features -->
   <section class="features-section">
     <div class="container">
-      <h2 class="section-title">¿Por qué <span class="gradient-text">Gamio</span>?</h2>
+      <h2 class="section-heading">¿Por qué <span class="gradient-text-violet">Gamio</span>?</h2>
       <div class="features-grid">
         {features.map((feat, idx) => (
           <div class="feature-item animate-fade-in-up" style={`animation-delay: ${0.1 * idx}s;`}>
@@ -79,13 +81,16 @@ const features = [
   <!-- CTA Banner -->
   <section class="cta-banner">
     <div class="container">
-      <div class="cta-card glass">
+      <div class="cta-card">
+        <div class="cta-glow"></div>
         <h2>¿Te unes a la aventura?</h2>
-        <p>Forma parte de la comunidad de Gamio y vive la experiencia.</p>
-        <a href="/login" class="btn-primary">Unirse ahora</a>
+        <p>Forma parte de la comunidad de Gamio y encuentra tu equipo perfecto.</p>
+        <a href="/signup" class="btn-primary">Unirse ahora</a>
       </div>
     </div>
   </section>
+
+  <Footer />
 </MainLayout>
 
 <style>
@@ -97,8 +102,9 @@ const features = [
   }
 
   .page-title {
+    font-family: var(--font-heading);
     font-size: clamp(2.2rem, 5vw, 3.5rem);
-    font-weight: 900;
+    font-weight: 700;
     margin-bottom: 1rem;
     letter-spacing: -0.02em;
   }
@@ -111,26 +117,25 @@ const features = [
     line-height: 1.7;
   }
 
-  .hero-glow {
+  .hero-orb {
     position: absolute;
     border-radius: 50%;
     filter: blur(120px);
-    opacity: 0.12;
     pointer-events: none;
   }
 
-  .hero-glow-1 {
+  .hero-orb-1 {
     width: 400px;
     height: 400px;
-    background: var(--color-purple);
+    background: rgba(0, 240, 255, 0.15); /* Torneum cyan */
     top: -100px;
     right: -100px;
   }
 
-  .hero-glow-2 {
+  .hero-orb-2 {
     width: 350px;
     height: 350px;
-    background: var(--color-teal);
+    background: rgba(255, 60, 172, 0.1); /* Torneum coral */
     bottom: -50px;
     left: -50px;
   }
@@ -157,6 +162,7 @@ const features = [
   }
 
   .value-card h3 {
+    font-family: var(--font-heading);
     font-size: 1.3rem;
     font-weight: 700;
     margin-bottom: 0.75rem;
@@ -173,10 +179,11 @@ const features = [
     padding: 4rem 0;
   }
 
-  .section-title {
+  .section-heading {
     text-align: center;
+    font-family: var(--font-heading);
     font-size: 2rem;
-    font-weight: 800;
+    font-weight: 700;
     margin-bottom: 3rem;
   }
 
@@ -189,15 +196,16 @@ const features = [
   .feature-item {
     text-align: center;
     padding: 2rem 1rem;
-    border-radius: 12px;
-    background: rgba(30, 41, 59, 0.4);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-card);
     border: 1px solid var(--color-border);
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
   }
 
   .feature-item:hover {
-    border-color: var(--color-primary);
+    border-color: rgba(0, 240, 255, 0.3);
     transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0, 240, 255, 0.06);
   }
 
   .feature-icon-lg {
@@ -207,6 +215,7 @@ const features = [
   }
 
   .feature-item h4 {
+    font-family: var(--font-heading);
     font-weight: 700;
     margin-bottom: 0.5rem;
   }
@@ -218,26 +227,48 @@ const features = [
 
   /* ── CTA ── */
   .cta-banner {
-    padding: 4rem 0 6rem;
+    padding: 4rem 0 2rem;
   }
 
   .cta-card {
+    position: relative;
     text-align: center;
     padding: 4rem 2rem;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(0, 191, 165, 0.08));
-    border: 1px solid rgba(124, 77, 255, 0.2);
+    border-radius: var(--radius-2xl);
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(255, 60, 172, 0.06));
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    overflow: hidden;
+  }
+
+  .cta-glow {
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    height: 400px;
+    background: rgba(0, 240, 255, 0.1);
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
   }
 
   .cta-card h2 {
+    font-family: var(--font-heading);
     font-size: 2rem;
-    font-weight: 800;
+    font-weight: 700;
     margin-bottom: 1rem;
+    position: relative;
   }
 
   .cta-card p {
     color: var(--color-text-secondary);
     margin-bottom: 2rem;
+    position: relative;
+  }
+
+  .cta-card .btn-primary {
+    position: relative;
   }
 
   /* ── Responsive ── */
