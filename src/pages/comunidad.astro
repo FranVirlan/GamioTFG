@@ -1,0 +1,30 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import CommunityView from '../components/views/CommunityView.astro';
+
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect('/login');
+}
+---
+
+<MainLayout title="Comunidad — Gamio 🎮" useSidebar={true}>
+  <div class="dashboard-content animate-fade-in-up">
+    <CommunityView />
+  </div>
+</MainLayout>
+
+<style>
+  .dashboard-content {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-content {
+      padding: 1rem;
+    }
+  }
+</style>

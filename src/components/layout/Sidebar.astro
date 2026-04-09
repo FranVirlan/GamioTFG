@@ -23,6 +23,7 @@ const navItems = [
   { href: '/home', label: 'Inicio', icon: 'home' },
   { href: '/juegos', label: 'Juegos', icon: 'gamepad' },
   { href: '/comunidad', label: 'Comunidad', icon: 'users' },
+  { href: '/chat', label: 'Mensajes', icon: 'message' },
   { href: '/noticias', label: 'Noticias', icon: 'news' },
   { href: '/perfil', label: 'Perfil', icon: 'user' },
 ];
@@ -76,6 +77,11 @@ const navItems = [
               <path d="M21 8v12a2 2 0 0 1-2 2"/>
               <line x1="7" y1="10" x2="13" y2="10"/>
               <line x1="7" y1="14" x2="11" y2="14"/>
+            </svg>
+          )}
+          {item.icon === 'message' && (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
           )}
           {item.icon === 'user' && (

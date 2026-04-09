@@ -26,7 +26,12 @@ const rankLabels: Record<string, string> = {
 const rankLabel = rankLabels[rank] || rankLabels.bronze;
 ---
 
-<div class="user-card">
+<div 
+  class="user-card js-matchmaking-card"
+  data-rank={rank?.toLowerCase() || 'unranked'}
+  data-region={region}
+  data-games={games?.join(',') || ''}
+>
   <div class="user-card-left">
     <div class="user-card-avatar">
       {name.charAt(0).toUpperCase()}

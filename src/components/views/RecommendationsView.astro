@@ -1,0 +1,228 @@
+---
+/**
+ * RecommendationsView.astro
+ * Vista de recomendaciones (amigos, comunidades, juegos).
+ */
+
+const userRecommendations = [
+  { id: 1, name: 'SniperPro', level: 34, reason: 'Juega a Valorant (como tú)', avatar: 'S' },
+  { id: 2, name: 'AlexGamer', level: 21, reason: 'Amigo de amigos', avatar: 'A' },
+  { id: 3, name: 'LaBestia', level: 56, reason: 'Jugador destacado en tu región', avatar: 'L' }
+];
+
+const communityRecommendations = [
+  { id: 1, name: 'Amantes del Indie', members: '1.2k', reason: 'Basado en tus preferencias' },
+  { id: 2, name: 'Comunidad Valorant ESP', members: '5.4k', reason: 'Comunidad oficial en España' }
+];
+---
+
+<div class="recommendations-view animate-fade-in-up">
+  <div class="page-header">
+    <h2>Para Ti</h2>
+    <p class="subtitle">Descubre jugadores y comunidades que encajan contigo.</p>
+  </div>
+
+  <div class="sections-wrapper">
+    <!-- Sugerencias de Jugadores -->
+    <section class="rec-section">
+      <div class="section-title">
+        <h3>Jugadores Sugeridos</h3>
+        <button class="btn-text">Ver más</button>
+      </div>
+      <div class="rec-grid">
+        {userRecommendations.map(user => (
+          <div class="rec-card user-rec">
+            <div class="rec-avatar">{user.avatar}</div>
+            <div class="rec-info">
+              <h4>{user.name} <span>Nv. {user.level}</span></h4>
+              <p>{user.reason}</p>
+            </div>
+            <button class="btn-add">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+              </svg>
+            </button>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Sugerencias de Comunidades -->
+    <section class="rec-section">
+      <div class="section-title">
+        <h3>Comunidades Recomendadas</h3>
+        <button class="btn-text">Ver más</button>
+      </div>
+      <div class="rec-grid">
+        {communityRecommendations.map(comm => (
+          <div class="rec-card comm-rec">
+            <div class="comm-icon">🎮</div>
+            <div class="rec-info">
+              <h4>{comm.name}</h4>
+              <p>{comm.members} miembros • {comm.reason}</p>
+            </div>
+            <button class="btn-secondary btn-sm">Unirse</button>
+          </div>
+        ))}
+      </div>
+    </section>
+  </div>
+</div>
+
+<style>
+  .recommendations-view {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .page-header h2 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  .sections-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  .section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title h3 {
+    font-size: 1.3rem;
+    margin: 0;
+    color: var(--color-text-primary);
+  }
+
+  .btn-text {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .btn-text:hover {
+    text-decoration: underline;
+  }
+
+  .rec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .rec-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .rec-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+  }
+
+  .rec-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-accent), var(--color-primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .comm-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-sm);
+    background: rgba(124, 58, 237, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .rec-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rec-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rec-info h4 span {
+    font-size: 0.8rem;
+    color: var(--color-primary);
+    margin-left: 0.5rem;
+  }
+
+  .rec-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-add {
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--color-primary);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .btn-add:hover {
+    background: var(--color-primary);
+    color: white;
+  }
+
+  .btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+</style>

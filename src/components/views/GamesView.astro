@@ -1,0 +1,174 @@
+---
+/**
+ * GamesView.astro
+ * Vista de juegos disponibles con grid.
+ */
+import GameCard from '../domain/GameCard.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: dbGames } = await supabase.from('games').select('*').order('players_count', { ascending: false });
+const games = dbGames || [];
+const categories = ['Todos', 'FPS', 'MOBA', 'Battle Royale', 'Deportes', 'Sandbox'];
+---
+
+<div class="games-view animate-fade-in-up">
+  <div class="games-header">
+    <div class="header-content">
+      <h2>Catálogo de Juegos</h2>
+      <p class="subtitle">Encuentra tu próximo juego y compañeros de equipo ideales.</p>
+    </div>
+    <div class="search-box">
+      <input type="text" placeholder="Buscar juego..." class="search-input" />
+      <button class="search-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="categories-wrapper">
+    {categories.map((cat, index) => (
+      <button class={`category-chip ${index === 0 ? 'active' : ''}`}>{cat}</button>
+    ))}
+  </div>
+
+  <div class="games-grid">
+    {games.length > 0 ? (
+      games.map(game => (
+        <GameCard
+          name={game.name}
+          genre={game.genre}
+          players={game.players_count}
+          color={game.color_theme}
+        />
+      ))
+    ) : (
+      <div class="empty-state">
+        <p>No hay juegos disponibles en este momento.</p>
+      </div>
+    )}
+  </div>
+</div>
+
+<style>
+  .games-view {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+  }
+
+  .games-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .header-content h2 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 350px;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.8rem 1rem 0.8rem 2.5rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-family: inherit;
+    transition: all 0.2s ease;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+
+  .search-btn {
+    position: absolute;
+    left: 0.75rem;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .categories-wrapper {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .category-chip {
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    padding: 0.5rem 1.25rem;
+    border-radius: var(--radius-full);
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+
+  .category-chip:hover {
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--color-text-primary);
+  }
+
+  .category-chip.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .games-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .search-box {
+      max-width: 100%;
+    }
+  }
+  .empty-state {
+    grid-column: 1 / -1;
+    padding: 3rem;
+    text-align: center;
+    background: var(--color-surface-card);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+  }
+</style>

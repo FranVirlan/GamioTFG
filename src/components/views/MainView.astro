@@ -1,0 +1,98 @@
+---
+/**
+ * MainView.astro
+ * Ejemplo de contenedor para renderizado condicional de vistas.
+ * Recibe por props (o estado en React/Vue) la vista a mostrar.
+ */
+import ProfileView from './ProfileView.astro';
+import CommunityView from './CommunityView.astro';
+import NewsView from './NewsView.astro';
+import GamesView from './GamesView.astro';
+import RecommendationsView from './RecommendationsView.astro';
+
+// Puedes tipar tus vistas disponibles
+export type ViewState = 'profile' | 'community' | 'news' | 'games' | 'recommendations';
+
+interface Props {
+  activeView: ViewState | string;
+}
+
+const { activeView = 'games' } = Astro.props;
+---
+
+<div class="view-renderer">
+  {/* Renderizado Condicional nativo en Astro */}
+  {activeView === 'profile' && <ProfileView />}
+  {activeView === 'community' && <CommunityView />}
+  {activeView === 'news' && <NewsView />}
+  {activeView === 'games' && <GamesView />}
+  {activeView === 'recommendations' && <RecommendationsView />}
+  
+  {/* Estado vacío por si llega una vista no mapeada */}
+  {!['profile', 'community', 'news', 'games', 'recommendations'].includes(activeView as string) && (
+    <div class="unmapped-view">
+      <div class="icon">🚧</div>
+      <h2>Vista en desarrollo</h2>
+      <p>La vista seleccionada ('{activeView}') aún no tiene un componente asociado.</p>
+    </div>
+  )}
+</div>
+
+<style>
+  .view-renderer {
+    width: 100%;
+    /* Ocupa el espacio restante en un layout con sidebar */
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .unmapped-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    background: var(--color-surface-card);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .unmapped-view .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .unmapped-view h2 {
+    font-family: var(--font-heading);
+    color: var(--color-text-primary);
+  }
+
+  .unmapped-view p {
+    color: var(--color-text-secondary);
+  }
+
+  /* Todas las vistas tienen esto en común: una animación de entrada fluida */
+  :global(.animate-fade-in-up) {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .view-renderer {
+      padding: 1rem;
+    }
+  }
+</style>

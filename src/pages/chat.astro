@@ -1,0 +1,517 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import { supabase } from '../lib/supabase';
+
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+// 1. Cargar historial del chat Server-Side
+const { data: messagesData } = await supabase
+  .from('messages')
+  .select('*, profiles(name, avatar_url)')
+  .order('created_at', { ascending: true })
+  .limit(50);
+
+const messages = messagesData || [];
+---
+
+<MainLayout title="Chat Global — Gamio 💬" useSidebar={true}>
+  <div class="chat-layout animate-fade-in-up" id="chat-root" data-current-user={user.id}>
+    <!-- Sidebar de Canales -->
+    <aside class="chat-sidebar">
+      <div class="sidebar-header">
+        <h3>Salas de Gamio</h3>
+      </div>
+      <ul class="channel-list">
+        <li class="channel-item active">
+          <span class="hashtag">#</span>
+          Lobby Global
+        </li>
+        <li class="channel-item">
+          <span class="hashtag">#</span>
+          Buscando Equipo (Rankeds)
+        </li>
+        <li class="channel-item">
+          <span class="hashtag">#</span>
+          Soporte
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Zona Principal del Chat -->
+    <main class="chat-main">
+      <header class="chat-header">
+        <div class="header-info">
+          <span class="hashtag">#</span>
+          <h2>Lobby Global</h2>
+        </div>
+        <p class="header-desc">Chat público para encontrar jugadores de toda la comunidad.</p>
+      </header>
+
+      <!-- Mensajes -->
+      <div class="messages-container" id="messages-container">
+        {messages.map((msg) => {
+          const isMine = msg.profile_id === user.id;
+          return (
+            <div class={`message ${isMine ? 'message-mine' : 'message-other'}`}>
+              {!isMine && (
+                <div class="avatar">
+                  {msg.profiles?.avatar_url ? (
+                    <img src={msg.profiles.avatar_url} alt="avatar" />
+                  ) : (
+                    <span>{msg.profiles?.name?.charAt(0).toUpperCase() || '?'}</span>
+                  )}
+                </div>
+              )}
+              <div class="message-content">
+                {!isMine && <div class="message-author">{msg.profiles?.name || 'Usuario'}</div>}
+                <div class="message-bubble">
+                  {msg.content}
+                </div>
+                <div class="message-time">
+                  {new Date(msg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <!-- Barra de escritura -->
+      <div class="chat-input-area">
+        <form id="chat-form" class="chat-form">
+          <button type="button" class="attach-btn" title="Adjuntar archivo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </svg>
+          </button>
+          <input 
+            type="text" 
+            id="chat-input" 
+            class="chat-input" 
+            placeholder="Enviar mensaje al #Lobby Global..." 
+            autocomplete="off" 
+            required 
+          />
+          <button type="submit" class="send-btn" id="send-btn" title="Enviar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </button>
+        </form>
+      </div>
+    </main>
+  </div>
+</MainLayout>
+
+<style is:global>
+  .chat-layout {
+    display: flex;
+    height: calc(100vh - var(--topbar-height) - 40px);
+    margin: 10px 20px 20px;
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  /* ── Sidebar de Canales ── */
+  .chat-sidebar {
+    width: 250px;
+    background: rgba(11, 15, 26, 0.4);
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-border-light);
+  }
+
+  .sidebar-header h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  .channel-list {
+    list-style: none;
+    padding: 1rem 0.5rem;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .channel-item {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .channel-item:hover {
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--color-text-primary);
+  }
+
+  .channel-item.active {
+    background: rgba(124, 58, 237, 0.2);
+    color: white;
+  }
+
+  .hashtag {
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    font-weight: 300;
+  }
+
+  /* ── Main Chat Area ── */
+  .chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .chat-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface-card);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .header-info h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .header-desc {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    margin: 0;
+  }
+
+  /* ── Messages Container ── */
+  .messages-container {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* Scrollbar estético */
+  .messages-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  .messages-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .messages-container::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 10px;
+  }
+
+  .message {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+    max-width: 75%;
+  }
+
+  .message-other {
+    align-self: flex-start;
+  }
+
+  .message-mine {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .message-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .message-author {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-left: 0.25rem;
+  }
+
+  .message-mine .message-author {
+    display: none; /* No mostramos nombre en mensajes propios */
+  }
+
+  .message-bubble {
+    padding: 0.75rem 1rem;
+    border-radius: 18px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: var(--color-text-primary);
+  }
+
+  .message-other .message-bubble {
+    background: rgba(43, 53, 76, 0.6);
+    border-bottom-left-radius: 4px;
+  }
+
+  .message-mine .message-bubble {
+    background: var(--color-secondary);
+    color: white;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 15px rgba(108, 58, 255, 0.2);
+  }
+
+  .message-time {
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+  }
+
+  .message-mine .message-time {
+    text-align: right;
+  }
+
+  /* ── Chat Input ── */
+  .chat-input-area {
+    padding: 1rem 1.5rem;
+    background: var(--color-surface-card);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .chat-form {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(11, 15, 26, 0.6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+  }
+
+  .chat-form:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+  }
+
+  .attach-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+
+  .attach-btn:hover {
+    color: var(--color-text-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .chat-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--color-text-primary);
+    font-size: 0.95rem;
+    font-family: var(--font-sans);
+    padding: 0.25rem;
+  }
+
+  .chat-input:focus {
+    outline: none;
+  }
+
+  .chat-input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .send-btn {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .send-btn:hover {
+    background: var(--color-primary-light);
+    transform: scale(1.05);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .chat-layout {
+      margin: 0;
+      border-radius: 0;
+      height: calc(100vh - var(--topbar-height));
+      border: none;
+      border-top: 1px solid var(--color-border);
+    }
+    
+    .chat-sidebar {
+      display: none; /* En móvil escondemos la sidebar por defecto, requiere tap para abrir */
+    }
+
+    .header-desc {
+      display: none;
+    }
+    
+    .message {
+      max-width: 90%;
+    }
+  }
+</style>
+
+<script>
+  import { supabase } from '../lib/supabase';
+
+  const chatRoot = document.getElementById('chat-root');
+  const messagesContainer = document.getElementById('messages-container');
+  const chatForm = document.getElementById('chat-form') as HTMLFormElement | null;
+  const chatInput = document.getElementById('chat-input') as HTMLInputElement | null;
+
+  if (chatRoot && messagesContainer && chatForm && chatInput) {
+    const currentUserId = chatRoot.dataset.currentUser;
+
+    function scrollToBottom() {
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }
+    scrollToBottom();
+
+    // ── Enviar mensajes a la base de datos ──
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault(); // Evitar la recarga
+      const content = chatInput.value.trim();
+      if (!content || !currentUserId) return;
+
+      chatInput.value = ''; // Limpiamos la caja rápido
+      chatInput.focus();
+
+      try {
+        const res = await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content })
+        });
+        
+        if (!res.ok) throw new Error('Network error');
+      } catch (err) {
+        console.error('Error enviando mensaje:', err);
+        alert('No se pudo enviar el mensaje. Error de servidor.');
+      }
+    });
+
+    // ── MAGIA: Canal WebSockets de Supabase ──
+    const channel = supabase.channel('public:messages');
+
+    channel
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        async (payload) => {
+          const newMessage = payload.new;
+          
+          const { data: authorProfile } = await supabase
+            .from('profiles')
+            .select('name, avatar_url')
+            .eq('id', newMessage.profile_id)
+            .single();
+
+          const isMine = newMessage.profile_id === currentUserId;
+          const time = new Date(newMessage.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+          const authorName = authorProfile?.name || 'Usuario';
+          const authorAvatar = authorProfile?.avatar_url 
+            ? `<img src="${authorProfile.avatar_url}" alt="avatar" />`
+            : `<span>${authorName.charAt(0).toUpperCase()}</span>`;
+
+          const msgOuter = document.createElement('div');
+          msgOuter.className = `message ${isMine ? 'message-mine' : 'message-other'}`;
+
+          let innerHTML = '';
+          if (!isMine) {
+            innerHTML += `<div class="avatar">${authorAvatar}</div>`;
+          }
+
+          innerHTML += `<div class="message-content">`;
+          if (!isMine) {
+            innerHTML += `<div class="message-author">${authorName}</div>`;
+          }
+          innerHTML += `<div class="message-bubble">${newMessage.content}</div>`;
+          innerHTML += `<div class="message-time">${time}</div>`;
+          innerHTML += `</div>`;
+
+          msgOuter.innerHTML = innerHTML;
+
+          messagesContainer.appendChild(msgOuter);
+          scrollToBottom();
+        }
+      )
+      .subscribe();
+      
+      document.addEventListener('astro:before-swap', () => {
+        supabase.removeChannel(channel);
+      });
+  }
+</script>

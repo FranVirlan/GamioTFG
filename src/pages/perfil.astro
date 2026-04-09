@@ -1,0 +1,44 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import ProfileView from '../components/views/ProfileView.astro';
+
+import { supabase } from '../lib/supabase';
+
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+
+const userName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador';
+const profileData = {
+  name: userName,
+  avatarUrl: profile?.avatar_url || null,
+  level: profile?.level || 1,
+  followers: profile?.followers_count || 0,
+  gamesPlayed: profile?.games_played || 0,
+  description: profile?.description || 'Jugador competitivo siempre buscando equipo para rankear.',
+};
+---
+
+<MainLayout title="Perfil — Gamio 🎮" useSidebar={true}>
+  <div class="dashboard-content animate-fade-in-up">
+    <ProfileView user={profileData} />
+  </div>
+</MainLayout>
+
+<style>
+  .dashboard-content {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-content {
+      padding: 1rem;
+    }
+  }
+</style>

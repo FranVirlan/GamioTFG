@@ -1,0 +1,107 @@
+---
+/**
+ * NewsView.astro
+ * Vista de noticias estilo feed.
+ */
+import NewsCard from '../domain/NewsCard.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+const news = data || [];
+---
+
+<div class="news-view animate-fade-in-up">
+  <div class="news-header">
+    <h2>Últimas Noticias</h2>
+    <div class="news-filters">
+      <button class="filter-btn active">Todas</button>
+      <button class="filter-btn">Actualizaciones</button>
+      <button class="filter-btn">Esports</button>
+      <button class="filter-btn">Guías</button>
+    </div>
+  </div>
+
+  <div class="news-feed">
+    {news.length > 0 ? (
+      news.map(item => (
+        <NewsCard
+          title={item.title}
+          summary={item.summary}
+          tags={item.tags}
+          date={new Date(item.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+        />
+      ))
+    ) : (
+      <div class="empty-state">
+        <p>No hay noticias recientes.</p>
+      </div>
+    )}
+  </div>
+</div>
+
+<style>
+  .news-view {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+  }
+
+  .news-header {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .news-header h2 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    margin: 0;
+  }
+
+  .news-filters {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .filter-btn {
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    font-size: 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+
+  .filter-btn:hover {
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--color-text-primary);
+  }
+
+  .filter-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+
+  .news-feed {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    padding: 3rem;
+    text-align: center;
+    background: var(--color-surface-card);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+  }
+</style>

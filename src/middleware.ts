@@ -2,7 +2,7 @@ import { defineMiddleware } from 'astro:middleware';
 import { createServerClient } from './lib/supabase';
 
 /** Rutas que requieren autenticación */
-const protectedRoutes = ['/home', '/chat', '/configuracion'];
+const protectedRoutes = ['/home', '/chat', '/configuracion', '/juegos', '/comunidad', '/noticias', '/perfil'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { cookies, url, redirect } = context;
