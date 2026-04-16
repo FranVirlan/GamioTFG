@@ -5,6 +5,26 @@
  */
 import MainLayout from '../layouts/MainLayout.astro';
 import Footer from '../components/layout/Footer.astro';
+import { supabase } from '../lib/supabase';
+
+// Fetch real-time player count from DB
+const { count: totalPlayers } = await supabase
+  .from('profiles')
+  .select('*', { count: 'exact', head: true });
+
+const playerCount = totalPlayers || 0;
+
+// Array dinámico de juegos para el carrusel
+const carouselGames = [
+  { title: 'League of Legends', img: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.jpg' },
+  { title: 'Valorant', img: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg' },
+  { title: 'EA FC 25', img: 'https://steamcdn-a.akamaihd.net/steam/apps/2669320/library_600x900.jpg' },
+  { title: 'Dead By Daylight', img: 'https://steamcdn-a.akamaihd.net/steam/apps/381210/library_600x900.jpg' },
+  { title: 'Call of Duty: Warzone', img: 'https://steamcdn-a.akamaihd.net/steam/apps/1962663/library_600x900.jpg' },
+  { title: 'Rocket League', img: 'https://steamcdn-a.akamaihd.net/steam/apps/252950/library_600x900.jpg' },
+  { title: 'Fortnite', img: 'https://upload.wikimedia.org/wikipedia/en/a/ae/Fortnite_Save_The_World.jpg' },
+  { title: 'Apex Legends', img: 'https://steamcdn-a.akamaihd.net/steam/apps/1172470/library_600x900.jpg' }
+];
 ---
 
 <MainLayout title="Gamio 🎮 — La plataforma gaming social">
@@ -30,29 +50,28 @@ import Footer from '../components/layout/Footer.astro';
     
     <!-- Game Posters Decoration -->
     <div class="hero-games-deco animate-fade-in-up" style="animation-delay: 0.4s;">
-      <div class="game-poster-sm"><span class="placeholder-text">FC 25</span></div>
-      <div class="game-poster-sm active"><span class="placeholder-text">BRAWL STARS</span></div>
-      <div class="game-poster-sm"><span class="placeholder-text">FORTNITE</span></div>
-      <div class="game-poster-sm"><span class="placeholder-text">WARZONE</span></div>
+      <div class="game-poster-sm" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.jpg');" title="League of Legends"></div>
+      <div class="game-poster-sm" style="background-image: url('https://steamcdn-a.akamaihd.net/steam/apps/381210/library_600x900.jpg');" title="Dead By Daylight"></div>
+      <div class="game-poster-sm" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg');" title="Valorant"></div>
+      <div class="game-poster-sm" style="background-image: url('https://steamcdn-a.akamaihd.net/steam/apps/2669320/library_600x900.jpg');" title="EA FC 25"></div>
+      <div class="game-poster-sm more-games-card">
+        <span class="gradient-text font-heading text-xl font-bold">Y MUCHOS<br>MÁS...</span>
+      </div>
     </div>
   </section>
 
   <!-- Games Section -->
   <section class="games-section">
     <div class="container">
-      <h2 class="section-title">LOS <span class="gradient-text">MEJORES</span> JUEGOS</h2>
-      <div class="games-carousel">
-        <!-- Mock game posters for Torneum style -->
-        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co1x7d.jpg');"></div>
-        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co1x77.jpg');"></div>
-        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co2lbd.jpg');"></div>
-        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co1tmu.jpg');"></div>
-        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg');"></div>
-        <div class="game-poster" style="background-image: url('https://images.igdb.com/igdb/image/upload/t_cover_big/co20m8.jpg');"></div>
+      <h2 class="section-title">NUESTROS <span class="gradient-text">JUEGOS</span></h2>
+      <div class="games-carousel" id="games-carousel-track">
+        {carouselGames.map((game) => (
+          <div class="game-poster" style={`background-image: url('${game.img}');`} title={game.title}></div>
+        ))}
       </div>
       <div class="carousel-controls">
-        <button class="nav-arrow">←</button>
-        <button class="nav-arrow">→</button>
+        <button class="nav-arrow" id="btn-prev-game" title="Anterior">←</button>
+        <button class="nav-arrow" id="btn-next-game" title="Siguiente">→</button>
       </div>
     </div>
   </section>
@@ -65,39 +84,44 @@ import Footer from '../components/layout/Footer.astro';
       </div>
       <div class="how-split">
         <div class="how-image">
-          <!-- Placeholder for gamer setup image -->
-          <div class="setup-img-placeholder"></div>
+          <!-- The image will fade between steps -->
+          <div class="setup-img-placeholder" id="timeline-image" style="background-image: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; transition: background-image 0.5s ease-in-out;"></div>
         </div>
-        <div class="how-timeline">
-          <div class="timeline-step">
-            <div class="timeline-dot active"></div>
-            <div class="timeline-content">
-              <h3>Encuentra a tu equipo ideal</h3>
-              <p>Busca jugadores según tu nivel, idioma y estilo de juego.</p>
+        <div class="how-timeline-wrapper" style="display: flex; flex-direction: column; align-items: flex-start;">
+          <div class="how-timeline" id="how-timeline">
+            <!-- Pill that slides down the track -->
+            <div class="timeline-sliding-pill" id="timeline-sliding-pill"></div>
+            
+            <div class="timeline-step js-timeline-step" data-index="0">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <h3>Encuentra a tu equipo ideal</h3>
+                <p>Busca jugadores según tu nivel, idioma y estilo de juego.</p>
+              </div>
+            </div>
+            <div class="timeline-step js-timeline-step" data-index="1">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <h3>Crea o únete a comunidades</h3>
+                <p>Participa en grupos dedicados exclusivamente a tus juegos favoritos.</p>
+              </div>
+            </div>
+            <div class="timeline-step js-timeline-step" data-index="2">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <h3>Organiza partidas al instante</h3>
+                <p>Usa el chat integrado para coordinar y empezar a jugar sin esperas.</p>
+              </div>
+            </div>
+            <div class="timeline-step js-timeline-step" data-index="3" style="margin-bottom: 0;">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <h3>Sube de nivel y gana reputación</h3>
+                <p>Recibe valoraciones positivas y destaca como el mejor compañero.</p>
+              </div>
             </div>
           </div>
-          <div class="timeline-step">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <h3>Crea o únete a comunidades</h3>
-              <p>Participa en grupos dedicados exclusivamente a tus juegos favoritos.</p>
-            </div>
-          </div>
-          <div class="timeline-step">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <h3>Organiza partidas al instante</h3>
-              <p>Usa el chat integrado para coordinar y empezar a jugar sin esperas.</p>
-            </div>
-          </div>
-          <div class="timeline-step">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <h3>Sube de nivel y gana reputación</h3>
-              <p>Recibe valoraciones positivas y destaca como el mejor compañero.</p>
-            </div>
-          </div>
-          <a href="/signup" class="btn-primary mt-4">ENCUENTRA TU EQUIPO</a>
+          <a href="/signup" class="btn-primary" style="margin-top: 3rem; align-self: flex-start;">ENCUENTRA TU EQUIPO</a>
         </div>
       </div>
     </div>
@@ -106,18 +130,15 @@ import Footer from '../components/layout/Footer.astro';
   <!-- Giant Stats Section -->
   <section class="stats-torneum">
     <div class="container">
+      <h2 class="section-title" style="text-align: center; margin-bottom: 3rem; font-size: 2.5rem;">Nuestras estadísticas en <span class="gradient-text">tiempo real</span></h2>
       <div class="stats-grid-giant">
         <div class="stat-giant">
-          <span class="stat-num-neon">+10K</span>
+          <span class="stat-num-neon" id="realtime-player-count">{playerCount > 0 ? `+${playerCount}` : '0'}</span>
           <span class="stat-label-torneum">Jugadores activos</span>
         </div>
         <div class="stat-giant">
-          <span class="stat-num-neon">+50</span>
+          <span class="stat-num-neon">+{carouselGames.length}</span>
           <span class="stat-label-torneum">Juegos soportados</span>
-        </div>
-        <div class="stat-giant">
-          <span class="stat-num-neon">+5K</span>
-          <span class="stat-label-torneum">Partidas jugadas</span>
         </div>
       </div>
     </div>
@@ -245,44 +266,73 @@ import Footer from '../components/layout/Footer.astro';
     box-shadow: 0 0 40px rgba(108, 58, 255, 0.6);
   }
 
-  /* ── Game Posters Deco Hero ── */
+  /* ── Game Posters Deco Hero (Fanned View) ── */
   .hero-games-deco {
     position: absolute;
-    bottom: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 1rem;
-    z-index: 2;
+    bottom: -15px; 
+    left: 0;
     width: 100%;
+    display: flex;
     justify-content: center;
     align-items: flex-end;
+    z-index: 10;
   }
 
   .game-poster-sm {
-    width: 140px;
+    width: 160px;
     height: 180px;
-    background: var(--color-surface-card);
-    border-radius: var(--radius-lg);
-    border: 2px solid var(--color-border);
-    transform: perspective(500px) rotateX(10deg);
-    transform-origin: bottom center;
-    opacity: 0.7;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 1rem;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    border-radius: 20px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--color-surface-card);
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.6);
+    margin: 0 -15px; /* Perfect overlap */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
   }
 
-  .game-poster-sm.active {
-    width: 160px;
-    height: 220px;
-    border-color: var(--color-primary);
-    transform: none;
-    opacity: 1;
+  /* Rotations and positions to match the exact photo fan */
+  .game-poster-sm:nth-child(1) {
+    transform: rotate(-14deg) translateY(40px) translateX(10px);
+    z-index: 1;
+  }
+  .game-poster-sm:nth-child(2) {
+    transform: rotate(-7deg) translateY(10px) translateX(5px);
+    z-index: 2;
+  }
+  .game-poster-sm:nth-child(3) {
+    transform: rotate(0deg) translateY(-10px) scale(1.15);
     z-index: 3;
-    box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.9), inset 0 0 0 2px rgba(255,255,255,0.15);
+  }
+  .game-poster-sm:nth-child(4) {
+    transform: rotate(7deg) translateY(10px) translateX(-5px);
+    z-index: 2;
+  }
+  .game-poster-sm:nth-child(5) {
+    transform: rotate(14deg) translateY(40px) translateX(-10px);
+    z-index: 1;
+  }
+
+  .game-poster-sm:hover {
+    z-index: 10 !important;
+    transform: translateY(-40px) scale(1.25) rotate(0deg) !important;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 0 2px var(--color-primary);
+  }
+
+  .more-games-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(15, 20, 31, 0.9), rgba(10, 14, 23, 0.95));
+    border: 2px dashed rgba(255, 60, 172, 0.5);
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .more-games-card span {
+    line-height: 1.2;
+    text-shadow: 0 0 15px rgba(255, 60, 172, 0.4);
   }
 
   .placeholder-text {
@@ -534,21 +584,38 @@ import Footer from '../components/layout/Footer.astro';
   .how-timeline {
     position: relative;
     padding-left: 2rem;
+    padding-bottom: 1rem;
   }
 
   .how-timeline::before {
     content: '';
     position: absolute;
-    left: 4px;
-    top: 0;
-    bottom: 0;
+    left: 0;
+    top: 5px;  /* Starts slightly lower to perfectly match first dot */
+    bottom: 1rem; /* Ends well before the button */
     width: 2px;
     background: var(--color-border-light);
+  }
+
+  /* Single pill that slides up and down */
+  .timeline-sliding-pill {
+    position: absolute;
+    left: 0;
+    top: -0.2rem;
+    width: 8px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--color-accent);
+    box-shadow: 0 0 16px rgba(255, 60, 172, 0.6);
+    transform: translateX(-50%);
+    z-index: 3;
+    transition: top 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .timeline-step {
     position: relative;
     margin-bottom: 2.5rem;
+    cursor: pointer;
   }
 
   .timeline-dot {
@@ -560,19 +627,17 @@ import Footer from '../components/layout/Footer.astro';
     border-radius: 50%;
     background: var(--color-border-light);
     transform: translateX(-50%);
+    z-index: 2;
   }
 
-  .timeline-dot.active {
-    background: var(--color-accent);
-    box-shadow: 0 0 10px var(--color-accent);
+
+  .timeline-content {
+    transition: opacity 0.3s ease;
+    opacity: 0.5;
   }
-  .timeline-step:first-child::before {
-    content: '';
-    position: absolute;
-    left: -2rem; top: 0; height: 100%; width: 2px;
-    background: var(--color-accent);
-    transform: translateX(-50%);
-    z-index: 1;
+  
+  .timeline-step.active .timeline-content {
+    opacity: 1;
   }
 
   .timeline-content h3 {
@@ -595,10 +660,10 @@ import Footer from '../components/layout/Footer.astro';
   }
 
   .stats-grid-giant {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    justify-content: center;
     text-align: center;
-    gap: 2rem;
+    gap: 8rem;
   }
 
   .stat-giant {
@@ -637,3 +702,109 @@ import Footer from '../components/layout/Footer.astro';
     }
   }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Images array
+    const images = [
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop", // Matchmaking
+      "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=2070&auto=format&fit=crop",   // Comunidades
+      "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop", // Partidas
+      "https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?q=80&w=2070&auto=format&fit=crop"  // Nivel
+    ];
+
+    const timelineSteps = document.querySelectorAll('.js-timeline-step');
+    const timelineSlidingPill = document.getElementById('timeline-sliding-pill');
+    const timelineImage = document.getElementById('timeline-image');
+    let currentIndex = 0;
+    const maxIndex = timelineSteps.length - 1;
+
+    function activateStep(index) {
+      if (!timelineSlidingPill || !timelineImage || timelineSteps.length === 0) return;
+      
+      // Update opacities
+      timelineSteps.forEach((step, i) => {
+        if (i === index) {
+          step.classList.add('active');
+          
+          // Move the pill
+          // Center the pill (44px) on the dot (top 4px relative to step).
+          // step.offsetTop + 4px (dot top) - 22px (half pill) + 5px (half dot) = offsetTop - 13px
+          timelineSlidingPill.style.top = `${step.offsetTop - 13}px`;
+        } else {
+          step.classList.remove('active');
+        }
+      });
+      
+      // Update image
+      timelineImage.style.backgroundImage = `url('${images[index]}')`;
+    }
+
+    // Auto-play the timeline
+    let interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % timelineSteps.length;
+      activateStep(currentIndex);
+    }, 4000); // changes every 4s
+
+    // Initially activate first step
+    activateStep(0);
+
+    // Make steps clickable to jump manually
+    timelineSteps.forEach((step) => {
+      step.addEventListener('click', () => {
+        clearInterval(interval); // Stop auto-play on manual click
+        const index = parseInt(step.getAttribute('data-index') || '0', 10);
+        currentIndex = index;
+        activateStep(index);
+        
+        // Resume autoplay
+        interval = setInterval(() => {
+          currentIndex = (currentIndex + 1) % timelineSteps.length;
+          activateStep(currentIndex);
+        }, 4000);
+      });
+    });
+  });
+
+  // ── Carousel Controls Logic ──
+  document.addEventListener('DOMContentLoaded', () => {
+    const track = document.getElementById('games-carousel-track');
+    const btnPrev = document.getElementById('btn-prev-game');
+    const btnNext = document.getElementById('btn-next-game');
+
+    if (track && btnPrev && btnNext) {
+      const scrollAmount = 260; // Approx card width + gap
+      btnPrev.addEventListener('click', () => {
+        track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      });
+      btnNext.addEventListener('click', () => {
+        track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      });
+    }
+  });
+</script>
+
+<script>
+  // ── WebSocket Realtime Count ──
+  import { supabase } from '../lib/supabase';
+  
+  const playerCountEl = document.getElementById('realtime-player-count');
+  
+  if (playerCountEl) {
+    // Current count extracted from DOM
+    let currentCount = parseInt(playerCountEl.textContent.replace('+', '')) || 0;
+    
+    // Subscribe to INSERT and DELETE events on profiles
+    const subscription = supabase.channel('public:profiles')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, payload => {
+        currentCount++;
+        playerCountEl.textContent = `+${currentCount}`;
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'profiles' }, payload => {
+        currentCount = Math.max(0, currentCount - 1);
+        playerCountEl.textContent = `+${currentCount}`;
+      })
+      .subscribe();
+  }
+</script>
+
