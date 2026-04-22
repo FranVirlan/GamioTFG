@@ -1,6 +1,7 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
 import ProfileView from '../components/views/ProfileView.astro';
+import ChatView from '../components/views/ChatView.astro';
 
 import { supabase } from '../lib/supabase';
 
@@ -22,9 +23,15 @@ const profileData = {
 };
 ---
 
-<MainLayout title="Perfil — Gamio 🎮" useSidebar={true}>
+<MainLayout title="Perfil — Gamio 🎮">
   <div class="dashboard-content animate-fade-in-up">
     <ProfileView user={profileData} />
+    
+    <!-- Chat Integrado en el Perfil -->
+    <div class="profile-chat-section">
+      <h3 class="section-title">Comunicaciones Globales</h3>
+      <ChatView />
+    </div>
   </div>
 </MainLayout>
 
@@ -34,6 +41,17 @@ const profileData = {
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
+  }
+
+  .profile-chat-section {
+    margin-top: 3rem;
+  }
+
+  .profile-chat-section .section-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--color-text-primary);
   }
 
   @media (max-width: 768px) {

@@ -29,5 +29,5 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     maxAge: 60 * 60 * 24 * 7,
   });
 
-  return redirect('/home');
+  return redirect('/');
 };

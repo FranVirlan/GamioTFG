@@ -20,17 +20,17 @@ const currentPath = Astro.url.pathname;
 const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || '';
 
 const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/quienes-somos', label: 'Quiénes Somos' },
-  { href: '/contacto', label: 'Contacto' },
-  { href: '/soporte', label: 'Soporte' },
+  { href: '/', label: 'Inicio' },
+  { href: '/juegos', label: 'Juegos' },
+  { href: '/comunidad', label: 'Comunidad' },
+  { href: '/noticias', label: 'Noticias' },
 ];
 ---
 
 <nav class="navbar glass-strong" id="mainNav">
   <div class="nav-container container">
     <!-- Logo -->
-    <a href={user ? '/home' : '/'} class="nav-logo">
+    <a href="/" class="nav-logo">
       <span class="logo-icon">🎮</span>
       <span class="logo-text">Gamio</span>
     </a>
@@ -48,7 +48,7 @@ const navLinks = [
 
       {user ? (
         <div class="nav-user">
-          <a href="/home" class="nav-user-link">
+          <a href="/perfil" class="nav-user-link">
             <span class="user-avatar">{userName.charAt(0).toUpperCase()}</span>
             <span class="user-name-nav">{userName}</span>
           </a>

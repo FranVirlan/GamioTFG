@@ -42,7 +42,7 @@ if (Astro.request.method === 'POST') {
           sameSite: 'lax',
           maxAge: 60 * 60 * 24 * 7,
         });
-        return Astro.redirect('/home');
+        return Astro.redirect('/');
       }
     }
   } catch (e) {

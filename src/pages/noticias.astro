@@ -3,12 +3,9 @@ import MainLayout from '../layouts/MainLayout.astro';
 import NewsView from '../components/views/NewsView.astro';
 
 const user = Astro.locals.user;
-if (!user) {
-  return Astro.redirect('/login');
-}
 ---
 
-<MainLayout title="Noticias — Gamio 🎮" useSidebar={true}>
+<MainLayout title="Noticias — Gamio 🎮">
   <div class="dashboard-content animate-fade-in-up">
     <NewsView />
   </div>

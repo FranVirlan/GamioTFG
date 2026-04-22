@@ -1,29 +1,23 @@
 ---
 /**
  * MainLayout.astro — Layout principal de Gamio
- * Dual mode: sidebar+topbar for authenticated users, navbar for public pages
+ * Unified mode: Navbar everywhere
  */
 
 import Navbar from '../components/layout/Navbar.astro';
-import Sidebar from '../components/layout/Sidebar.astro';
-import Topbar from '../components/layout/Topbar.astro';
 import '../styles/global.css';
 
 interface Props {
   title?: string;
   description?: string;
-  useSidebar?: boolean;
 }
 
 const {
   title = 'Gamio 🎮 — Tu plataforma gaming social',
   description = 'Gamio es la plataforma gaming social donde encuentras jugadores, compites y conectas con tu comunidad gamer.',
-  useSidebar = false,
 } = Astro.props;
 
 const user = Astro.locals.user;
-const showSidebar = useSidebar && user;
-const currentPath = Astro.url.pathname;
 ---
 
 <!doctype html>
@@ -45,41 +39,40 @@ const currentPath = Astro.url.pathname;
 
     <title>{title}</title>
   </head>
-  <body class={showSidebar ? 'has-sidebar' : 'gradient-bg'}>
-    {showSidebar ? (
-      <>
-        <Sidebar user={user} currentPath={currentPath} />
-        <Topbar user={user} />
-        <main class="main-with-sidebar">
-          <slot />
-        </main>
-      </>
-    ) : (
-      <>
-        <Navbar user={user} />
-        <main>
-          <slot />
-        </main>
-      </>
-    )}
+  <body class="gradient-bg" data-auth={user ? 'true' : 'false'}>
+    <Navbar user={user} />
+    <main class="main-content">
+      <slot />
+    </main>
   </body>
 </html>
 
 <style>
-  .has-sidebar {
-    background: var(--color-bg-primary);
-  }
-
-  .main-with-sidebar {
-    margin-left: var(--sidebar-width);
-    padding-top: var(--topbar-height);
+  .main-content {
+    /* Agregamos padding-top para compensar el Navbar fijo */
+    padding-top: 80px;
     min-height: 100vh;
   }
-
-  @media (max-width: 768px) {
-    .main-with-sidebar {
-      margin-left: 0;
-      padding-top: calc(var(--topbar-height) + 0.5rem);
-    }
-  }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Intercepta todos los clics buscando la clase .requires-auth
+    document.addEventListener('click', (e) => {
+      const target = e.target as Element;
+      const authBtn = target.closest('.requires-auth');
+      
+      if (authBtn) {
+        const isAuthenticated = document.body.dataset.auth === 'true';
+        
+        if (!isAuthenticated) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const currentPath = window.location.pathname;
+          window.location.href = `/login?next=${encodeURIComponent(currentPath)}`;
+        }
+      }
+    });
+  });
+</script>

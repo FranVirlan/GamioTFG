@@ -2,7 +2,7 @@ import { defineMiddleware } from 'astro:middleware';
 import { createServerClient } from './lib/supabase';
 
 /** Rutas que requieren autenticación */
-const protectedRoutes = ['/home', '/chat', '/configuracion', '/juegos', '/comunidad', '/noticias', '/perfil'];
+const protectedRoutes = ['/configuracion', '/perfil'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { cookies, url, redirect } = context;
@@ -59,9 +59,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return redirect('/login');
   }
 
-  // Si el usuario ya está autenticado e intenta ir a login/signup → redirigir a /home
+  // Si el usuario ya está autenticado e intenta ir a login/signup → redirigir a /
   if (context.locals.user && (url.pathname === '/login' || url.pathname === '/signup')) {
-    return redirect('/home');
+    return redirect('/');
   }
 
   return next();
