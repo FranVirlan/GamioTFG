@@ -1,0 +1,170 @@
+---
+/**
+ * MatchmakingView.astro
+ * Vista para mostrar jugadores que juegan a un juego específico.
+ */
+import UserCard from '../domain/UserCard.astro';
+import { supabase } from '../../lib/supabase';
+
+interface Props {
+  game: string;
+}
+
+const { game } = Astro.props;
+
+// Mock data base para jugadores
+const mockPlayersBase = [
+  { name: 'AlexGamer', level: 42, rank: 'diamond', games: [game, 'CS:GO', 'Apex Legends'], region: 'EUW', online: true },
+  { name: 'SniperPro', level: 35, rank: 'platinum', games: [game, 'Valorant'], region: 'EUW', online: true },
+  { name: 'Marta10', level: 50, rank: 'gold', games: [game, 'League of Legends', 'Teamfight Tactics'], region: 'EUW', online: false },
+  { name: 'NoobMaster', level: 12, rank: 'bronze', games: [game, 'Minecraft'], region: 'NA', online: true },
+  { name: 'ProPlayer99', level: 88, rank: 'diamond', games: [game, 'Overwatch 2'], region: 'EUW', online: true },
+  { name: 'LauraGG', level: 27, rank: 'silver', games: [game, 'Rocket League', 'Fortnite'], region: 'LATAM', online: false },
+  { name: 'Carlos_ESP', level: 45, rank: 'platinum', games: [game, 'EA FC 25'], region: 'EUW', online: true },
+  { name: 'GamerGirl_x', level: 61, rank: 'gold', games: [game, 'Dead By Daylight', 'Valorant'], region: 'NA', online: true },
+];
+
+// Opcional: Obtener perfiles reales de la DB y combinarlos (simulando que juegan a este juego)
+const { data: dbProfiles } = await supabase.from('profiles').select('*').limit(4);
+
+const allPlayers = [...mockPlayersBase];
+
+if (dbProfiles) {
+  dbProfiles.forEach(profile => {
+    // Solo añadir si no existe ya un mock con nombre parecido para no duplicar
+    if (!allPlayers.find(p => p.name.toLowerCase() === (profile.name || '').toLowerCase())) {
+      allPlayers.push({
+        name: profile.name || 'Jugador',
+        level: profile.level || Math.floor(Math.random() * 50) + 1,
+        rank: ['bronze', 'silver', 'gold', 'platinum', 'diamond'][Math.floor(Math.random() * 5)] as any,
+        games: [game, 'Otro Juego'], // Simulamos que juegan al juego solicitado
+        region: 'EUW',
+        online: Math.random() > 0.3 // 70% online
+      });
+    }
+  });
+}
+
+// Mezclar un poco los jugadores para que no salgan siempre igual
+const shuffledPlayers = allPlayers.sort(() => 0.5 - Math.random());
+---
+
+<div class="matchmaking-view animate-fade-in-up">
+  <div class="matchmaking-header">
+    <div class="header-content">
+      <h2>Jugadores de <span class="gradient-text">{game}</span></h2>
+      <p class="subtitle">Encuentra a tus compañeros ideales y forma tu escuadrón.</p>
+    </div>
+    
+    <div class="filters">
+      <select class="filter-select">
+        <option value="">Rango: Todos</option>
+        <option value="diamond">Diamante</option>
+        <option value="platinum">Platino</option>
+        <option value="gold">Oro</option>
+        <option value="silver">Plata</option>
+        <option value="bronze">Bronce</option>
+      </select>
+      <select class="filter-select">
+        <option value="">Región: Todas</option>
+        <option value="EUW">EUW</option>
+        <option value="NA">NA</option>
+        <option value="LATAM">LATAM</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="players-grid">
+    {shuffledPlayers.map(player => (
+      <UserCard
+        name={player.name}
+        level={player.level}
+        rank={player.rank}
+        games={player.games}
+        region={player.region}
+        online={player.online}
+      />
+    ))}
+  </div>
+</div>
+
+<style>
+  .matchmaking-view {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+  }
+
+  .matchmaking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border-light);
+  }
+
+  .header-content h2 {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .gradient-text {
+    background: linear-gradient(to right, var(--color-primary), var(--color-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  .filters {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .filter-select {
+    padding: 0.6rem 1rem;
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+  }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .matchmaking-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .filters {
+      width: 100%;
+    }
+
+    .filter-select {
+      flex: 1;
+    }
+  }
+</style>
+
+

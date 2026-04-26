@@ -12,20 +12,23 @@ if (!user) {
 
 const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
-const userName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador';
+const targetUser = Astro.url.searchParams.get('usuario');
+
+const userName = targetUser || profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador';
 const profileData = {
   name: userName,
-  avatarUrl: profile?.avatar_url || null,
-  level: profile?.level || 1,
-  followers: profile?.followers_count || 0,
-  gamesPlayed: profile?.games_played || 0,
-  description: profile?.description || 'Jugador competitivo siempre buscando equipo para rankear.',
+  avatarUrl: targetUser ? null : (profile?.avatar_url || null),
+  level: targetUser ? Math.floor(Math.random() * 50) + 1 : (profile?.level || 1),
+  followers: targetUser ? Math.floor(Math.random() * 500) : (profile?.followers_count || 0),
+  gamesPlayed: targetUser ? Math.floor(Math.random() * 100) : (profile?.games_played || 0),
+  description: targetUser ? `Perfil de ${targetUser}. Jugador competitivo siempre buscando equipo para rankear.` : (profile?.description || 'Jugador competitivo siempre buscando equipo para rankear.'),
 };
 ---
 
+
 <MainLayout title="Perfil — Gamio 🎮">
   <div class="dashboard-content animate-fade-in-up">
-    <ProfileView user={profileData} />
+    <ProfileView user={profileData} isOwnProfile={!targetUser} />
     
     <!-- Chat Integrado en el Perfil -->
     <div class="profile-chat-section">

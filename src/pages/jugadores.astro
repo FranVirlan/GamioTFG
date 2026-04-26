@@ -1,0 +1,78 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import MatchmakingView from '../components/views/MatchmakingView.astro';
+
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+// Obtenemos el nombre del juego desde la URL (query param)
+const game = Astro.url.searchParams.get('game');
+const pageTitle = game ? `Jugadores de ${game} — Gamio 🎮` : 'Matchmaking — Gamio 🎮';
+---
+
+<MainLayout title={pageTitle}>
+  <div class="dashboard-content animate-fade-in-up">
+    {game ? (
+      <MatchmakingView game={game} />
+    ) : (
+      <div class="empty-state">
+        <div class="empty-state-content">
+          <h2>No has seleccionado ningún juego</h2>
+          <p>Por favor, vuelve al catálogo y elige un juego para encontrar compañeros de equipo.</p>
+          <a href="/juegos" class="btn-primary mt-4">Ir al Catálogo</a>
+        </div>
+      </div>
+    )}
+  </div>
+</MainLayout>
+
+<style>
+  .dashboard-content {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+  }
+
+  .empty-state-content {
+    text-align: center;
+    background: var(--color-surface-card);
+    padding: 3rem;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    max-width: 500px;
+  }
+
+  .empty-state-content h2 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: var(--color-text-primary);
+  }
+
+  .empty-state-content p {
+    color: var(--color-text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  .mt-4 {
+    margin-top: 1.5rem;
+    display: inline-block;
+    text-decoration: none;
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-content {
+      padding: 1rem;
+    }
+  }
+</style>

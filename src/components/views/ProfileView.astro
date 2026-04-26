@@ -4,6 +4,7 @@
  * Vista del perfil de usuario con avatar, información y estadísticas.
  */
 interface Props {
+  isOwnProfile?: boolean;
   user?: {
     name: string;
     avatarUrl?: string;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 const { 
+  isOwnProfile = true,
   user = {
     name: 'Usuario Gamio',
     level: 42,
@@ -42,8 +44,17 @@ const {
         <p class="profile-description">{user.description}</p>
       </div>
       <div class="profile-actions">
-        <button class="btn-primary">Editar Perfil</button>
-        <button class="btn-secondary">Compartir</button>
+        {isOwnProfile ? (
+          <>
+            <button class="btn-primary">Editar Perfil</button>
+            <button class="btn-secondary">Ajustes</button>
+          </>
+        ) : (
+          <>
+            <button class="btn-primary">Añadir Amigo</button>
+            <button class="btn-secondary">Mensaje</button>
+          </>
+        )}
       </div>
     </div>
   </div>
