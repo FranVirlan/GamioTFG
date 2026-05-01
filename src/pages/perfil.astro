@@ -1,7 +1,6 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
 import ProfileView from '../components/views/ProfileView.astro';
-import ChatView from '../components/views/ChatView.astro';
 
 import { supabase } from '../lib/supabase';
 
@@ -10,31 +9,36 @@ if (!user) {
   return Astro.redirect('/login');
 }
 
-const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+const { data: myProfile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
-const targetUser = Astro.url.searchParams.get('usuario');
+const targetUserName = Astro.url.searchParams.get('usuario');
+let targetProfile = null;
 
-const userName = targetUser || profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador';
+if (targetUserName) {
+  const { data } = await supabase.from('profiles').select('*').eq('name', targetUserName).single();
+  targetProfile = data;
+}
+
+// Si hay un targetUserName pero no se encuentra en DB, es un mock user.
+const isMockUser = targetUserName && !targetProfile;
+const isOwnProfile = !targetUserName || (targetProfile && targetProfile.id === user.id);
+const displayProfile = targetProfile || (isMockUser ? null : myProfile);
+
 const profileData = {
-  name: userName,
-  avatarUrl: targetUser ? null : (profile?.avatar_url || null),
-  level: targetUser ? Math.floor(Math.random() * 50) + 1 : (profile?.level || 1),
-  followers: targetUser ? Math.floor(Math.random() * 500) : (profile?.followers_count || 0),
-  gamesPlayed: targetUser ? Math.floor(Math.random() * 100) : (profile?.games_played || 0),
-  description: targetUser ? `Perfil de ${targetUser}. Jugador competitivo siempre buscando equipo para rankear.` : (profile?.description || 'Jugador competitivo siempre buscando equipo para rankear.'),
+  id: displayProfile?.id,
+  name: displayProfile?.name || targetUserName || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador',
+  avatarUrl: displayProfile?.avatar_url || null,
+  level: displayProfile?.level || (isMockUser ? Math.floor(Math.random() * 50) + 1 : 1),
+  followers: displayProfile?.followers_count || (isMockUser ? Math.floor(Math.random() * 500) : 0),
+  gamesPlayed: displayProfile?.games_played || (isMockUser ? Math.floor(Math.random() * 100) : 0),
+  description: displayProfile?.description || (isMockUser ? `Perfil de ${targetUserName}. Jugador competitivo siempre buscando equipo para rankear.` : 'Jugador competitivo siempre buscando equipo para rankear.'),
 };
 ---
 
 
-<MainLayout title="Perfil — Gamio 🎮">
+<MainLayout title={`Perfil de ${profileData.name} — Gamio 🎮`}>
   <div class="dashboard-content animate-fade-in-up">
-    <ProfileView user={profileData} isOwnProfile={!targetUser} />
-    
-    <!-- Chat Integrado en el Perfil -->
-    <div class="profile-chat-section">
-      <h3 class="section-title">Comunicaciones Globales</h3>
-      <ChatView />
-    </div>
+    <ProfileView user={profileData} isOwnProfile={isOwnProfile} />
   </div>
 </MainLayout>
 
@@ -44,17 +48,6 @@ const profileData = {
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
-  }
-
-  .profile-chat-section {
-    margin-top: 3rem;
-  }
-
-  .profile-chat-section .section-title {
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--color-text-primary);
   }
 
   @media (max-width: 768px) {

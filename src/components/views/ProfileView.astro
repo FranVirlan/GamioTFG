@@ -6,6 +6,7 @@
 interface Props {
   isOwnProfile?: boolean;
   user?: {
+    id?: string;
     name: string;
     avatarUrl?: string;
     level: number;
@@ -52,7 +53,7 @@ const {
         ) : (
           <>
             <button class="btn-primary">Añadir Amigo</button>
-            <button class="btn-secondary">Mensaje</button>
+            <button class="btn-secondary message-btn" data-target-id={user.id}>Mensaje</button>
           </>
         )}
       </div>
@@ -224,3 +225,42 @@ const {
     }
   }
 </style>
+
+<script>
+  const msgBtns = document.querySelectorAll('.message-btn');
+  msgBtns.forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const targetId = (e.currentTarget as HTMLElement).dataset.targetId;
+      if (!targetId) {
+        alert('Este es un jugador de prueba (mock). No puedes enviarle mensajes privados porque no existe en la base de datos.');
+        return;
+      }
+
+      const originalText = btn.textContent;
+      btn.textContent = 'Iniciando...';
+      btn.setAttribute('disabled', 'true');
+
+      try {
+        const res = await fetch('/api/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_profile_id: targetId })
+        });
+        const data = await res.json();
+        
+        if (res.ok && data.id) {
+          window.location.href = `/mensajes/${data.id}`;
+        } else {
+          alert('Error: ' + (data.error || 'No se pudo iniciar el chat'));
+          btn.textContent = originalText;
+          btn.removeAttribute('disabled');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error conectando con el servidor.');
+        btn.textContent = originalText;
+        btn.removeAttribute('disabled');
+      }
+    });
+  });
+</script>

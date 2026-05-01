@@ -3,6 +3,7 @@
  * Navbar.astro — Barra de navegación para páginas públicas
  * Gaming aesthetic: violeta/azul neón, glassmorphism
  */
+import SearchBar from '../ui/SearchBar.astro';
 
 interface Props {
   user?: {
@@ -46,8 +47,18 @@ const navLinks = [
         </a>
       ))}
 
+      <div class="desktop-search">
+        <SearchBar />
+      </div>
+
       {user ? (
         <div class="nav-user">
+          <a href="/mensajes" class="nav-icon-link" aria-label="Mensajes" title="Tus Mensajes">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </a>
+          
           <a href="/perfil" class="nav-user-link">
             <span class="user-avatar">{userName.charAt(0).toUpperCase()}</span>
             <span class="user-name-nav">{userName}</span>
@@ -83,6 +94,10 @@ const navLinks = [
 <!-- Mobile Menu Overlay -->
 <div class="mobile-menu" id="mobileMenu">
   <div class="mobile-menu-content">
+    <div class="mobile-search">
+      <SearchBar />
+    </div>
+
     {navLinks.map((link) => (
       <a
         href={link.href}
@@ -94,6 +109,12 @@ const navLinks = [
 
     {user ? (
       <>
+        <a href="/mensajes" class="mobile-link" style="color: var(--color-primary-light); display: flex; align-items: center; gap: 0.5rem; margin-top: -0.5rem;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Mis Mensajes
+        </a>
         <div class="mobile-user-info">
           <span class="user-avatar-lg">{userName.charAt(0).toUpperCase()}</span>
           <span>{userName}</span>
@@ -223,6 +244,22 @@ const navLinks = [
     align-items: center;
     gap: 0.75rem;
     margin-left: 1rem;
+  }
+
+  .nav-icon-link {
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+
+  .nav-icon-link:hover {
+    color: var(--color-primary-light);
+    background: rgba(124, 58, 237, 0.1);
+    transform: scale(1.1);
   }
 
   .nav-user-link {
@@ -397,10 +434,29 @@ const navLinks = [
     font-size: 1rem;
   }
 
+  .desktop-search {
+    display: block;
+    margin-left: 1rem;
+  }
+
+  .mobile-search {
+    display: none;
+    width: 100%;
+    margin-bottom: 1.5rem;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .nav-links {
       display: none;
+    }
+
+    .desktop-search {
+      display: none;
+    }
+
+    .mobile-search {
+      display: block;
     }
 
     .nav-hamburger {

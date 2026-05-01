@@ -1,0 +1,111 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import ConversationsSidebar from '../../components/views/ConversationsSidebar.astro';
+import PrivateChatView from '../../components/views/PrivateChatView.astro';
+import { createServerClient } from '../../lib/supabase';
+
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+const { id } = Astro.params;
+
+const accessToken = Astro.cookies.get('sb-access-token')?.value;
+const supabase = createServerClient(accessToken);
+
+// Obtener todas las conversaciones para la sidebar
+const { data: convData } = await supabase
+  .from('conversation_participants')
+  .select(`
+    conversation_id,
+    conversations (
+      id,
+      updated_at,
+      conversation_participants (
+        profiles (
+          id,
+          name,
+          avatar_url
+        )
+      )
+    )
+  `)
+  .eq('profile_id', user.id)
+  .order('created_at', { ascending: false });
+
+const formattedConversations = (convData || []).map((cp: any) => {
+  const conv = cp.conversations;
+  const otherParticipant = conv.conversation_participants.find(
+    (p: any) => p.profiles.id !== user.id
+  )?.profiles;
+
+  return {
+    id: conv.id,
+    updated_at: conv.updated_at,
+    other_user: otherParticipant
+  };
+}).filter((c: any) => c.other_user);
+
+// Encontrar la conversación actual
+const currentConv = formattedConversations.find(c => c.id === id);
+
+if (!currentConv) {
+  return Astro.redirect('/mensajes');
+}
+---
+
+<MainLayout title={`Chat con ${currentConv.other_user.name} — Gamio 🎮`}>
+  <div class="messages-page animate-fade-in-up">
+    <div class="layout-grid">
+      <div class="sidebar-wrapper">
+        <ConversationsSidebar conversations={formattedConversations} activeId={id} />
+      </div>
+      
+      <div class="chat-main">
+        <PrivateChatView conversationId={id} otherUser={currentConv.other_user} />
+      </div>
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .messages-page {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    height: calc(100vh - var(--topbar-height) - 4rem);
+  }
+
+  .layout-grid {
+    display: flex;
+    gap: 2rem;
+    height: 100%;
+  }
+
+  .sidebar-wrapper {
+    height: 100%;
+  }
+
+  .chat-main {
+    flex: 1;
+    height: 100%;
+    min-width: 0;
+  }
+
+  @media (max-width: 768px) {
+    .messages-page {
+      padding: 1rem;
+      height: calc(100vh - var(--topbar-height) - 2rem);
+    }
+    
+    .layout-grid {
+      flex-direction: column;
+    }
+
+    .sidebar-wrapper {
+      display: none; /* En móvil escondemos la lista si ya estamos en un chat */
+    }
+  }
+</style>

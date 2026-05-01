@@ -1,22 +1,63 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
 import CommunityView from '../components/views/CommunityView.astro';
+import ChatView from '../components/views/ChatView.astro';
 
 const user = Astro.locals.user;
 ---
 
 <MainLayout title="Comunidad — Gamio 🎮">
   <div class="dashboard-content animate-fade-in-up">
-    <CommunityView />
+    <div class="community-layout">
+      <div class="main-column">
+        <CommunityView />
+      </div>
+      <aside class="sidebar-column">
+        <div class="chat-section">
+          <h3 class="section-title">Chat Global</h3>
+          <ChatView />
+        </div>
+      </aside>
+    </div>
   </div>
 </MainLayout>
 
 <style>
   .dashboard-content {
     padding: 2rem;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     width: 100%;
+  }
+
+  .community-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 550px; /* Columna de chat más ancha */
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .sidebar-column {
+    position: sticky;
+    top: 100px;
+  }
+
+  .chat-section .section-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-primary);
+  }
+
+  @media (max-width: 1024px) {
+    .community-layout {
+      grid-template-columns: 1fr;
+    }
+    
+    .sidebar-column {
+      position: static;
+      margin-top: 2rem;
+    }
   }
 
   @media (max-width: 768px) {
