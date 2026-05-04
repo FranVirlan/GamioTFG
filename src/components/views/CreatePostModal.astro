@@ -1,0 +1,404 @@
+---
+import { supabase } from '../../lib/supabase';
+
+const { data: dbGames } = await supabase.from('games').select('name');
+
+const staticGames = [
+  'League of Legends', 'Valorant', 'EA FC 25', 'Dead By Daylight', 
+  'Call of Duty: Warzone', 'Rocket League', 'Fortnite', 'Apex Legends'
+];
+
+let allGames = [...staticGames];
+if (dbGames) {
+  dbGames.forEach(g => {
+    if (!allGames.includes(g.name)) allGames.push(g.name);
+  });
+}
+allGames.sort((a, b) => a.localeCompare(b));
+---
+
+<div id="create-post-modal" class="modal-overlay hidden">
+  <div class="modal-content animate-fade-in-up">
+    <div class="modal-header">
+      <h3>Crear Solicitud de Grupo (LFG)</h3>
+      <button id="close-modal-btn" class="close-btn">&times;</button>
+    </div>
+
+    <form id="create-post-form" class="create-form">
+      <div class="form-group">
+        <label for="post-game">Juego</label>
+        <select id="post-game" name="game" required>
+          <option value="" disabled selected>Selecciona un juego...</option>
+          {allGames.map(game => (
+            <option value={game}>{game}</option>
+          ))}
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="post-mode">Modalidad</label>
+          <select id="post-mode" name="mode" required>
+            <option value="Casual">Casual / Chill</option>
+            <option value="Ranked">Ranked / Competitivo</option>
+            <option value="Torneo">Torneo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="post-spots">Plazas Libres</label>
+          <select id="post-spots" name="spots" required>
+            <option value="1">1 Jugador</option>
+            <option value="2">2 Jugadores</option>
+            <option value="3">3 Jugadores</option>
+            <option value="4">4+ Jugadores</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Etiquetas (Opcional)</label>
+        <div class="tags-selector" id="tags-selector">
+          <label class="tag-label"><input type="checkbox" name="tags" value="Micrófono"> Micrófono</label>
+          <label class="tag-label"><input type="checkbox" name="tags" value="+18"> +18</label>
+          <label class="tag-label"><input type="checkbox" name="tags" value="Tryhard"> Tryhard</label>
+          <label class="tag-label"><input type="checkbox" name="tags" value="Principiantes"> Principiantes</label>
+          <label class="tag-label"><input type="checkbox" name="tags" value="Discord"> Discord</label>
+        </div>
+        <div class="custom-tag-container">
+          <input type="text" id="custom-tag-input" class="custom-tag-input" placeholder="Escribe una etiqueta y pulsa Enter o +" />
+          <button type="button" id="add-custom-tag-btn" class="btn-secondary btn-sm">+</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="post-content">Descripción</label>
+        <textarea id="post-content" name="content" rows="4" placeholder="Ej: Busco main healer para subir a platino esta noche..." required></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="cancel-post-btn" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary" id="submit-post-btn">Publicar Anuncio</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.2s, visibility 0.2s;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
+  .modal-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .modal-content {
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 500px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    margin: auto;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-family: var(--font-heading);
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .close-btn:hover {
+    color: var(--color-text-primary);
+  }
+
+  .create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .form-row .form-group {
+    flex: 1;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+  }
+
+  select, textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    background: rgba(11, 15, 26, 0.5);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+  }
+
+  select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+
+  .tags-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  :global(.tag-label) {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba(43, 53, 76, 0.5);
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+
+  :global(.tag-label:hover) {
+    background: rgba(43, 53, 76, 0.8);
+  }
+
+  :global(.tag-label:has(input:checked)) {
+    background: rgba(124, 58, 237, 0.2);
+    border-color: var(--color-primary);
+    color: white;
+  }
+
+  :global(.tag-label input) {
+    display: none;
+  }
+
+  .custom-tag-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  
+  .custom-tag-input {
+    flex: 1;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: rgba(11, 15, 26, 0.5);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    font-size: 0.85rem;
+    font-family: var(--font-sans);
+  }
+  
+  .custom-tag-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+  
+  .btn-sm {
+    padding: 0.4rem 0.75rem;
+    font-size: 1.2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border-light);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-primary);
+  }
+
+  .btn-primary {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .btn-primary:hover {
+    background: var(--color-primary-light);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+</style>
+
+<script>
+  const modal = document.getElementById('create-post-modal');
+  const openBtn = document.getElementById('open-create-post-btn');
+  const closeBtn = document.getElementById('close-modal-btn');
+  const cancelBtn = document.getElementById('cancel-post-btn');
+  const form = document.getElementById('create-post-form') as HTMLFormElement;
+  const submitBtn = document.getElementById('submit-post-btn') as HTMLButtonElement;
+  const customTagInput = document.getElementById('custom-tag-input') as HTMLInputElement;
+  const addCustomTagBtn = document.getElementById('add-custom-tag-btn');
+  const tagsSelector = document.getElementById('tags-selector');
+
+  function addCustomTag() {
+    if (!customTagInput || !tagsSelector) return;
+    const tagValue = customTagInput.value.trim();
+    if (!tagValue) return;
+
+    // Check if it exists to avoid duplicates
+    const existing = Array.from(tagsSelector.querySelectorAll('input')).find(el => el.value.toLowerCase() === tagValue.toLowerCase());
+    if (existing) {
+      existing.checked = true;
+      customTagInput.value = '';
+      return;
+    }
+
+    const label = document.createElement('label');
+    label.className = 'tag-label';
+    label.innerHTML = `<input type="checkbox" name="tags" value="${tagValue}" checked> ${tagValue}`;
+    tagsSelector.appendChild(label);
+    
+    customTagInput.value = '';
+  }
+
+  if (addCustomTagBtn) {
+    addCustomTagBtn.addEventListener('click', addCustomTag);
+  }
+
+  if (customTagInput) {
+    customTagInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addCustomTag();
+      }
+    });
+  }
+
+  function closeModal() {
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function openModal() {
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  if (openBtn) openBtn.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const data = {
+        game: formData.get('game'),
+        mode: formData.get('mode'),
+        spots: formData.get('spots'),
+        content: formData.get('content'),
+        tags: formData.getAll('tags')
+      };
+
+      try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Publicando...';
+
+        const response = await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al publicar');
+        }
+
+        closeModal();
+        window.location.reload(); // Recargar para ver el nuevo post
+
+      } catch (error) {
+        console.error(error);
+        alert('Hubo un error al crear la publicación.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Publicar Anuncio';
+      }
+    });
+  }
+</script>

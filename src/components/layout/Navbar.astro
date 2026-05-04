@@ -53,10 +53,11 @@ const navLinks = [
 
       {user ? (
         <div class="nav-user">
-          <a href="/mensajes" class="nav-icon-link" aria-label="Mensajes" title="Tus Mensajes">
+          <a href="/mensajes" class="nav-icon-link" aria-label="Mensajes" title="Tus Mensajes" id="nav-messages-link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
+            <span class="unread-badge" id="unread-badge" style="display:none;"></span>
           </a>
           
           <a href="/perfil" class="nav-user-link">
@@ -109,11 +110,12 @@ const navLinks = [
 
     {user ? (
       <>
-        <a href="/mensajes" class="mobile-link" style="color: var(--color-primary-light); display: flex; align-items: center; gap: 0.5rem; margin-top: -0.5rem;">
+        <a href="/mensajes" class="mobile-link" id="mobile-messages-link" style="color: var(--color-primary-light); display: flex; align-items: center; gap: 0.5rem; margin-top: -0.5rem; position: relative;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
           </svg>
           Mis Mensajes
+          <span class="unread-badge mobile-badge" id="unread-badge-mobile" style="display:none;"></span>
         </a>
         <div class="mobile-user-info">
           <span class="user-avatar-lg">{userName.charAt(0).toUpperCase()}</span>
@@ -254,12 +256,44 @@ const navLinks = [
     padding: 0.4rem;
     border-radius: 50%;
     transition: all 0.2s ease;
+    position: relative;
   }
 
   .nav-icon-link:hover {
     color: var(--color-primary-light);
     background: rgba(124, 58, 237, 0.1);
     transform: scale(1.1);
+  }
+
+  .unread-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 0 0 2px var(--color-bg-primary);
+    animation: badge-pulse 2s ease-in-out infinite;
+    line-height: 1;
+  }
+
+  .unread-badge.mobile-badge {
+    position: static;
+    margin-left: 0.5rem;
+    animation: none;
+  }
+
+  @keyframes badge-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
   }
 
   .nav-user-link {
@@ -494,5 +528,61 @@ const navLinks = [
     } else {
       navbar?.classList.remove('scrolled');
     }
+  });
+
+  // --- Notification badge logic ---
+  async function updateUnreadBadge() {
+    try {
+      const res = await fetch('/api/unread-count');
+      if (!res.ok) return;
+      const { count } = await res.json();
+      setBadgeCount(count);
+    } catch (err) {
+      // Silently fail
+    }
+  }
+
+  function setBadgeCount(count: number) {
+    const badge = document.getElementById('unread-badge');
+    const badgeMobile = document.getElementById('unread-badge-mobile');
+
+    [badge, badgeMobile].forEach(el => {
+      if (!el) return;
+      if (count > 0) {
+        el.textContent = count > 99 ? '99+' : String(count);
+        el.style.display = 'flex';
+      } else {
+        el.style.display = 'none';
+      }
+    });
+  }
+
+  // Check immediately and then every 60 seconds as fallback
+  updateUnreadBadge();
+  setInterval(updateUnreadBadge, 60000);
+
+  // --- Realtime: actualización instantánea ---
+  import { supabase } from '../../lib/supabase';
+
+  const realtimeChannel = supabase.channel('navbar-unread-notifications');
+
+  realtimeChannel
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'private_messages'
+      },
+      () => {
+        // Un mensaje nuevo llegó — refrescar conteo inmediatamente
+        updateUnreadBadge();
+      }
+    )
+    .subscribe();
+
+  // Limpiar canal al navegar con View Transitions
+  document.addEventListener('astro:before-swap', () => {
+    supabase.removeChannel(realtimeChannel);
   });
 </script>

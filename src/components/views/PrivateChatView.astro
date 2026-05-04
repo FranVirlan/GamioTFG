@@ -270,6 +270,15 @@ const accessToken = Astro.cookies.get('sb-access-token')?.value || '';
     };
     scrollToBottom();
 
+    // Marcar mensajes como leídos al abrir la conversación
+    if (conversationId) {
+      fetch('/api/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation_id: conversationId })
+      }).catch(() => {});
+    }
+
     // Enviar mensaje
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
