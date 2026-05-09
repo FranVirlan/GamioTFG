@@ -7,7 +7,16 @@
 import { supabase } from '../../lib/supabase';
 import CreatePostModal from './CreatePostModal.astro';
 
-const { data } = await supabase.from('posts').select('*, profiles(name, avatar_url)').order('created_at', { ascending: false });
+const user = Astro.locals.user;
+
+// Solo mostrar anuncios de las últimas 2 horas
+const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+
+const { data } = await supabase
+  .from('posts')
+  .select('*, profiles(name, avatar_url)')
+  .gte('created_at', twoHoursAgo)
+  .order('created_at', { ascending: false });
 const posts = data || [];
 ---
 
@@ -52,12 +61,22 @@ const posts = data || [];
             <p>{post.content}</p>
           </div>
           <div class="post-actions">
-            <button class="btn-primary message-btn ml-auto requires-auth" data-target-id={post.author_id}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-              </svg>
-              Enviar Mensaje
-            </button>
+            {user?.id === post.author_id && (
+              <button class="action-btn delete-post-btn" data-post-id={post.id} title="Eliminar anuncio">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#ef4444">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            )}
+            {(!user || user.id !== post.author_id) && (
+              <button class="btn-primary message-btn ml-auto requires-auth" data-target-id={post.author_id}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+                Enviar Mensaje
+              </button>
+            )}
           </div>
         </div>
       ))
@@ -273,6 +292,42 @@ const posts = data || [];
         console.error(err);
         alert('Error conectando con el servidor.');
         btn.textContent = originalText || 'Enviar Mensaje';
+        btn.removeAttribute('disabled');
+      }
+    });
+  });
+
+  const deleteBtns = document.querySelectorAll('.delete-post-btn');
+  deleteBtns.forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const postId = (e.currentTarget as HTMLElement).dataset.postId;
+      if (!postId) return;
+
+      if (!confirm('¿Ya has encontrado a quien buscabas y quieres eliminar este anuncio?')) return;
+
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<span style="font-size: 0.8rem">...</span>';
+      btn.setAttribute('disabled', 'true');
+
+      try {
+        const res = await fetch('/api/posts', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: postId })
+        });
+        
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          const data = await res.json();
+          alert('Error: ' + (data.error || 'No se pudo eliminar el anuncio'));
+          btn.innerHTML = originalHTML;
+          btn.removeAttribute('disabled');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error conectando con el servidor.');
+        btn.innerHTML = originalHTML;
         btn.removeAttribute('disabled');
       }
     });
