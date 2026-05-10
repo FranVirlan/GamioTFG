@@ -30,7 +30,9 @@ const carouselGames = [
 <MainLayout title="Gamio 🎮 — La plataforma gaming social">
   <!-- Hero Section -->
   <section class="hero" id="hero">
-    <div class="hero-bg-image"></div>
+    <video class="hero-video" autoplay muted loop playsinline preload="auto">
+      <source src="/hero-bg.mp4" type="video/mp4" />
+    </video>
     <div class="hero-overlay"></div>
     
     <div class="container hero-content">
@@ -201,23 +203,24 @@ const carouselGames = [
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center; /* Center content vertically now that navbar is transparent */
     overflow: hidden;
-    padding-top: 15vh; /* Push content down to match Torneum's vertical alignment */
   }
 
-  .hero-bg-image {
+  .hero-video {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    /* Dark gradient representing Torneum's dark background */
-    background: radial-gradient(circle at 50% 30%, rgba(108, 58, 255, 0.15), var(--color-bg-primary) 70%);
+    object-fit: cover;
     z-index: 0;
+    filter: brightness(0.45) saturate(1.2) hue-rotate(-10deg);
   }
 
   .hero-overlay {
     position: absolute;
-    bottom: 0; left: 0; width: 100%; height: 30%;
-    background: linear-gradient(to top, var(--color-bg-primary), transparent);
+    inset: 0;
+    background:
+      radial-gradient(circle at 50% 40%, rgba(108, 58, 255, 0.12), transparent 55%),
+      linear-gradient(to top, var(--color-bg-primary) 0%, rgba(10, 14, 23, 0.5) 35%, transparent 100%);
     z-index: 1;
   }
 

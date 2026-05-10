@@ -13,6 +13,9 @@ interface Props {
     followers: number;
     gamesPlayed: number;
     description: string;
+    favoriteGames?: string[];
+    playStyle?: string;
+    playerTypeSought?: string;
   };
 }
 
@@ -23,9 +26,18 @@ const {
     level: 42,
     followers: 1250,
     gamesPlayed: 340,
-    description: 'Jugador competitivo de Valorant y amante de los juegos indies. Siempre buscando equipo para rankear.',
+    description: 'Jugador competitivo de Valorant y amante de los juegos indies.',
+    favoriteGames: ['Valorant', 'Minecraft', 'Rocket League'],
+    playStyle: 'Competitivo',
+    playerTypeSought: 'Ranked',
   }
 } = Astro.props;
+
+const popularGames = [
+  "League of Legends", "Valorant", "Counter-Strike 2",
+  "Minecraft", "Fortnite", "Apex Legends",
+  "Overwatch 2", "Call of Duty", "Rocket League", "EA FC 24"
+];
 ---
 
 <div class="profile-view animate-fade-in-up">
@@ -47,8 +59,8 @@ const {
       <div class="profile-actions">
         {isOwnProfile ? (
           <>
-            <button class="btn-primary">Editar Perfil</button>
-            <button class="btn-secondary">Ajustes</button>
+            <button class="btn-primary" id="edit-profile-btn">Editar Perfil</button>
+            <button class="btn-secondary" id="settings-btn">Ajustes</button>
           </>
         ) : (
           <>
@@ -76,7 +88,39 @@ const {
     </div>
   </div>
 
-  <!-- Contenido Adicional (Mock de Juegos Recientes) -->
+  <!-- Preferencias de Jugador -->
+  {(user.playStyle || user.playerTypeSought || (user.favoriteGames && user.favoriteGames.length > 0)) && (
+    <div class="profile-preferences">
+      <h3>Preferencias de Jugador</h3>
+      <div class="preferences-grid">
+        {user.favoriteGames && user.favoriteGames.length > 0 && (
+          <div class="preference-card">
+            <h4>🎮 Juegos Favoritos</h4>
+            <div class="tags-container">
+              {user.favoriteGames.map((game: string) => (
+                <span class="tag game-tag">{game}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {(user.playStyle || user.playerTypeSought) && (
+          <div class="preference-card">
+            <h4>⚔️ Estilo y Búsqueda</h4>
+            <div class="tags-container">
+              {user.playStyle && (
+                <span class="tag style-tag">Estilo: {user.playStyle}</span>
+              )}
+              {user.playerTypeSought && (
+                <span class="tag sought-tag">Busca: {user.playerTypeSought}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )}
+
+  <!-- Juegos Recientes -->
   <div class="profile-recent">
     <h3>Juegos Recientes</h3>
     <div class="empty-state">
@@ -85,148 +129,347 @@ const {
   </div>
 </div>
 
+<!-- ══════════ MODAL: Editar Perfil ══════════ -->
+{isOwnProfile && (
+<div id="edit-profile-modal" class="pv-modal-overlay pv-hidden">
+  <div class="pv-modal-content animate-fade-in-up">
+    <div class="pv-modal-header">
+      <h3>✏️ Editar Perfil</h3>
+      <button class="pv-close-btn" data-close="edit-profile-modal">&times;</button>
+    </div>
+    <form id="edit-profile-form" class="pv-form">
+      <div class="pv-form-group">
+        <label for="edit-name">Nombre de usuario</label>
+        <input type="text" id="edit-name" value={user.name} required />
+      </div>
+      <div class="pv-form-group">
+        <label for="edit-description">Descripción</label>
+        <textarea id="edit-description" rows="3">{user.description}</textarea>
+      </div>
+
+      <div class="pv-form-group">
+        <label>Juegos Favoritos (Puedes elegir varios)</label>
+        <div class="pv-games-grid">
+          {popularGames.map(game => (
+            <label class="pv-game-checkbox">
+              <input type="checkbox" name="edit-games" value={game}
+                checked={user.favoriteGames?.includes(game)} />
+              <span class="pv-game-pill">{game}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div class="pv-form-group">
+        <label>Estilo de juego</label>
+        <div class="pv-radio-group">
+          {["Casual", "Competitivo", "Tryhard", "Depende del día"].map(style => (
+            <label class="pv-radio-option">
+              <input type="radio" name="edit-play-style" value={style}
+                checked={user.playStyle === style} />
+              <span class="pv-radio-pill">{style}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div class="pv-form-group">
+        <label>Tipo de jugadores que buscas</label>
+        <div class="pv-radio-group">
+          {["Social", "Ranked", "Mixto"].map(type => (
+            <label class="pv-radio-option">
+              <input type="radio" name="edit-player-type" value={type}
+                checked={user.playerTypeSought === type} />
+              <span class="pv-radio-pill">{type}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div class="pv-modal-footer">
+        <button type="button" class="btn-secondary" data-close="edit-profile-modal">Cancelar</button>
+        <button type="submit" class="btn-primary" id="save-profile-btn">Guardar Cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+)}
+
+<!-- ══════════ MODAL: Ajustes ══════════ -->
+{isOwnProfile && (
+<div id="settings-modal" class="pv-modal-overlay pv-hidden">
+  <div class="pv-modal-content animate-fade-in-up">
+    <div class="pv-modal-header">
+      <h3>⚙️ Ajustes</h3>
+      <button class="pv-close-btn" data-close="settings-modal">&times;</button>
+    </div>
+    <div class="pv-form">
+      <!-- Cambiar contraseña -->
+      <div class="pv-settings-section">
+        <h4>🔒 Cambiar Contraseña</h4>
+        <div class="pv-form-group">
+          <label for="new-password">Nueva contraseña</label>
+          <input type="password" id="new-password" placeholder="Mínimo 6 caracteres" minlength="6" />
+        </div>
+        <div class="pv-form-group">
+          <label for="confirm-password">Confirmar contraseña</label>
+          <input type="password" id="confirm-password" placeholder="Repite la contraseña" minlength="6" />
+        </div>
+        <button class="btn-primary btn-block" id="change-password-btn">Actualizar Contraseña</button>
+      </div>
+
+      <div class="pv-divider"></div>
+
+      <!-- Zona peligrosa -->
+      <div class="pv-settings-section pv-danger-zone">
+        <h4>⚠️ Zona de Peligro</h4>
+        <p class="pv-danger-text">Estas acciones no se pueden deshacer.</p>
+        <a href="/api/auth/signout" class="btn-danger btn-block" id="logout-btn">Cerrar Sesión</a>
+      </div>
+    </div>
+  </div>
+</div>
+)}
+
 <style>
-  .profile-view {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    width: 100%;
-  }
+  /* ── Profile Layout ── */
+  .profile-view { display: flex; flex-direction: column; gap: 2rem; width: 100%; }
+  .profile-header { background: var(--color-surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; }
+  .profile-banner { height: 150px; background: linear-gradient(135deg, rgba(124,58,237,0.4), rgba(56,189,248,0.4)); width: 100%; }
+  .profile-info-container { padding: 0 2rem 2rem; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.5rem; position: relative; margin-top: -50px; }
+  .profile-avatar { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); border: 4px solid var(--color-surface-card); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; color: white; overflow: hidden; flex-shrink: 0; }
+  .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-basic-info { flex: 1; min-width: 250px; padding-bottom: 0.5rem; }
+  .profile-name { font-family: var(--font-heading); font-size: 1.8rem; margin-bottom: 0.5rem; }
+  .profile-description { color: var(--color-text-secondary); font-size: 0.95rem; line-height: 1.5; }
+  .profile-actions { display: flex; gap: 1rem; padding-bottom: 0.5rem; }
 
-  /* Header */
-  .profile-header {
-    background: var(--color-surface-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-
-  .profile-banner {
-    height: 150px;
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.4), rgba(56, 189, 248, 0.4));
-    width: 100%;
-  }
-
-  .profile-info-container {
-    padding: 0 2rem 2rem;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 1.5rem;
-    position: relative;
-    margin-top: -50px;
-  }
-
-  .profile-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-    border: 4px solid var(--color-surface-card);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: white;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-
-  .profile-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .profile-basic-info {
-    flex: 1;
-    min-width: 250px;
-    padding-bottom: 0.5rem;
-  }
-
-  .profile-name {
-    font-family: var(--font-heading);
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .profile-description {
-    color: var(--color-text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.5;
-  }
-
-  .profile-actions {
-    display: flex;
-    gap: 1rem;
-    padding-bottom: 0.5rem;
-  }
-
-  /* Stats */
-  .profile-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-  }
-
-  .stat-card {
-    background: var(--color-surface-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: 1.5rem;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .stat-value {
-    font-family: var(--font-heading);
-    font-size: 2rem;
-    font-weight: 700;
-  }
-
+  /* ── Stats ── */
+  .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+  .stat-card { background: var(--color-surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1.5rem; text-align: center; display: flex; flex-direction: column; gap: 0.5rem; }
+  .stat-value { font-family: var(--font-heading); font-size: 2rem; font-weight: 700; }
   .text-primary { color: var(--color-primary); }
   .text-accent { color: var(--color-accent); }
   .text-secondary { color: var(--color-secondary); }
+  .stat-label { color: var(--color-text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
 
-  .stat-label {
-    color: var(--color-text-muted);
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  /* ── Preferences ── */
+  .profile-preferences h3 { margin-bottom: 1rem; font-family: var(--font-heading); }
+  .preferences-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+  .preference-card { background: var(--color-surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1.5rem; }
+  .preference-card h4 { font-size: 1.05rem; margin-bottom: 1rem; color: var(--color-text-primary); }
+  .tags-container { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .tag { padding: 0.4rem 0.8rem; border-radius: 100px; font-size: 0.85rem; font-weight: 500; }
+  .game-tag { background: rgba(0,240,255,0.1); color: var(--color-primary-light); border: 1px solid rgba(0,240,255,0.2); }
+  .style-tag { background: rgba(108,58,255,0.1); color: var(--color-accent-light); border: 1px solid rgba(108,58,255,0.2); }
+  .sought-tag { background: rgba(255,60,172,0.1); color: var(--color-secondary-light); border: 1px solid rgba(255,60,172,0.2); }
+
+  /* ── Recent ── */
+  .profile-recent h3 { margin-bottom: 1rem; font-family: var(--font-heading); }
+  .empty-state { padding: 3rem; text-align: center; background: var(--color-surface-card); border: 1px dashed var(--color-border); border-radius: var(--radius-md); color: var(--color-text-muted); }
+
+  /* ══════════ Modals ══════════ */
+  .pv-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999999; padding: 1rem; overflow-y: auto;
+    opacity: 1; visibility: visible; transition: opacity 0.2s, visibility 0.2s;
+  }
+  .pv-modal-overlay.pv-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  .pv-modal-content {
+    background: var(--color-surface-card); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); width: 100%; max-width: 540px;
+    padding: 2rem; box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    margin: auto; max-height: calc(100vh - 2rem); overflow-y: auto;
   }
 
-  /* Recent Region */
-  .profile-recent h3 {
-    margin-bottom: 1rem;
-    font-family: var(--font-heading);
+  .pv-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .pv-modal-header h3 { margin: 0; font-size: 1.3rem; font-family: var(--font-heading); }
+  .pv-close-btn { background: transparent; border: none; color: var(--color-text-muted); font-size: 1.6rem; cursor: pointer; line-height: 1; transition: color 0.2s; }
+  .pv-close-btn:hover { color: var(--color-text-primary); }
+
+  .pv-form { display: flex; flex-direction: column; gap: 1.25rem; }
+  .pv-form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  .pv-form-group label { font-size: 0.9rem; font-weight: 600; color: var(--color-text-secondary); }
+  .pv-form-group input, .pv-form-group textarea {
+    width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font-sans);
+    color: var(--color-text-primary); background: rgba(11,15,26,0.6);
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+    outline: none; transition: border-color 0.2s;
+  }
+  .pv-form-group input:focus, .pv-form-group textarea:focus {
+    border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(0,240,255,0.12);
   }
 
-  .empty-state {
-    padding: 3rem;
-    text-align: center;
-    background: var(--color-surface-card);
-    border: 1px dashed var(--color-border);
-    border-radius: var(--radius-md);
-    color: var(--color-text-muted);
+  /* Games grid in modal */
+  .pv-games-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .pv-game-checkbox { cursor: pointer; }
+  .pv-game-checkbox input { display: none; }
+  .pv-game-pill {
+    display: inline-block; padding: 0.5rem 1rem;
+    background: rgba(11,15,26,0.6); border: 1px solid var(--color-border);
+    border-radius: 100px; font-size: 0.9rem; color: var(--color-text-secondary);
+    transition: all 0.2s;
+  }
+  .pv-game-checkbox:hover .pv-game-pill { background: rgba(255,255,255,0.05); color: var(--color-text-primary); }
+  .pv-game-checkbox input:checked + .pv-game-pill {
+    background: rgba(0,240,255,0.15); border-color: var(--color-primary);
+    color: var(--color-primary-light); box-shadow: 0 0 12px rgba(0,240,255,0.15);
   }
 
+  /* Radio pills in modal */
+  .pv-radio-group { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .pv-radio-option { cursor: pointer; }
+  .pv-radio-option input { display: none; }
+  .pv-radio-pill {
+    display: inline-block; padding: 0.5rem 1rem;
+    background: rgba(11,15,26,0.6); border: 1px solid var(--color-border);
+    border-radius: 100px; font-size: 0.9rem; color: var(--color-text-secondary);
+    transition: all 0.2s;
+  }
+  .pv-radio-option:hover .pv-radio-pill { background: rgba(255,255,255,0.05); }
+  .pv-radio-option input:checked + .pv-radio-pill {
+    background: rgba(108,58,255,0.15); border-color: var(--color-accent);
+    color: var(--color-accent-light); box-shadow: 0 0 12px rgba(108,58,255,0.15);
+  }
+
+  .pv-modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); }
+
+  /* Settings specific */
+  .pv-settings-section { display: flex; flex-direction: column; gap: 1rem; }
+  .pv-settings-section h4 { font-family: var(--font-heading); font-size: 1.1rem; margin: 0; }
+  .pv-divider { height: 1px; background: var(--color-border); margin: 0.5rem 0; }
+  .btn-block { width: 100%; padding: 0.75rem; text-align: center; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: all 0.2s; }
+  .btn-danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #f87171; display: block; text-decoration: none; }
+  .btn-danger:hover { background: rgba(239,68,68,0.25); }
+  .pv-danger-zone { }
+  .pv-danger-text { font-size: 0.85rem; color: var(--color-text-muted); margin: 0; }
+
+  /* ── Responsive ── */
   @media (max-width: 768px) {
-    .profile-info-container {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-    .profile-actions {
-      justify-content: center;
-      width: 100%;
-    }
+    .profile-info-container { flex-direction: column; align-items: center; text-align: center; }
+    .profile-actions { justify-content: center; width: 100%; }
   }
 </style>
 
 <script>
+  // ── Modal helpers ──
+  function openModal(id: string) {
+    document.getElementById(id)?.classList.remove('pv-hidden');
+  }
+  function closeModal(id: string) {
+    document.getElementById(id)?.classList.add('pv-hidden');
+  }
+
+  // Close buttons
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modalId = (btn as HTMLElement).dataset.close!;
+      closeModal(modalId);
+    });
+  });
+
+  // Close on overlay click
+  document.querySelectorAll('.pv-modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal(overlay.id);
+    });
+  });
+
+  // ── Open Edit Profile ──
+  document.getElementById('edit-profile-btn')?.addEventListener('click', () => {
+    openModal('edit-profile-modal');
+  });
+
+  // ── Open Settings ──
+  document.getElementById('settings-btn')?.addEventListener('click', () => {
+    openModal('settings-modal');
+  });
+
+  // ── Save Profile ──
+  const editForm = document.getElementById('edit-profile-form') as HTMLFormElement;
+  if (editForm) {
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const saveBtn = document.getElementById('save-profile-btn') as HTMLButtonElement;
+      const originalText = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Guardando...';
+
+      const name = (document.getElementById('edit-name') as HTMLInputElement).value;
+      const description = (document.getElementById('edit-description') as HTMLTextAreaElement).value;
+      const favorite_games = Array.from(editForm.querySelectorAll('input[name="edit-games"]:checked')).map(el => (el as HTMLInputElement).value);
+      const play_style = (editForm.querySelector('input[name="edit-play-style"]:checked') as HTMLInputElement)?.value || '';
+      const player_type_sought = (editForm.querySelector('input[name="edit-player-type"]:checked') as HTMLInputElement)?.value || '';
+
+      try {
+        const res = await fetch('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description, favorite_games, play_style, player_type_sought })
+        });
+
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          const data = await res.json();
+          alert('Error: ' + (data.error || 'No se pudo guardar'));
+          saveBtn.disabled = false;
+          saveBtn.textContent = originalText;
+        }
+      } catch (err) {
+        alert('Error conectando con el servidor.');
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
+      }
+    });
+  }
+
+  // ── Change Password ──
+  document.getElementById('change-password-btn')?.addEventListener('click', async () => {
+    const newPass = (document.getElementById('new-password') as HTMLInputElement).value;
+    const confirmPass = (document.getElementById('confirm-password') as HTMLInputElement).value;
+
+    if (!newPass || newPass.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (newPass !== confirmPass) {
+      alert('Las contraseñas no coinciden.');
+      return;
+    }
+
+    const btn = document.getElementById('change-password-btn') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Actualizando...';
+
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPass })
+      });
+
+      if (res.ok) {
+        alert('¡Contraseña actualizada correctamente!');
+        (document.getElementById('new-password') as HTMLInputElement).value = '';
+        (document.getElementById('confirm-password') as HTMLInputElement).value = '';
+        closeModal('settings-modal');
+      } else {
+        const data = await res.json();
+        alert('Error: ' + (data.error || 'No se pudo actualizar'));
+      }
+    } catch (err) {
+      alert('Error conectando con el servidor.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Actualizar Contraseña';
+    }
+  });
+
+  // ── Message button (for other users' profiles) ──
   const msgBtns = document.querySelectorAll('.message-btn');
   msgBtns.forEach(btn => {
     btn.addEventListener('click', async (e) => {
@@ -235,11 +478,9 @@ const {
         alert('Este es un jugador de prueba (mock). No puedes enviarle mensajes privados porque no existe en la base de datos.');
         return;
       }
-
       const originalText = btn.textContent;
       btn.textContent = 'Iniciando...';
       btn.setAttribute('disabled', 'true');
-
       try {
         const res = await fetch('/api/conversations', {
           method: 'POST',
@@ -247,7 +488,6 @@ const {
           body: JSON.stringify({ target_profile_id: targetId })
         });
         const data = await res.json();
-        
         if (res.ok && data.id) {
           window.location.href = `/mensajes/${data.id}`;
         } else {

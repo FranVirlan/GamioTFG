@@ -28,7 +28,7 @@ const navLinks = [
 ];
 ---
 
-<nav class="navbar glass-strong" id="mainNav">
+<nav class:list={['navbar', 'glass-strong', { 'navbar-landing': currentPath === '/' }]} id="mainNav">
   <div class="nav-container container">
     <!-- Logo -->
     <a href="/" class="nav-logo">
@@ -146,7 +146,25 @@ const navLinks = [
     right: 0;
     z-index: 1000;
     padding: 0.75rem 0;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ── Navbar Landing (Transparent initially) ── */
+  .navbar-landing:not(.scrolled) {
+    background: transparent;
+    border-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 1.5rem 0;
+  }
+
+  .navbar.scrolled {
+    background: rgba(10, 14, 23, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+    padding: 0.75rem 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   }
 
   .nav-container {

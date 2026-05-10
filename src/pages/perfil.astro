@@ -32,6 +32,9 @@ const profileData = {
   followers: displayProfile?.followers_count || (isMockUser ? Math.floor(Math.random() * 500) : 0),
   gamesPlayed: displayProfile?.games_played || (isMockUser ? Math.floor(Math.random() * 100) : 0),
   description: displayProfile?.description || (isMockUser ? `Perfil de ${targetUserName}. Jugador competitivo siempre buscando equipo para rankear.` : 'Jugador competitivo siempre buscando equipo para rankear.'),
+  favoriteGames: displayProfile?.favorite_games || [],
+  playStyle: displayProfile?.play_style || (isMockUser ? 'Competitivo' : ''),
+  playerTypeSought: displayProfile?.player_type_sought || (isMockUser ? 'Ranked' : ''),
 };
 ---
 

@@ -41,7 +41,7 @@ const user = Astro.locals.user;
   </head>
   <body class="gradient-bg" data-auth={user ? 'true' : 'false'}>
     <Navbar user={user} />
-    <main class="main-content">
+    <main class:list={['main-content', { 'no-padding': Astro.url.pathname === '/' }]}>
       <slot />
     </main>
   </body>
@@ -52,6 +52,10 @@ const user = Astro.locals.user;
     /* Agregamos padding-top para compensar el Navbar fijo */
     padding-top: 80px;
     min-height: 100vh;
+  }
+
+  .main-content.no-padding {
+    padding-top: 0;
   }
 </style>
 
