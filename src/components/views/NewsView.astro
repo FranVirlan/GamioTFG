@@ -1,13 +1,59 @@
 ---
 /**
  * NewsView.astro
- * Vista de noticias estilo feed.
+ * Vista de noticias estilo feed con destacados y filtros dinámicos.
  */
 import NewsCard from '../domain/NewsCard.astro';
 import { supabase } from '../../lib/supabase';
 
-const { data } = await supabase.from('news').select('*').order('created_at', { ascending: false });
-const news = data || [];
+// Datos estáticos (Mock) para asegurar que siempre haya contenido visualmente atractivo
+const mockNews = [
+  {
+    id: 'mock-1',
+    title: 'La Gran Final del Torneo de Primavera Rompe Récords de Audiencia',
+    summary: 'El evento principal de la temporada ha superado todas las expectativas, con más de 2 millones de espectadores simultáneos viendo la increíble remontada del equipo Alpha.',
+    tags: ['Esports', 'Torneos'],
+    created_at: new Date().toISOString(),
+    image: '/images/news/esports_tournament.png',
+    content: 'La Gran Final del Torneo de Primavera ha marcado un antes y un después en la historia de los esports. Desde el primer mapa, la tensión fue palpable. El equipo Alpha, que venía del lower bracket, logró una remontada histórica frente a los actuales campeones. El evento destacó no solo por la calidad de las jugadas, sino por la espectacular producción en la arena, que contó con hologramas y un show de luces sin precedentes. ¡Revive los mejores momentos en nuestro resumen en vídeo!'
+  },
+  {
+    id: 'mock-2',
+    title: 'Parche 12.4: Nuevos Mapas, Balance de Armas y Mejoras de Rendimiento',
+    summary: 'La actualización más grande del año ya está aquí. Descubre todas las novedades que cambiarán el meta por completo.',
+    tags: ['Actualizaciones', 'Parches'],
+    created_at: new Date(Date.now() - 86400000).toISOString(), // 1 día antes
+    image: '/images/news/game_update_patch.png',
+    content: 'El parche 12.4 ya está disponible para su descarga en todos los servidores. Esta actualización trae consigo dos mapas completamente nuevos diseñados para el juego táctico de alto nivel. Además, se han realizado ajustes importantes en el balance de armas, reduciendo el retroceso de los rifles de asalto y ajustando el daño de los francotiradores. Los desarrolladores también prometen una mejora del 15% en los FPS gracias a la optimización del motor gráfico.'
+  },
+  {
+    id: 'mock-3',
+    title: 'Guía Avanzada: Cómo dominar la economía en las rondas clave',
+    summary: 'Aprende a gestionar tus recursos para asegurar la victoria en los momentos más tensos de la partida.',
+    tags: ['Guías', 'Estrategia'],
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+    image: '',
+    content: 'Una buena puntería te gana rondas, pero una buena economía te gana partidas. En esta guía desglosamos las matemáticas detrás de las compras forzadas, los ecos y cuándo invertir en utilidad. Comprender el ciclo económico de tu equipo y el del enemigo te dará una ventaja táctica invaluable.'
+  },
+  {
+    id: 'mock-4',
+    title: 'Nuevos cosméticos de temporada: Colección "Neon Nights"',
+    summary: 'Dale un toque cyberpunk a tus personajes con las nuevas skins que acaban de llegar a la tienda.',
+    tags: ['Actualizaciones', 'Cosméticos'],
+    created_at: new Date(Date.now() - 259200000).toISOString(),
+    image: '',
+    content: 'La noche brilla con luz de neón. La nueva colección "Neon Nights" introduce diseños inspirados en la estética cyberpunk clásica, con colores vibrantes y animaciones exclusivas de recarga. ¡Consíguelas antes de que termine el evento temporal!'
+  }
+];
+
+// Obtener noticias de la DB
+const { data: dbNews } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+
+// Combinar, dando prioridad a las de la base de datos si existen, sino usar el mock
+let news = (dbNews && dbNews.length > 0) ? dbNews : mockNews;
+
+const featuredNews = news[0];
+const regularNews = news.slice(1);
 ---
 
 <div class="news-view animate-fade-in-up">
@@ -21,21 +67,87 @@ const news = data || [];
     </div>
   </div>
 
+  <!-- Featured News (Hero) -->
+  {featuredNews && (
+    <div class="featured-news-wrapper">
+      <div class="featured-news" style={featuredNews.image ? `background-image: url('${featuredNews.image}')` : 'background: linear-gradient(135deg, var(--color-primary-dark), var(--color-bg-secondary));'}>
+        <div class="featured-overlay"></div>
+        <div class="featured-content">
+          <div class="featured-tags">
+            {featuredNews.tags?.map((tag: string) => (
+              <span class="tag tag-accent">{tag}</span>
+            ))}
+          </div>
+          <h3>{featuredNews.title}</h3>
+          <p>{featuredNews.summary}</p>
+          <div class="featured-actions">
+            <button class="btn-primary read-more-btn" 
+              data-title={featuredNews.title} 
+              data-summary={featuredNews.summary} 
+              data-date={new Date(featuredNews.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} 
+              data-image={featuredNews.image || ''} 
+              data-content={featuredNews.content || ''}
+              data-tags={(featuredNews.tags || []).join(',')}>
+              Leer Noticia Completa
+            </button>
+            <span class="featured-date">{new Date(featuredNews.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+
+  <!-- News Grid -->
   <div class="news-feed">
-    {news.length > 0 ? (
-      news.map(item => (
+    {regularNews.length > 0 ? (
+      regularNews.map((item: any) => (
         <NewsCard
           title={item.title}
           summary={item.summary}
-          tags={item.tags}
+          tags={item.tags || []}
           date={new Date(item.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+          image={item.image}
+          content={item.content}
         />
       ))
     ) : (
-      <div class="empty-state">
-        <p>No hay noticias recientes.</p>
-      </div>
+      !featuredNews && (
+        <div class="empty-state" id="initial-empty-state">
+          <p>No hay noticias recientes en este momento.</p>
+        </div>
+      )
     )}
+    
+    <div class="empty-state" id="no-results" style="display: none;">
+      <p>No se han encontrado noticias en esta categoría.</p>
+    </div>
+  </div>
+
+  <!-- News Modal -->
+  <div id="news-modal" class="modal-overlay">
+    <div class="modal-content news-modal-content">
+      <button class="close-modal" id="close-news-modal">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      
+      <div class="modal-header-img" id="modal-image"></div>
+      
+      <div class="modal-body">
+        <div class="modal-tags" id="modal-tags"></div>
+        <h2 id="modal-title" class="modal-title">Título</h2>
+        <div class="modal-meta">
+          <span id="modal-date">Fecha</span>
+        </div>
+        <div class="modal-text">
+          <p id="modal-summary" class="lead-text"></p>
+          <div class="divider"></div>
+          <p id="modal-full-content" class="full-content"></p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -70,9 +182,10 @@ const news = data || [];
     background: var(--color-surface-card);
     border: 1px solid var(--color-border);
     color: var(--color-text-secondary);
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1.25rem;
     border-radius: var(--radius-full);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s ease;
@@ -87,6 +200,84 @@ const news = data || [];
     background: var(--color-primary);
     color: white;
     border-color: var(--color-primary);
+  }
+
+  /* Featured News */
+  .featured-news-wrapper {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .featured-news {
+    position: relative;
+    width: 100%;
+    min-height: 400px;
+    border-radius: var(--radius-xl);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+  }
+
+  .featured-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(11, 15, 26, 0.95) 0%, rgba(11, 15, 26, 0.5) 50%, transparent 100%);
+  }
+
+  .featured-content {
+    position: relative;
+    z-index: 2;
+    padding: 3rem;
+    width: 100%;
+    max-width: 800px;
+  }
+
+  .featured-tags {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .tag-accent {
+    background: rgba(0, 240, 255, 0.2);
+    color: var(--color-primary-light);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+    font-size: 0.85rem;
+    padding: 0.3rem 0.8rem;
+  }
+
+  .featured-content h3 {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    color: white;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .featured-content p {
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .featured-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .featured-date {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
   }
 
   .news-feed {
@@ -104,4 +295,284 @@ const news = data || [];
     border-radius: var(--radius-md);
     color: var(--color-text-muted);
   }
+
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .news-modal-content {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-overlay.active .news-modal-content {
+    transform: translateY(0);
+  }
+
+  .close-modal {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s;
+  }
+
+  .close-modal:hover {
+    background: var(--color-error);
+  }
+
+  .modal-header-img {
+    width: 100%;
+    height: 300px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--color-bg-tertiary);
+  }
+
+  .modal-body {
+    padding: 3rem;
+  }
+
+  .modal-tags {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .modal-title {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    color: var(--color-text-primary);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  .modal-meta {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+  }
+
+  .lead-text {
+    font-size: 1.2rem;
+    color: var(--color-text-primary);
+    line-height: 1.6;
+    font-weight: 500;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 2rem 0;
+  }
+
+  .full-content {
+    color: var(--color-text-secondary);
+    line-height: 1.8;
+    font-size: 1.05rem;
+  }
+
+  @media (max-width: 768px) {
+    .featured-content {
+      padding: 2rem;
+    }
+    
+    .featured-content h3 {
+      font-size: 1.6rem;
+    }
+
+    .featured-news {
+      min-height: 300px;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+    }
+  }
 </style>
+
+<script>
+  // Filtering logic
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const newsCards = document.querySelectorAll('.news-card');
+  const featuredWrapper = document.querySelector('.featured-news-wrapper') as HTMLElement;
+  const noResults = document.getElementById('no-results');
+
+  let currentCategory = 'todas';
+
+  function filterNews() {
+    let visibleCount = 0;
+
+    // Filter regular cards
+    newsCards.forEach((card) => {
+      const tagsString = (card as HTMLElement).dataset.tags || '';
+      
+      const matchesCategory = currentCategory === 'todas' || tagsString.includes(currentCategory);
+
+      if (matchesCategory) {
+        (card as HTMLElement).style.display = 'block';
+        visibleCount++;
+      } else {
+        (card as HTMLElement).style.display = 'none';
+      }
+    });
+
+    // Hide/Show featured based on filter (if 'todas' show it, else hide to avoid confusion)
+    if (featuredWrapper) {
+      if (currentCategory === 'todas') {
+        featuredWrapper.style.display = 'block';
+        visibleCount++; // Count featured as visible
+      } else {
+        featuredWrapper.style.display = 'none';
+      }
+    }
+
+    if (noResults) {
+      noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+  }
+
+  filterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentCategory = btn.textContent?.toLowerCase().trim() || 'todas';
+      filterNews();
+    });
+  });
+
+  // Modal logic
+  const modal = document.getElementById('news-modal');
+  const closeBtn = document.getElementById('close-news-modal');
+  
+  // Modal elements
+  const mImage = document.getElementById('modal-image');
+  const mTags = document.getElementById('modal-tags');
+  const mTitle = document.getElementById('modal-title');
+  const mDate = document.getElementById('modal-date');
+  const mSummary = document.getElementById('modal-summary');
+  const mContent = document.getElementById('modal-full-content');
+
+  const readMoreBtns = document.querySelectorAll('.read-more-btn');
+
+  function openModal(data: any) {
+    if (!modal) return;
+
+    // Set image
+    if (mImage) {
+      if (data.image) {
+        mImage.style.backgroundImage = `url('${data.image}')`;
+        mImage.style.display = 'block';
+      } else {
+        mImage.style.display = 'none';
+      }
+    }
+
+    // Set tags
+    if (mTags) {
+      mTags.innerHTML = '';
+      if (data.tags) {
+        const tagList = data.tags.split(',').filter((t: string) => t.trim() !== '');
+        tagList.forEach((tag: string) => {
+          const span = document.createElement('span');
+          span.className = 'tag tag-violet'; // generic color
+          span.textContent = tag;
+          mTags.appendChild(span);
+        });
+      }
+    }
+
+    // Set texts
+    if (mTitle) mTitle.textContent = data.title || '';
+    if (mDate) mDate.textContent = data.date || '';
+    if (mSummary) mSummary.textContent = data.summary || '';
+    if (mContent) {
+      // Si no hay contenido detallado, mostramos el resumen o un lorem ipsum extendido en el mock
+      mContent.textContent = data.content || data.summary || '';
+    }
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  }
+
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  readMoreBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const el = e.currentTarget as HTMLElement;
+      
+      const data = {
+        title: el.dataset.title,
+        summary: el.dataset.summary,
+        date: el.dataset.date,
+        image: el.dataset.image,
+        tags: el.dataset.tags,
+        content: el.dataset.content // Esto lo podemos pasar o inferir
+      };
+      
+      openModal(data);
+    });
+  });
+
+  closeBtn?.addEventListener('click', closeModal);
+
+  // Close on background click
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+      closeModal();
+    }
+  });
+</script>

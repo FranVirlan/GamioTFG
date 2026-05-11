@@ -47,7 +47,7 @@ const categories = ['Todos', 'FPS', 'MOBA', 'Battle Royale', 'Deportes', 'Sandbo
       <p class="subtitle">Encuentra tu próximo juego y compañeros de equipo ideales.</p>
     </div>
     <div class="search-box">
-      <input type="text" placeholder="Buscar juego..." class="search-input" />
+      <input type="text" id="game-search" placeholder="Buscar juego..." class="search-input" />
       <button class="search-btn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"></circle>
@@ -64,21 +64,23 @@ const categories = ['Todos', 'FPS', 'MOBA', 'Battle Royale', 'Deportes', 'Sandbo
   </div>
 
   <div class="games-grid">
-    {games.length > 0 ? (
-      games.map(game => (
-        <GameCard
-          name={game.name}
-          genre={game.genre}
-          players={game.players_count}
-          color={game.color_theme}
-          image={game.image}
-        />
-      ))
-    ) : (
-      <div class="empty-state">
-        <p>No hay juegos disponibles en este momento.</p>
-      </div>
-    )}
+    {games.map(game => (
+      <GameCard
+        name={game.name}
+        genre={game.genre}
+        players={game.players_count}
+        color={game.color_theme}
+        image={game.image}
+      />
+    ))}
+
+    <div class="empty-state" id="no-results" style="display: none;">
+      <p>No se han encontrado juegos que coincidan con tu búsqueda.</p>
+    </div>
+
+    <div class="empty-state" id="initial-empty-state" style={games.length === 0 ? "display: block;" : "display: none;"}>
+      <p>No hay juegos disponibles en este momento.</p>
+    </div>
   </div>
 </div>
 
@@ -202,3 +204,58 @@ const categories = ['Todos', 'FPS', 'MOBA', 'Battle Royale', 'Deportes', 'Sandbo
     color: var(--color-text-muted);
   }
 </style>
+
+<script>
+  const searchInput = document.getElementById('game-search') as HTMLInputElement;
+  const categoryChips = document.querySelectorAll('.category-chip');
+  const gameCards = document.querySelectorAll('.game-card');
+  const noResults = document.getElementById('no-results');
+  const initialEmpty = document.getElementById('initial-empty-state');
+
+  let currentSearch = '';
+  let currentCategory = 'todos';
+
+  function filterGames() {
+    let visibleCount = 0;
+
+    gameCards.forEach((card) => {
+      const name = (card as HTMLElement).dataset.name || '';
+      const genre = (card as HTMLElement).dataset.genre || '';
+      
+      const matchesSearch = name.includes(currentSearch);
+      const matchesCategory = currentCategory === 'todos' || genre.includes(currentCategory);
+
+      if (matchesSearch && matchesCategory) {
+        (card as HTMLElement).style.display = 'block';
+        visibleCount++;
+      } else {
+        (card as HTMLElement).style.display = 'none';
+      }
+    });
+
+    if (noResults) {
+      noResults.style.display = visibleCount === 0 && gameCards.length > 0 ? 'block' : 'none';
+    }
+    
+    if (initialEmpty) {
+        initialEmpty.style.display = gameCards.length === 0 ? 'block' : 'none';
+    }
+  }
+
+  searchInput?.addEventListener('input', (e) => {
+    currentSearch = (e.target as HTMLInputElement).value.toLowerCase().trim();
+    filterGames();
+  });
+
+  categoryChips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      // Update UI
+      categoryChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      // Update filter
+      currentCategory = chip.textContent?.toLowerCase().trim() || 'todos';
+      filterGames();
+    });
+  });
+</script>

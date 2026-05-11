@@ -23,7 +23,7 @@ const colorMap: Record<string, { bg: string; border: string; text: string }> = {
 const c = colorMap[color] || colorMap.violet;
 ---
 
-<div class="game-card">
+<div class="game-card" data-name={name.toLowerCase()} data-genre={genre.toLowerCase()}>
   <div class="game-image" style={image ? `background-image: url(${image});` : `background: linear-gradient(135deg, ${c.bg}, var(--color-bg-tertiary));`}>
     {!image && <span class="game-placeholder">🎮</span>}
     <div class="game-players">
