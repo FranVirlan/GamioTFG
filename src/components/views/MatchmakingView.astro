@@ -57,7 +57,7 @@ const shuffledPlayers = allPlayers.sort(() => 0.5 - Math.random());
     </div>
     
     <div class="filters">
-      <select class="filter-select">
+      <select class="filter-select" id="filter-rank">
         <option value="">Rango: Todos</option>
         <option value="diamond">Diamante</option>
         <option value="platinum">Platino</option>
@@ -65,7 +65,7 @@ const shuffledPlayers = allPlayers.sort(() => 0.5 - Math.random());
         <option value="silver">Plata</option>
         <option value="bronze">Bronce</option>
       </select>
-      <select class="filter-select">
+      <select class="filter-select" id="filter-region">
         <option value="">Región: Todas</option>
         <option value="EUW">EUW</option>
         <option value="NA">NA</option>
@@ -74,7 +74,7 @@ const shuffledPlayers = allPlayers.sort(() => 0.5 - Math.random());
     </div>
   </div>
 
-  <div class="players-grid">
+  <div class="players-grid" id="players-grid">
     {shuffledPlayers.map(player => (
       <UserCard
         name={player.name}
@@ -85,6 +85,10 @@ const shuffledPlayers = allPlayers.sort(() => 0.5 - Math.random());
         online={player.online}
       />
     ))}
+  </div>
+
+  <div class="no-results-msg" id="no-results-msg" style="display: none;">
+    <p>No se encontraron jugadores con esos filtros.</p>
   </div>
 </div>
 
@@ -151,6 +155,15 @@ const shuffledPlayers = allPlayers.sort(() => 0.5 - Math.random());
     gap: 1.5rem;
   }
 
+  .no-results-msg {
+    padding: 3rem;
+    text-align: center;
+    background: var(--color-surface-card);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+  }
+
   @media (max-width: 768px) {
     .matchmaking-header {
       flex-direction: column;
@@ -167,4 +180,38 @@ const shuffledPlayers = allPlayers.sort(() => 0.5 - Math.random());
   }
 </style>
 
+<script>
+  const rankFilter = document.getElementById('filter-rank') as HTMLSelectElement;
+  const regionFilter = document.getElementById('filter-region') as HTMLSelectElement;
+  const playerCards = document.querySelectorAll('.js-matchmaking-card');
+  const noResultsMsg = document.getElementById('no-results-msg');
 
+  function applyFilters() {
+    const selectedRank = rankFilter?.value || '';
+    const selectedRegion = regionFilter?.value || '';
+    let visibleCount = 0;
+
+    playerCards.forEach(card => {
+      const el = card as HTMLElement;
+      const cardRank = el.dataset.rank || '';
+      const cardRegion = el.dataset.region || '';
+
+      const matchesRank = !selectedRank || cardRank === selectedRank;
+      const matchesRegion = !selectedRegion || cardRegion === selectedRegion;
+
+      if (matchesRank && matchesRegion) {
+        el.style.display = '';
+        visibleCount++;
+      } else {
+        el.style.display = 'none';
+      }
+    });
+
+    if (noResultsMsg) {
+      noResultsMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+  }
+
+  rankFilter?.addEventListener('change', applyFilters);
+  regionFilter?.addEventListener('change', applyFilters);
+</script>

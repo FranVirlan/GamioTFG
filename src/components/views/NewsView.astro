@@ -10,47 +10,56 @@ import { supabase } from '../../lib/supabase';
 const mockNews = [
   {
     id: 'mock-1',
-    title: 'La Gran Final del Torneo de Primavera Rompe Récords de Audiencia',
-    summary: 'El evento principal de la temporada ha superado todas las expectativas, con más de 2 millones de espectadores simultáneos viendo la increíble remontada del equipo Alpha.',
-    tags: ['Esports', 'Torneos'],
+    title: 'Valorant: Notas del Parche 12.09 y Cambios al Sistema MMR',
+    summary: 'Riot Games introduce nerfeos significativos a Neon y ajustes a todas las escopetas para fomentar un juego más táctico.',
+    tags: ['Actualizaciones', 'Parches', 'Valorant'],
     created_at: new Date().toISOString(),
-    image: '/images/news/esports_tournament.png',
-    content: 'La Gran Final del Torneo de Primavera ha marcado un antes y un después en la historia de los esports. Desde el primer mapa, la tensión fue palpable. El equipo Alpha, que venía del lower bracket, logró una remontada histórica frente a los actuales campeones. El evento destacó no solo por la calidad de las jugadas, sino por la espectacular producción en la arena, que contó con hologramas y un show de luces sin precedentes. ¡Revive los mejores momentos en nuestro resumen en vídeo!'
+    image: '/images/news/valorant_patch.png',
+    content: 'El parche 12.09 de Valorant ya está aquí y trae consigo cambios que sacudirán el meta. Neon recibe un nerfeo importante a su habilidad "High Gear", reduciendo su evasión y movilidad. Además, todas las escopetas han sido ajustadas para ser menos efectivas al moverse y saltar. Riot también ha anunciado que el esperado sistema de repeticiones llegará en el próximo parche 12.10, permitiendo revisar partidas directamente desde el perfil de tus amigos.'
   },
   {
     id: 'mock-2',
-    title: 'Parche 12.4: Nuevos Mapas, Balance de Armas y Mejoras de Rendimiento',
-    summary: 'La actualización más grande del año ya está aquí. Descubre todas las novedades que cambiarán el meta por completo.',
-    tags: ['Actualizaciones', 'Parches'],
+    title: 'League of Legends: Llega el Parche 26.10 con ajustes masivos',
+    summary: 'Lee Sin recibe una actualización completa de su kit, mientras que el Emporio de Esencias Azules regresa temporalmente.',
+    tags: ['Actualizaciones', 'League of Legends'],
     created_at: new Date(Date.now() - 86400000).toISOString(), // 1 día antes
-    image: '/images/news/game_update_patch.png',
-    content: 'El parche 12.4 ya está disponible para su descarga en todos los servidores. Esta actualización trae consigo dos mapas completamente nuevos diseñados para el juego táctico de alto nivel. Además, se han realizado ajustes importantes en el balance de armas, reduciendo el retroceso de los rifles de asalto y ajustando el daño de los francotiradores. Los desarrolladores también prometen una mejora del 15% en los FPS gracias a la optimización del motor gráfico.'
+    image: '/images/news/lol_patch.png',
+    content: 'La temporada 2026 continúa con el Parche 26.10 de League of Legends. El cambio más destacado es la modernización del kit de Lee Sin, que incluye ajustes en sus escudos y enfriamientos para adaptarlo al meta actual. Otros campeones como Ashe, Zed, Zeri y Galio también han recibido balances. Para los coleccionistas, el Emporio de Esencias ha vuelto y estará disponible hasta junio, trayendo consigo el nuevo título exclusivo "Big Serious Gamer".'
   },
   {
     id: 'mock-3',
-    title: 'Guía Avanzada: Cómo dominar la economía en las rondas clave',
-    summary: 'Aprende a gestionar tus recursos para asegurar la victoria en los momentos más tensos de la partida.',
-    tags: ['Guías', 'Estrategia'],
+    title: 'Fortnite: Épica colaboración con Overwatch y Temporada 3',
+    summary: 'D.Va, Genji, Tracer y Mercy llegan a la isla junto con armas y emotes temáticos de Overwatch.',
+    tags: ['Actualizaciones', 'Fortnite'],
     created_at: new Date(Date.now() - 172800000).toISOString(),
-    image: '',
-    content: 'Una buena puntería te gana rondas, pero una buena economía te gana partidas. En esta guía desglosamos las matemáticas detrás de las compras forzadas, los ecos y cuándo invertir en utilidad. Comprender el ciclo económico de tu equipo y el del enemigo te dará una ventaja táctica invaluable.'
+    image: '/images/news/fortnite_collab.png',
+    content: 'Una de las colaboraciones más esperadas se ha hecho realidad. A partir del 14 de mayo, los jugadores de Fortnite podrán adquirir las skins de los icónicos héroes de Overwatch: D.Va, Genji, Tracer y Mercy. La actualización también incluye elementos de los mapas de Overwatch y nuevas armas míticas. Mientras tanto, la comunidad se prepara para el final del Capítulo 7 Temporada 2 "Showdown" y el inminente inicio de la Temporada 3 este próximo mes de junio.'
   },
   {
     id: 'mock-4',
-    title: 'Nuevos cosméticos de temporada: Colección "Neon Nights"',
-    summary: 'Dale un toque cyberpunk a tus personajes con las nuevas skins que acaban de llegar a la tienda.',
-    tags: ['Actualizaciones', 'Cosméticos'],
+    title: 'EDward Gaming se corona campeón del VCT China Stage 1',
+    summary: 'EDG derrota a Xi Lai Gaming en una final de infarto y asegura su pase al Masters de Londres.',
+    tags: ['Esports', 'Torneos', 'Valorant'],
     created_at: new Date(Date.now() - 259200000).toISOString(),
-    image: '',
-    content: 'La noche brilla con luz de neón. La nueva colección "Neon Nights" introduce diseños inspirados en la estética cyberpunk clásica, con colores vibrantes y animaciones exclusivas de recarga. ¡Consíguelas antes de que termine el evento temporal!'
+    image: '/images/news/edg_valorant.png',
+    content: 'El panorama competitivo de Valorant en China tiene un nuevo rey indiscutible. EDward Gaming (EDG) ha logrado asegurar la victoria en el VCT China Stage 1 tras derrotar a Xi Lai Gaming (XLG) en una espectacular gran final. Con este triunfo, EDG se posiciona como uno de los grandes favoritos para el próximo Masters de Londres. Riot Games también confirmó que a finales de año compartirán más detalles sobre la reestructuración del circuito VCT para 2027.'
+  },
+  {
+    id: 'mock-5',
+    title: 'Guía EA FC 26: Formaciones y tácticas para Ultimate Team',
+    summary: 'Domina el modo competitivo con esta guía detallada sobre el nuevo meta y las formaciones tradicionales.',
+    tags: ['Guías', 'Estrategia', 'EA FC 26'],
+    created_at: new Date(Date.now() - 345600000).toISOString(),
+    image: '/images/news/eafc_guide.png',
+    content: 'Con la llegada de la nueva temporada en EA FC 26, el meta ha evolucionado significativamente. En esta guía exploramos las formaciones más sólidas para Ultimate Team, haciendo especial énfasis en cómo adaptar tu estilo de juego al dinámico modo 5v5 Rush. Aprenderás a configurar las instrucciones de los jugadores para maximizar la presión alta sin dejar huecos en la defensa, y descubrirás qué perfiles de jugadores rinden mejor en el actual motor gráfico.'
   }
 ];
 
-// Obtener noticias de la DB
-const { data: dbNews } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+// Obtener noticias de la DB (desactivado temporalmente para usar las noticias reales predefinidas)
+// const { data: dbNews } = await supabase.from('news').select('*').order('created_at', { ascending: false });
 
-// Combinar, dando prioridad a las de la base de datos si existen, sino usar el mock
-let news = (dbNews && dbNews.length > 0) ? dbNews : mockNews;
+// Usar directamente las noticias reales que hemos configurado
+let news = mockNews;
 
 const featuredNews = news[0];
 const regularNews = news.slice(1);
@@ -123,32 +132,6 @@ const regularNews = news.slice(1);
     </div>
   </div>
 
-  <!-- News Modal -->
-  <div id="news-modal" class="modal-overlay">
-    <div class="modal-content news-modal-content">
-      <button class="close-modal" id="close-news-modal">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-      
-      <div class="modal-header-img" id="modal-image"></div>
-      
-      <div class="modal-body">
-        <div class="modal-tags" id="modal-tags"></div>
-        <h2 id="modal-title" class="modal-title">Título</h2>
-        <div class="modal-meta">
-          <span id="modal-date">Fecha</span>
-        </div>
-        <div class="modal-text">
-          <p id="modal-summary" class="lead-text"></p>
-          <div class="divider"></div>
-          <p id="modal-full-content" class="full-content"></p>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <style>
@@ -296,118 +279,6 @@ const regularNews = news.slice(1);
     color: var(--color-text-muted);
   }
 
-  /* Modal Styles */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(5px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-  }
-
-  .modal-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .news-modal-content {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
-    width: 90%;
-    max-width: 800px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    transform: translateY(20px);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .modal-overlay.active .news-modal-content {
-    transform: translateY(0);
-  }
-
-  .close-modal {
-    position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    background: rgba(0, 0, 0, 0.5);
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 10;
-    transition: background 0.2s;
-  }
-
-  .close-modal:hover {
-    background: var(--color-error);
-  }
-
-  .modal-header-img {
-    width: 100%;
-    height: 300px;
-    background-size: cover;
-    background-position: center;
-    background-color: var(--color-bg-tertiary);
-  }
-
-  .modal-body {
-    padding: 3rem;
-  }
-
-  .modal-tags {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .modal-title {
-    font-family: var(--font-heading);
-    font-size: 2.2rem;
-    color: var(--color-text-primary);
-    margin-bottom: 1rem;
-    line-height: 1.2;
-  }
-
-  .modal-meta {
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-    margin-bottom: 2rem;
-  }
-
-  .lead-text {
-    font-size: 1.2rem;
-    color: var(--color-text-primary);
-    line-height: 1.6;
-    font-weight: 500;
-  }
-
-  .divider {
-    height: 1px;
-    background: var(--color-border);
-    margin: 2rem 0;
-  }
-
-  .full-content {
-    color: var(--color-text-secondary);
-    line-height: 1.8;
-    font-size: 1.05rem;
-  }
-
   @media (max-width: 768px) {
     .featured-content {
       padding: 2rem;
@@ -420,19 +291,11 @@ const regularNews = news.slice(1);
     .featured-news {
       min-height: 300px;
     }
-
-    .modal-body {
-      padding: 1.5rem;
-    }
-
-    .modal-title {
-      font-size: 1.5rem;
-    }
   }
 </style>
 
 <script>
-  // Filtering logic
+  // ===== Filtering logic =====
   const filterBtns = document.querySelectorAll('.filter-btn');
   const newsCards = document.querySelectorAll('.news-card');
   const featuredWrapper = document.querySelector('.featured-news-wrapper') as HTMLElement;
@@ -442,13 +305,9 @@ const regularNews = news.slice(1);
 
   function filterNews() {
     let visibleCount = 0;
-
-    // Filter regular cards
     newsCards.forEach((card) => {
       const tagsString = (card as HTMLElement).dataset.tags || '';
-      
       const matchesCategory = currentCategory === 'todas' || tagsString.includes(currentCategory);
-
       if (matchesCategory) {
         (card as HTMLElement).style.display = 'block';
         visibleCount++;
@@ -456,17 +315,14 @@ const regularNews = news.slice(1);
         (card as HTMLElement).style.display = 'none';
       }
     });
-
-    // Hide/Show featured based on filter (if 'todas' show it, else hide to avoid confusion)
     if (featuredWrapper) {
       if (currentCategory === 'todas') {
         featuredWrapper.style.display = 'block';
-        visibleCount++; // Count featured as visible
+        visibleCount++;
       } else {
         featuredWrapper.style.display = 'none';
       }
     }
-
     if (noResults) {
       noResults.style.display = visibleCount === 0 ? 'block' : 'none';
     }
@@ -476,103 +332,268 @@ const regularNews = news.slice(1);
     btn.addEventListener('click', () => {
       filterBtns.forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
-
       currentCategory = btn.textContent?.toLowerCase().trim() || 'todas';
       filterNews();
     });
   });
 
-  // Modal logic
-  const modal = document.getElementById('news-modal');
-  const closeBtn = document.getElementById('close-news-modal');
-  
-  // Modal elements
-  const mImage = document.getElementById('modal-image');
-  const mTags = document.getElementById('modal-tags');
-  const mTitle = document.getElementById('modal-title');
-  const mDate = document.getElementById('modal-date');
-  const mSummary = document.getElementById('modal-summary');
-  const mContent = document.getElementById('modal-full-content');
+  // ===== Modal: creado dinámicamente en document.body =====
+  // Esto evita el bug de CSS donde position:fixed se rompe
+  // dentro de contenedores con transform (animate-fade-in-up).
 
-  const readMoreBtns = document.querySelectorAll('.read-more-btn');
-
-  function openModal(data: any) {
-    if (!modal) return;
-
-    // Set image
-    if (mImage) {
-      if (data.image) {
-        mImage.style.backgroundImage = `url('${data.image}')`;
-        mImage.style.display = 'block';
-      } else {
-        mImage.style.display = 'none';
-      }
-    }
-
-    // Set tags
-    if (mTags) {
-      mTags.innerHTML = '';
-      if (data.tags) {
-        const tagList = data.tags.split(',').filter((t: string) => t.trim() !== '');
-        tagList.forEach((tag: string) => {
-          const span = document.createElement('span');
-          span.className = 'tag tag-violet'; // generic color
-          span.textContent = tag;
-          mTags.appendChild(span);
-        });
-      }
-    }
-
-    // Set texts
-    if (mTitle) mTitle.textContent = data.title || '';
-    if (mDate) mDate.textContent = data.date || '';
-    if (mSummary) mSummary.textContent = data.summary || '';
-    if (mContent) {
-      // Si no hay contenido detallado, mostramos el resumen o un lorem ipsum extendido en el mock
-      mContent.textContent = data.content || data.summary || '';
-    }
-
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  // Crear el overlay directamente en el body
+  let modalOverlay = document.getElementById('news-modal-dynamic');
+  if (!modalOverlay) {
+    modalOverlay = document.createElement('div');
+    modalOverlay.id = 'news-modal-dynamic';
+    document.body.appendChild(modalOverlay);
   }
 
-  function closeModal() {
-    if (!modal) return;
-    modal.classList.remove('active');
+  // Inyectar estilos globales para el modal (una sola vez)
+  if (!document.getElementById('news-modal-styles')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'news-modal-styles';
+    styleEl.textContent = `
+      #news-modal-dynamic {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(8px);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      #news-modal-dynamic.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      #news-modal-dynamic .nm-box {
+        background: #0A0E17;
+        border: 1px solid #1E293B;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 800px;
+        max-height: 85vh;
+        overflow-y: auto;
+        position: relative;
+        transform: translateY(20px);
+        transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      }
+      #news-modal-dynamic.open .nm-box {
+        transform: translateY(0);
+      }
+      /* Scrollbar visible dentro del modal */
+      #news-modal-dynamic .nm-box::-webkit-scrollbar {
+        width: 10px;
+      }
+      #news-modal-dynamic .nm-box::-webkit-scrollbar-track {
+        background: #131A28;
+        border-radius: 0 20px 20px 0;
+      }
+      #news-modal-dynamic .nm-box::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 10px;
+        border: 2px solid #131A28;
+      }
+      #news-modal-dynamic .nm-box::-webkit-scrollbar-thumb:hover {
+        background: #00F0FF;
+      }
+      #news-modal-dynamic .nm-close {
+        position: sticky;
+        top: 1rem;
+        float: right;
+        margin-right: 1rem;
+        margin-top: 1rem;
+        background: rgba(0,0,0,0.6);
+        border: none;
+        color: white;
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        transition: background 0.2s;
+      }
+      #news-modal-dynamic .nm-close:hover {
+        background: #EF4444;
+      }
+      #news-modal-dynamic .nm-img {
+        width: 100%;
+        height: 300px;
+        background-size: cover;
+        background-position: center;
+        background-color: #131A28;
+        border-radius: 20px 20px 0 0;
+        margin-top: -56px;
+      }
+      #news-modal-dynamic .nm-body {
+        padding: 2.5rem 3rem 3rem;
+      }
+      #news-modal-dynamic .nm-tags {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+      #news-modal-dynamic .nm-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.65rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        border-radius: 9999px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        background: rgba(124,58,237,0.15);
+        color: #66FBFF;
+        border: 1px solid rgba(124,58,237,0.25);
+      }
+      #news-modal-dynamic .nm-title {
+        font-family: 'Space Grotesk','Inter',system-ui,sans-serif;
+        font-size: 2.2rem;
+        color: #F1F5F9;
+        margin: 0 0 1rem 0;
+        line-height: 1.2;
+      }
+      #news-modal-dynamic .nm-date {
+        color: #64748B;
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+        display: block;
+      }
+      #news-modal-dynamic .nm-summary {
+        font-size: 1.2rem;
+        color: #F1F5F9;
+        line-height: 1.6;
+        font-weight: 500;
+        margin: 0 0 0 0;
+      }
+      #news-modal-dynamic .nm-divider {
+        height: 1px;
+        background: #1E293B;
+        margin: 2rem 0;
+      }
+      #news-modal-dynamic .nm-content {
+        color: #94A3B8;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        margin: 0;
+      }
+      @media (max-width: 768px) {
+        #news-modal-dynamic { padding: 1rem; }
+        #news-modal-dynamic .nm-body { padding: 1.5rem; }
+        #news-modal-dynamic .nm-title { font-size: 1.5rem; }
+        #news-modal-dynamic .nm-img { height: 200px; }
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
+  // Contenido interno del modal
+  modalOverlay.innerHTML = `
+    <div class="nm-box">
+      <button class="nm-close" aria-label="Cerrar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div class="nm-img" id="nm-img"></div>
+      <div class="nm-body">
+        <div class="nm-tags" id="nm-tags"></div>
+        <h2 class="nm-title" id="nm-title"></h2>
+        <span class="nm-date" id="nm-date"></span>
+        <p class="nm-summary" id="nm-summary"></p>
+        <div class="nm-divider"></div>
+        <p class="nm-content" id="nm-content"></p>
+      </div>
+    </div>
+  `;
+
+  const nmBox = modalOverlay.querySelector('.nm-box') as HTMLElement;
+  const nmClose = modalOverlay.querySelector('.nm-close') as HTMLElement;
+  const nmImg = document.getElementById('nm-img') as HTMLElement;
+  const nmTags = document.getElementById('nm-tags') as HTMLElement;
+  const nmTitle = document.getElementById('nm-title') as HTMLElement;
+  const nmDate = document.getElementById('nm-date') as HTMLElement;
+  const nmSummary = document.getElementById('nm-summary') as HTMLElement;
+  const nmContent = document.getElementById('nm-content') as HTMLElement;
+
+  function openNewsModal(data: any) {
+    // Imagen
+    if (data.image) {
+      nmImg.style.backgroundImage = `url('${data.image}')`;
+      nmImg.style.display = 'block';
+    } else {
+      nmImg.style.display = 'none';
+    }
+
+    // Tags
+    nmTags.innerHTML = '';
+    if (data.tags) {
+      const tagList = data.tags.split(',').filter((t: string) => t.trim() !== '');
+      tagList.forEach((tag: string) => {
+        const span = document.createElement('span');
+        span.className = 'nm-tag';
+        span.textContent = tag.trim();
+        nmTags.appendChild(span);
+      });
+    }
+
+    // Textos
+    nmTitle.textContent = data.title || '';
+    nmDate.textContent = data.date || '';
+    nmSummary.textContent = data.summary || '';
+    nmContent.textContent = data.content || data.summary || '';
+
+    // Scroll del modal al inicio
+    nmBox.scrollTop = 0;
+
+    // Abrir
+    modalOverlay!.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeNewsModal() {
+    modalOverlay!.classList.remove('open');
     document.body.style.overflow = '';
   }
 
+  // Escuchar botones "Leer más"
+  const readMoreBtns = document.querySelectorAll('.read-more-btn');
   readMoreBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const el = e.currentTarget as HTMLElement;
-      
-      const data = {
+      openNewsModal({
         title: el.dataset.title,
         summary: el.dataset.summary,
         date: el.dataset.date,
         image: el.dataset.image,
         tags: el.dataset.tags,
-        content: el.dataset.content // Esto lo podemos pasar o inferir
-      };
-      
-      openModal(data);
+        content: el.dataset.content
+      });
     });
   });
 
-  closeBtn?.addEventListener('click', closeModal);
+  // Cerrar con X
+  nmClose.addEventListener('click', closeNewsModal);
 
-  // Close on background click
-  modal?.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      closeModal();
-    }
+  // Cerrar al hacer clic en el fondo oscuro
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeNewsModal();
   });
 
-  // Close on Escape key
+  // Cerrar con Escape
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal?.classList.contains('active')) {
-      closeModal();
+    if (e.key === 'Escape' && modalOverlay!.classList.contains('open')) {
+      closeNewsModal();
     }
   });
 </script>
+
