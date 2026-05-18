@@ -19,29 +19,80 @@ if (targetUserName) {
   targetProfile = data;
 }
 
-// Si hay un targetUserName pero no se encuentra en DB, es un mock user.
-const isMockUser = targetUserName && !targetProfile;
+// Si hay un targetUserName pero no se encuentra en DB, es un 404
+if (targetUserName && !targetProfile) {
+  return new Response('Usuario no encontrado', { status: 404 });
+}
+
 const isOwnProfile = !targetUserName || (targetProfile && targetProfile.id === user.id);
-const displayProfile = targetProfile || (isMockUser ? null : myProfile);
+const displayProfile = targetProfile || myProfile;
+
+if (!displayProfile) {
+  return new Response('Perfil no encontrado', { status: 404 });
+}
+
+// Obtener amigos aceptados
+const { data: friendsData, error: friendsError } = await supabase
+  .from('friend_requests')
+  .select(`
+    id,
+    sender:sender_id(id, name, avatar_url),
+    receiver:receiver_id(id, name, avatar_url)
+  `)
+  .eq('status', 'accepted')
+  .or(`sender_id.eq.${displayProfile.id},receiver_id.eq.${displayProfile.id}`);
+
+if (friendsError) {
+  console.error("Error fetching friends data:", friendsError);
+}
+
+const friendsList = (friendsData || []).map(req => {
+  const sender = Array.isArray(req.sender) ? req.sender[0] : req.sender;
+  const receiver = Array.isArray(req.receiver) ? req.receiver[0] : req.receiver;
+  return sender.id === displayProfile.id ? receiver : sender;
+});
+
+const friendsCount = friendsList.length;
+
+let friendStatus = 'none'; // 'none', 'pending_sent', 'pending_received', 'accepted'
+let friendRequestId = null;
+
+if (!isOwnProfile) {
+  const { data: rel } = await supabase
+    .from('friend_requests')
+    .select('*')
+    .or(`and(sender_id.eq.${user.id},receiver_id.eq.${displayProfile.id}),and(sender_id.eq.${displayProfile.id},receiver_id.eq.${user.id})`)
+    .limit(1)
+    .single();
+
+  if (rel) {
+    friendRequestId = rel.id;
+    if (rel.status === 'accepted') {
+      friendStatus = 'accepted';
+    } else if (rel.status === 'pending') {
+      friendStatus = rel.sender_id === user.id ? 'pending_sent' : 'pending_received';
+    }
+  }
+}
 
 const profileData = {
-  id: displayProfile?.id,
-  name: displayProfile?.name || targetUserName || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador',
-  avatarUrl: displayProfile?.avatar_url || null,
-  level: displayProfile?.level || (isMockUser ? Math.floor(Math.random() * 50) + 1 : 1),
-  followers: displayProfile?.followers_count || (isMockUser ? Math.floor(Math.random() * 500) : 0),
-  gamesPlayed: displayProfile?.games_played || (isMockUser ? Math.floor(Math.random() * 100) : 0),
-  description: displayProfile?.description || (isMockUser ? `Perfil de ${targetUserName}. Jugador competitivo siempre buscando equipo para rankear.` : 'Jugador competitivo siempre buscando equipo para rankear.'),
-  favoriteGames: displayProfile?.favorite_games || [],
-  playStyle: displayProfile?.play_style || (isMockUser ? 'Competitivo' : ''),
-  playerTypeSought: displayProfile?.player_type_sought || (isMockUser ? 'Ranked' : ''),
+  id: displayProfile.id,
+  name: displayProfile.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador',
+  avatarUrl: displayProfile.avatar_url || null,
+  level: displayProfile.level || 1,
+  followers: friendsCount,
+  gamesPlayed: displayProfile.games_played || 0,
+  description: displayProfile.description || 'Jugador de Gamio.',
+  favoriteGames: displayProfile.favorite_games || [],
+  playStyle: displayProfile.play_style || '',
+  playerTypeSought: displayProfile.player_type_sought || '',
 };
 ---
 
 
 <MainLayout title={`Perfil de ${profileData.name} — Gamio 🎮`}>
   <div class="dashboard-content animate-fade-in-up">
-    <ProfileView user={profileData} isOwnProfile={isOwnProfile} />
+    <ProfileView user={profileData} isOwnProfile={isOwnProfile} friendStatus={friendStatus} friendRequestId={friendRequestId} friendsList={friendsList} />
   </div>
 </MainLayout>
 

@@ -12,41 +12,28 @@ interface Props {
 
 const { game } = Astro.props;
 
-// Mock data base para jugadores
-const mockPlayersBase = [
-  { name: 'AlexGamer', level: 42, rank: 'diamond', games: [game, 'CS:GO', 'Apex Legends'], region: 'EUW', online: true },
-  { name: 'SniperPro', level: 35, rank: 'platinum', games: [game, 'Valorant'], region: 'EUW', online: true },
-  { name: 'Marta10', level: 50, rank: 'gold', games: [game, 'League of Legends', 'Teamfight Tactics'], region: 'EUW', online: false },
-  { name: 'NoobMaster', level: 12, rank: 'bronze', games: [game, 'Minecraft'], region: 'NA', online: true },
-  { name: 'ProPlayer99', level: 88, rank: 'diamond', games: [game, 'Overwatch 2'], region: 'EUW', online: true },
-  { name: 'LauraGG', level: 27, rank: 'silver', games: [game, 'Rocket League', 'Fortnite'], region: 'LATAM', online: false },
-  { name: 'Carlos_ESP', level: 45, rank: 'platinum', games: [game, 'EA FC 25'], region: 'EUW', online: true },
-  { name: 'GamerGirl_x', level: 61, rank: 'gold', games: [game, 'Dead By Daylight', 'Valorant'], region: 'NA', online: true },
-];
+// Obtener perfiles reales de la DB
+const { data: dbProfiles } = await supabase.from('profiles').select('*').limit(100);
 
-// Opcional: Obtener perfiles reales de la DB y combinarlos (simulando que juegan a este juego)
-const { data: dbProfiles } = await supabase.from('profiles').select('*').limit(4);
+const allPlayers = (dbProfiles || []).map(profile => ({
+  name: profile.name || 'Jugador',
+  level: profile.level || 1,
+  rank: 'unranked' as any, // Sin rango por defecto, evitando aleatoriedad falsa
+  games: profile.favorite_games || [], // Usar los juegos reales, sin inventar
+  region: 'EUW',
+  online: true // Asumimos online por ahora, sin falsear con random
+}));
 
-const allPlayers = [...mockPlayersBase];
+// Filtrar para que SOLO salgan los jugadores que realmente tengan este juego en favoritos
+const filteredPlayers = allPlayers.filter(p => p.games.some((g: string) => {
+  let key = g.toLowerCase();
+  // Normalizar nombres antiguos o desajustados para que coincidan con el catálogo
+  if (key === 'call of duty') key = 'call of duty: warzone';
+  if (key === 'ea fc 24') key = 'ea fc 25';
+  return key === game.toLowerCase();
+}));
 
-if (dbProfiles) {
-  dbProfiles.forEach(profile => {
-    // Solo añadir si no existe ya un mock con nombre parecido para no duplicar
-    if (!allPlayers.find(p => p.name.toLowerCase() === (profile.name || '').toLowerCase())) {
-      allPlayers.push({
-        name: profile.name || 'Jugador',
-        level: profile.level || Math.floor(Math.random() * 50) + 1,
-        rank: ['bronze', 'silver', 'gold', 'platinum', 'diamond'][Math.floor(Math.random() * 5)] as any,
-        games: [game, 'Otro Juego'], // Simulamos que juegan al juego solicitado
-        region: 'EUW',
-        online: Math.random() > 0.3 // 70% online
-      });
-    }
-  });
-}
-
-// Mezclar un poco los jugadores para que no salgan siempre igual
-const shuffledPlayers = allPlayers.sort(() => 0.5 - Math.random());
+const shuffledPlayers = filteredPlayers.sort(() => 0.5 - Math.random());
 ---
 
 <div class="matchmaking-view animate-fade-in-up">

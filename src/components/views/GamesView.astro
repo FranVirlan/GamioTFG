@@ -6,36 +6,59 @@
 import GameCard from '../domain/GameCard.astro';
 import { supabase } from '../../lib/supabase';
 
-const { data: dbGames } = await supabase.from('games').select('*').order('players_count', { ascending: false });
+const { data: dbGames } = await supabase.from('games').select('*');
+const { data: profilesData } = await supabase.from('profiles').select('favorite_games');
+
+// Calcular el número real de jugadores contando en tiempo real
+const gameCounts: Record<string, number> = {};
+if (profilesData) {
+  profilesData.forEach(p => {
+    if (p.favorite_games && Array.isArray(p.favorite_games)) {
+      p.favorite_games.forEach(gameName => {
+        let key = gameName.toLowerCase();
+        // Normalizar nombres antiguos o desajustados para que coincidan con el catálogo
+        if (key === 'call of duty') key = 'call of duty: warzone';
+        if (key === 'ea fc 24') key = 'ea fc 25';
+        
+        gameCounts[key] = (gameCounts[key] || 0) + 1;
+      });
+    }
+  });
+}
 
 const staticGames = [
-  { name: 'League of Legends', genre: 'MOBA', players_count: 28912, color_theme: 'violet', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.jpg' },
-  { name: 'Valorant', genre: 'FPS TÁCTICO', players_count: 12453, color_theme: 'blue', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg' },
-  { name: 'EA FC 25', genre: 'Deportes', players_count: 8540, color_theme: 'green', image: 'https://steamcdn-a.akamaihd.net/steam/apps/2669320/library_600x900.jpg' },
-  { name: 'Dead By Daylight', genre: 'Survival', players_count: 6200, color_theme: 'violet', image: 'https://steamcdn-a.akamaihd.net/steam/apps/381210/library_600x900.jpg' },
-  { name: 'Call of Duty: Warzone', genre: 'Battle Royale', players_count: 15300, color_theme: 'orange', image: 'https://steamcdn-a.akamaihd.net/steam/apps/1962663/library_600x900.jpg' },
-  { name: 'Rocket League', genre: 'Deportes', players_count: 9800, color_theme: 'blue', image: 'https://steamcdn-a.akamaihd.net/steam/apps/252950/library_600x900.jpg' },
-  { name: 'Fortnite', genre: 'Battle Royale', players_count: 15678, color_theme: 'violet', image: 'https://upload.wikimedia.org/wikipedia/en/a/ae/Fortnite_Save_The_World.jpg' },
-  { name: 'Apex Legends', genre: 'Battle Royale', players_count: 11200, color_theme: 'orange', image: 'https://steamcdn-a.akamaihd.net/steam/apps/1172470/library_600x900.jpg' }
+  { name: 'League of Legends', genre: 'MOBA', color_theme: 'violet', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.jpg' },
+  { name: 'Valorant', genre: 'FPS TÁCTICO', color_theme: 'blue', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg' },
+  { name: 'EA FC 25', genre: 'Deportes', color_theme: 'green', image: 'https://steamcdn-a.akamaihd.net/steam/apps/2669320/library_600x900.jpg' },
+  { name: 'Dead By Daylight', genre: 'Survival', color_theme: 'violet', image: 'https://steamcdn-a.akamaihd.net/steam/apps/381210/library_600x900.jpg' },
+  { name: 'Call of Duty: Warzone', genre: 'Battle Royale', color_theme: 'orange', image: 'https://steamcdn-a.akamaihd.net/steam/apps/1962663/library_600x900.jpg' },
+  { name: 'Rocket League', genre: 'Deportes', color_theme: 'blue', image: 'https://steamcdn-a.akamaihd.net/steam/apps/252950/library_600x900.jpg' },
+  { name: 'Fortnite', genre: 'Battle Royale', color_theme: 'violet', image: 'https://upload.wikimedia.org/wikipedia/en/a/ae/Fortnite_Save_The_World.jpg' },
+  { name: 'Apex Legends', genre: 'Battle Royale', color_theme: 'orange', image: 'https://steamcdn-a.akamaihd.net/steam/apps/1172470/library_600x900.jpg' }
 ];
 
 const mergedGames = staticGames.map(staticGame => {
   const dbGame = dbGames?.find(g => g.name === staticGame.name);
-  if (dbGame) {
-    return { ...staticGame, ...dbGame, image: staticGame.image }; // Keep static image
-  }
-  return staticGame;
+  const realCount = gameCounts[staticGame.name.toLowerCase()] || 0;
+  return { 
+    ...staticGame, 
+    ...dbGame, 
+    players_count: realCount, // Número 100% real de la base de datos de perfiles
+    image: staticGame.image 
+  };
 });
 
 // Add any games from DB that are not in staticGames
 if (dbGames) {
   dbGames.forEach(dbGame => {
     if (!mergedGames.find(g => g.name === dbGame.name)) {
-      mergedGames.push(dbGame);
+      const realCount = gameCounts[dbGame.name.toLowerCase()] || 0;
+      mergedGames.push({ ...dbGame, players_count: realCount });
     }
   });
 }
 
+// Ahora sí ordenamos por el conteo real
 const games = mergedGames.sort((a, b) => b.players_count - a.players_count);
 const categories = ['Todos', 'FPS', 'MOBA', 'Battle Royale', 'Deportes', 'Sandbox'];
 ---

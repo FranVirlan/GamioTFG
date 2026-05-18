@@ -5,6 +5,9 @@
  */
 interface Props {
   isOwnProfile?: boolean;
+  friendStatus?: string;
+  friendRequestId?: string | null;
+  friendsList?: any[];
   user?: {
     id?: string;
     name: string;
@@ -21,22 +24,16 @@ interface Props {
 
 const { 
   isOwnProfile = true,
-  user = {
-    name: 'Usuario Gamio',
-    level: 42,
-    followers: 1250,
-    gamesPlayed: 340,
-    description: 'Jugador competitivo de Valorant y amante de los juegos indies.',
-    favoriteGames: ['Valorant', 'Minecraft', 'Rocket League'],
-    playStyle: 'Competitivo',
-    playerTypeSought: 'Ranked',
-  }
+  friendStatus = 'none',
+  friendRequestId = null,
+  friendsList = [],
+  user
 } = Astro.props;
 
 const popularGames = [
   "League of Legends", "Valorant", "Counter-Strike 2",
-  "Minecraft", "Fortnite", "Apex Legends",
-  "Overwatch 2", "Call of Duty", "Rocket League", "EA FC 24"
+  "Dead By Daylight", "Fortnite", "Apex Legends",
+  "Overwatch 2", "Call of Duty: Warzone", "Rocket League", "EA FC 25"
 ];
 ---
 
@@ -64,7 +61,11 @@ const popularGames = [
           </>
         ) : (
           <>
-            <button class="btn-primary">Añadir Amigo</button>
+            {friendStatus === 'accepted' && <button class="btn-primary" disabled style="background: rgba(34, 197, 94, 0.2); color: #4ADE80; border-color: rgba(34, 197, 94, 0.4);">✓ Amigos</button>}
+            {friendStatus === 'pending_sent' && <button class="btn-primary" disabled style="background: rgba(124, 58, 237, 0.2); color: #C4B5FD; border-color: rgba(124, 58, 237, 0.4);">Solicitud Pendiente</button>}
+            {friendStatus === 'pending_received' && <button class="btn-primary btn-accept-friend-req" data-request-id={friendRequestId}>Aceptar Solicitud</button>}
+            {friendStatus === 'none' && <button class="btn-primary btn-add-friend" data-target-id={user.id}>Añadir Amigo</button>}
+            
             <button class="btn-secondary message-btn" data-target-id={user.id}>Mensaje</button>
           </>
         )}
@@ -82,9 +83,9 @@ const popularGames = [
       <span class="stat-value text-accent">{user.gamesPlayed}</span>
       <span class="stat-label">Partidas Jugadas</span>
     </div>
-    <div class="stat-card">
+    <div class="stat-card clickable-stat" id="friends-stat-card">
       <span class="stat-value text-secondary">{user.followers}</span>
-      <span class="stat-label">Seguidores</span>
+      <span class="stat-label">Amigos</span>
     </div>
   </div>
 
@@ -231,6 +232,38 @@ const popularGames = [
 </div>
 )}
 
+<!-- ══════════ MODAL: Lista de Amigos ══════════ -->
+<div id="friends-modal" class="pv-modal-overlay pv-hidden">
+  <div class="pv-modal-content animate-fade-in-up">
+    <div class="pv-modal-header">
+      <h3>🫂 Lista de Amigos</h3>
+      <button class="pv-close-btn" data-close="friends-modal">&times;</button>
+    </div>
+    <div class="pv-friends-list">
+      {(!friendsList || friendsList.length === 0) ? (
+        <div class="empty-state" style="padding: 2rem;">
+          <p>No hay amigos que mostrar.</p>
+        </div>
+      ) : (
+        friendsList.map((friend) => (
+          <div class="pv-friend-item">
+            <a href={`/perfil?usuario=${friend.name}`} class="pv-friend-link">
+              <div class="pv-friend-avatar">
+                {friend.avatar_url ? (
+                  <img src={friend.avatar_url} alt={friend.name} />
+                ) : (
+                  <span>{friend.name.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <span class="pv-friend-name">{friend.name}</span>
+            </a>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+</div>
+
 <style>
   /* ── Profile Layout ── */
   .profile-view { display: flex; flex-direction: column; gap: 2rem; width: 100%; }
@@ -247,6 +280,8 @@ const popularGames = [
   /* ── Stats ── */
   .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
   .stat-card { background: var(--color-surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1.5rem; text-align: center; display: flex; flex-direction: column; gap: 0.5rem; }
+  .clickable-stat { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  .clickable-stat:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
   .stat-value { font-family: var(--font-heading); font-size: 2rem; font-weight: 700; }
   .text-primary { color: var(--color-primary); }
   .text-accent { color: var(--color-accent); }
@@ -347,6 +382,17 @@ const popularGames = [
   .pv-danger-zone { }
   .pv-danger-text { font-size: 0.85rem; color: var(--color-text-muted); margin: 0; }
 
+  /* Friends List Modal */
+  .pv-friends-list { display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem; }
+  .pv-friends-list::-webkit-scrollbar { width: 6px; }
+  .pv-friends-list::-webkit-scrollbar-thumb { background-color: var(--color-border); border-radius: 10px; }
+  .pv-friend-item { background: rgba(11,15,26,0.6); border: 1px solid var(--color-border); border-radius: var(--radius-md); transition: all 0.2s; }
+  .pv-friend-item:hover { border-color: var(--color-secondary); transform: translateX(4px); }
+  .pv-friend-link { display: flex; align-items: center; gap: 1rem; padding: 1rem; text-decoration: none; color: inherit; }
+  .pv-friend-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); display: flex; align-items: center; justify-content: center; font-weight: bold; overflow: hidden; flex-shrink: 0; }
+  .pv-friend-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .pv-friend-name { font-weight: 600; font-size: 1.05rem; }
+
   /* ── Responsive ── */
   @media (max-width: 768px) {
     .profile-info-container { flex-direction: column; align-items: center; text-align: center; }
@@ -386,6 +432,11 @@ const popularGames = [
   // ── Open Settings ──
   document.getElementById('settings-btn')?.addEventListener('click', () => {
     openModal('settings-modal');
+  });
+
+  // ── Open Friends List ──
+  document.getElementById('friends-stat-card')?.addEventListener('click', () => {
+    openModal('friends-modal');
   });
 
   // ── Save Profile ──
@@ -469,18 +520,19 @@ const popularGames = [
     }
   });
 
-  // ── Message button (for other users' profiles) ──
-  const msgBtns = document.querySelectorAll('.message-btn');
-  msgBtns.forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const targetId = (e.currentTarget as HTMLElement).dataset.targetId;
-      if (!targetId) {
-        alert('Este es un jugador de prueba (mock). No puedes enviarle mensajes privados porque no existe en la base de datos.');
-        return;
-      }
-      const originalText = btn.textContent;
-      btn.textContent = 'Iniciando...';
-      btn.setAttribute('disabled', 'true');
+  // ── Event Delegation for Profile Buttons ──
+  document.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+
+    // --- Message Button ---
+    const msgBtn = target.closest('.message-btn') as HTMLButtonElement;
+    if (msgBtn && !msgBtn.disabled) {
+      const targetId = msgBtn.dataset.targetId;
+      if (!targetId) return;
+      
+      const originalText = msgBtn.textContent;
+      msgBtn.textContent = 'Iniciando...';
+      msgBtn.disabled = true;
       try {
         const res = await fetch('/api/conversations', {
           method: 'POST',
@@ -492,15 +544,75 @@ const popularGames = [
           window.location.href = `/mensajes/${data.id}`;
         } else {
           alert('Error: ' + (data.error || 'No se pudo iniciar el chat'));
-          btn.textContent = originalText;
-          btn.removeAttribute('disabled');
+          msgBtn.textContent = originalText;
+          msgBtn.disabled = false;
         }
       } catch (err) {
-        console.error(err);
         alert('Error conectando con el servidor.');
-        btn.textContent = originalText;
-        btn.removeAttribute('disabled');
+        msgBtn.textContent = originalText;
+        msgBtn.disabled = false;
       }
-    });
+      return; // Stop here if handled
+    }
+
+    // --- Add Friend Button ---
+    const addBtn = target.closest('.btn-add-friend') as HTMLButtonElement;
+    if (addBtn && !addBtn.disabled) {
+      const targetId = addBtn.dataset.targetId;
+      if (!targetId) return;
+      
+      const originalText = addBtn.textContent;
+      addBtn.textContent = 'Enviando...';
+      addBtn.disabled = true;
+      try {
+        const res = await fetch('/api/friends/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ receiver_id: targetId })
+        });
+        if (res.ok) {
+          window.location.reload(); 
+        } else {
+          const data = await res.json();
+          alert('Error: ' + (data.error || 'No se pudo enviar la solicitud.'));
+          addBtn.textContent = originalText;
+          addBtn.disabled = false;
+        }
+      } catch (err) {
+        alert('Error conectando con el servidor.');
+        addBtn.textContent = originalText;
+        addBtn.disabled = false;
+      }
+      return; // Stop here if handled
+    }
+
+    // --- Accept Friend Request Button (on Profile) ---
+    const acceptReqBtn = target.closest('.btn-accept-friend-req') as HTMLButtonElement;
+    if (acceptReqBtn && !acceptReqBtn.disabled) {
+      const reqId = acceptReqBtn.dataset.requestId;
+      if (!reqId) return;
+      
+      const originalText = acceptReqBtn.textContent;
+      acceptReqBtn.textContent = 'Aceptando...';
+      acceptReqBtn.disabled = true;
+      try {
+        const res = await fetch('/api/friends/respond', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ request_id: reqId, status: 'accepted' })
+        });
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          alert('Error al aceptar solicitud.');
+          acceptReqBtn.textContent = originalText;
+          acceptReqBtn.disabled = false;
+        }
+      } catch (err) {
+        alert('Error de conexión.');
+        acceptReqBtn.textContent = originalText;
+        acceptReqBtn.disabled = false;
+      }
+    }
   });
 </script>

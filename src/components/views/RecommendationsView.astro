@@ -4,15 +4,20 @@
  * Vista de recomendaciones (amigos, comunidades, juegos).
  */
 
-const userRecommendations = [
-  { id: 1, name: 'SniperPro', level: 34, reason: 'Juega a Valorant (como tú)', avatar: 'S' },
-  { id: 2, name: 'AlexGamer', level: 21, reason: 'Amigo de amigos', avatar: 'A' },
-  { id: 3, name: 'LaBestia', level: 56, reason: 'Jugador destacado en tu región', avatar: 'L' }
-];
+import { supabase } from '../../lib/supabase';
+
+// Fetch users for recommendations
+const { data: profiles } = await supabase.from('profiles').select('*').limit(3);
+const userRecommendations = (profiles || []).map(p => ({
+  id: p.id,
+  name: p.name || 'Jugador',
+  level: p.level || 1,
+  reason: 'Recomendado',
+  avatar: p.name ? p.name.charAt(0).toUpperCase() : 'J'
+}));
 
 const communityRecommendations = [
-  { id: 1, name: 'Amantes del Indie', members: '1.2k', reason: 'Basado en tus preferencias' },
-  { id: 2, name: 'Comunidad Valorant ESP', members: '5.4k', reason: 'Comunidad oficial en España' }
+  // Si no tenemos tabla de comunidades, dejamos vacío para que no haya mocks
 ];
 ---
 
@@ -57,7 +62,7 @@ const communityRecommendations = [
         <button class="btn-text">Ver más</button>
       </div>
       <div class="rec-grid">
-        {communityRecommendations.map(comm => (
+        {communityRecommendations.length > 0 ? communityRecommendations.map(comm => (
           <div class="rec-card comm-rec">
             <div class="comm-icon">🎮</div>
             <div class="rec-info">
@@ -66,7 +71,9 @@ const communityRecommendations = [
             </div>
             <button class="btn-secondary btn-sm">Unirse</button>
           </div>
-        ))}
+        )) : (
+          <p style="color: var(--color-text-muted);">No hay comunidades recomendadas en este momento.</p>
+        )}
       </div>
     </section>
   </div>
