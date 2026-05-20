@@ -38,6 +38,17 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
 
     if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
 
+    // Otorgar +20 puntos y +40 XP a ambos usuarios cuando se acepta una amistad
+    try {
+      if (status === 'accepted') {
+        const senderId = data.sender_id;
+        await supabase.rpc('earn_points', { p_profile_id: senderId, p_amount: 20, p_xp_amount: 40 });
+        await supabase.rpc('earn_points', { p_profile_id: user.id, p_amount: 20, p_xp_amount: 40 });
+      }
+    } catch (rpcErr) {
+      console.error('Error al otorgar puntos por amistad:', rpcErr);
+    }
+
     return new Response(JSON.stringify(data), { status: 200 });
   } catch (err) {
     return new Response(JSON.stringify({ error: 'Error del servidor' }), { status: 500 });

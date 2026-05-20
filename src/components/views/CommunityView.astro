@@ -303,7 +303,11 @@ const posts = data || [];
       const postId = (e.currentTarget as HTMLElement).dataset.postId;
       if (!postId) return;
 
-      if (!confirm('¿Ya has encontrado a quien buscabas y quieres eliminar este anuncio?')) return;
+      const isConfirmed = (window as any).showCustomConfirm 
+        ? await (window as any).showCustomConfirm('¿Ya has encontrado a quien buscabas y quieres eliminar este anuncio?', 'Eliminar Anuncio', '🗑️')
+        : confirm('¿Ya has encontrado a quien buscabas y quieres eliminar este anuncio?');
+
+      if (!isConfirmed) return;
 
       const originalHTML = btn.innerHTML;
       btn.innerHTML = '<span style="font-size: 0.8rem">...</span>';

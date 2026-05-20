@@ -1,0 +1,975 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import { supabase } from '../lib/supabase';
+
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+// Obtener datos del perfil actual del usuario
+const { data: profile, error: profileError } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('id', user.id)
+  .single();
+
+if (profileError || !profile) {
+  console.error("Error fetching user profile for rewards page:", profileError);
+  return new Response('Perfil no encontrado', { status: 404 });
+}
+
+// Obtener catálogo de recompensas
+const { data: rewards, error: rewardsError } = await supabase
+  .from('rewards')
+  .select('*')
+  .order('cost', { ascending: true });
+
+if (rewardsError) {
+  console.error("Error fetching rewards catalog:", rewardsError);
+}
+
+// Validar si ya reclamó el check-in diario (24 horas)
+let isDailyClaimed = false;
+let nextClaimText = '';
+if (profile.last_daily_claim) {
+  const lastClaim = new Date(profile.last_daily_claim);
+  const diffTime = Math.abs(new Date().getTime() - lastClaim.getTime());
+  const diffHours = diffTime / (1000 * 60 * 60);
+  if (diffHours < 24) {
+    isDailyClaimed = true;
+    const timeRemaining = 24 - diffHours;
+    const hours = Math.floor(timeRemaining);
+    const minutes = Math.floor((timeRemaining - hours) * 60);
+    nextClaimText = `Disponible en ${hours}h ${minutes}m`;
+  }
+}
+
+const userClaimedIds = profile.claimed_rewards || [];
+
+const gameCoinsMap: Record<string, { emoji: string; symbol: string; game: string; gradient: string; borderColor: string; glowColor: string }> = {
+  'coins_lol': {
+    emoji: '🎯',
+    symbol: 'RP',
+    game: 'League of Legends',
+    gradient: 'linear-gradient(135deg, rgba(197, 160, 89, 0.25), rgba(10, 20, 40, 0.85))',
+    borderColor: '#C5A059',
+    glowColor: 'rgba(197, 160, 89, 0.6)'
+  },
+  'coins_valorant': {
+    emoji: '🔫',
+    symbol: 'VP',
+    game: 'Valorant',
+    gradient: 'linear-gradient(135deg, rgba(255, 70, 85, 0.25), rgba(15, 25, 35, 0.85))',
+    borderColor: '#FF4655',
+    glowColor: 'rgba(255, 70, 85, 0.6)'
+  },
+  'coins_cs2': {
+    emoji: '🔑',
+    symbol: 'Steam',
+    game: 'Counter-Strike 2',
+    gradient: 'linear-gradient(135deg, rgba(228, 174, 57, 0.25), rgba(20, 20, 20, 0.85))',
+    borderColor: '#E4AE39',
+    glowColor: 'rgba(228, 174, 57, 0.6)'
+  },
+  'coins_dbd': {
+    emoji: '☠️',
+    symbol: 'AC',
+    game: 'Dead By Daylight',
+    gradient: 'linear-gradient(135deg, rgba(163, 0, 0, 0.25), rgba(10, 10, 10, 0.85))',
+    borderColor: '#A30000',
+    glowColor: 'rgba(163, 0, 0, 0.6)'
+  },
+  'coins_fortnite': {
+    emoji: '🛡️',
+    symbol: 'Pavos',
+    game: 'Fortnite',
+    gradient: 'linear-gradient(135deg, rgba(0, 191, 255, 0.25), rgba(25, 0, 50, 0.85))',
+    borderColor: '#00BFFF',
+    glowColor: 'rgba(0, 191, 255, 0.6)'
+  },
+  'coins_apex': {
+    emoji: '🧬',
+    symbol: 'AC',
+    game: 'Apex Legends',
+    gradient: 'linear-gradient(135deg, rgba(255, 62, 62, 0.25), rgba(30, 0, 0, 0.85))',
+    borderColor: '#FF3E3E',
+    glowColor: 'rgba(255, 62, 62, 0.6)'
+  },
+  'coins_overwatch': {
+    emoji: '🤖',
+    symbol: 'OC',
+    game: 'Overwatch 2',
+    gradient: 'linear-gradient(135deg, rgba(249, 158, 26, 0.25), rgba(20, 30, 45, 0.85))',
+    borderColor: '#F99E1A',
+    glowColor: 'rgba(249, 158, 26, 0.6)'
+  },
+  'coins_cod': {
+    emoji: '💣',
+    symbol: 'CP',
+    game: 'Warzone',
+    gradient: 'linear-gradient(135deg, rgba(139, 128, 0, 0.25), rgba(15, 20, 15, 0.85))',
+    borderColor: '#8B8000',
+    glowColor: 'rgba(139, 128, 0, 0.6)'
+  },
+  'coins_rocket': {
+    emoji: '🏎️',
+    symbol: 'Créditos',
+    game: 'Rocket League',
+    gradient: 'linear-gradient(135deg, rgba(0, 200, 83, 0.25), rgba(10, 25, 50, 0.85))',
+    borderColor: '#00C853',
+    glowColor: 'rgba(0, 200, 83, 0.6)'
+  },
+  'coins_eafc': {
+    emoji: '⚽',
+    symbol: 'FC Pts',
+    game: 'EA FC 25',
+    gradient: 'linear-gradient(135deg, rgba(0, 230, 118, 0.25), rgba(5, 30, 20, 0.85))',
+    borderColor: '#00E676',
+    glowColor: 'rgba(0, 230, 118, 0.6)'
+  }
+};
+---
+
+<MainLayout title="Tienda de Premios ✨ — Gamio">
+  <div class="rewards-dashboard animate-fade-in-up">
+    
+    <!-- CABECERA: Título y Stats de Jugador -->
+    <div class="rewards-header">
+      <div class="header-intro">
+        <h1>Tienda de Recompensas ✨</h1>
+        <p>Gana puntos participando en la comunidad y canjéalos por artículos estéticos premium para lucir en tu perfil.</p>
+      </div>
+
+      <!-- Ficha de Balance y Nivel -->
+      <div class="user-stats-card glass-strong">
+        <div class="stats-row">
+          <!-- Puntos -->
+          <div class="stat-box">
+            <span class="stat-icon">✨</span>
+            <div class="stat-details">
+              <span class="stat-value text-points">{profile.points || 0}</span>
+              <span class="stat-label">Puntos Gamio</span>
+            </div>
+          </div>
+          
+          <!-- Nivel -->
+          <div class="stat-box border-divider">
+            <span class="stat-icon">🏆</span>
+            <div class="stat-details">
+              <span class="stat-value text-level">Nv. {profile.level || 1}</span>
+              <span class="stat-label">Nivel Actual</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Progreso XP -->
+        <div class="xp-section">
+          <div class="xp-labels">
+            <span>XP actual: <strong>{profile.xp || 0}</strong></span>
+            <span>Próximo nivel en {100 - ((profile.xp || 0) % 100)} XP</span>
+          </div>
+          <div class="xp-progress-container">
+            <div class="xp-progress-bar" style={`width: ${(profile.xp || 0) % 100}%`}></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Check-in Diario -->
+    <div class="daily-checkin-section glass-card">
+      <div class="daily-info">
+        <div class="daily-icon-box">🎁</div>
+        <div class="daily-text">
+          <h3>Recompensa Diaria</h3>
+          <p>Reclama puntos gratis y experiencia cada 24 horas solo por conectarte a Gamio.</p>
+        </div>
+      </div>
+      <div class="daily-action">
+        <button id="claim-daily-btn" class={`btn-neon ${isDailyClaimed ? 'claimed' : ''}`} disabled={isDailyClaimed}>
+          {isDailyClaimed ? '✓ Reclamado Hoy' : 'Reclamar +25 Pts & +25 XP'}
+        </button>
+        {isDailyClaimed && <span class="cooldown-timer">⏳ {nextClaimText}</span>}
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Tienda de Premios -->
+    <div class="shop-section">
+      <div class="shop-nav">
+        <h2>Catálogo de Premios</h2>
+        <div class="shop-tabs">
+          <button class="tab-btn active" data-tab="all">Todos</button>
+          <button class="tab-btn" data-tab="border">Bordes de Avatar</button>
+          <button class="tab-btn" data-tab="title">Títulos de Perfil</button>
+          <button class="tab-btn" data-tab="badge">Monedas de Juego 💎</button>
+        </div>
+      </div>
+
+      <!-- Cuadrícula de Premios -->
+      <div class="catalog-grid">
+        {(rewards || []).map((reward) => {
+          const isOwned = userClaimedIds.includes(reward.id);
+          const isEquipped = reward.type === 'border' 
+            ? profile.selected_border === reward.value 
+            : profile.selected_title === reward.value;
+
+          return (
+            <div class="reward-card glass-card" data-type={reward.type} data-owned={isOwned ? "true" : "false"}>
+              
+              <!-- Preview Visual -->
+              <div class="reward-preview-container">
+                {reward.type === 'border' ? (
+                  <div class="border-preview-box">
+                    <div class={`preview-avatar ${reward.value}`}>
+                      <span>{profile.name.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <span class="preview-type-label">Avatar Preview</span>
+                  </div>
+                ) : reward.type === 'badge' ? (
+                  (() => {
+                    const coinInfo = gameCoinsMap[reward.value] || {
+                      emoji: '💎',
+                      symbol: 'COIN',
+                      game: 'Premio Especial',
+                      gradient: 'linear-gradient(180deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.3))',
+                      borderColor: '#FFD700',
+                      glowColor: 'rgba(255, 215, 0, 0.6)'
+                    };
+                    return (
+                      <div class="coins-preview-box" style={`background: ${coinInfo.gradient}; border-bottom: 2px solid ${coinInfo.borderColor}; width: 100%; height: 100%;`}>
+                        <div class="coins-icon-glow" style={`filter: drop-shadow(0 0 15px ${coinInfo.glowColor});`}>
+                          {coinInfo.emoji}
+                        </div>
+                        <span class="preview-type-label" style={`color: ${coinInfo.borderColor}; font-weight: 700;`}>
+                          {coinInfo.game}
+                        </span>
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <div class="title-preview-box">
+                    <span class="profile-title-badge">{reward.value}</span>
+                    <span class="preview-type-label">Título Preview</span>
+                  </div>
+                )}
+              </div>
+
+              <!-- Contenido de Tarjeta -->
+              <div class="reward-content">
+                <div class="reward-meta">
+                  <span class={`type-badge ${reward.type}`}>
+                    {reward.type === 'border' ? 'Borde de Avatar' : reward.type === 'badge' ? 'Monedas de Juego' : 'Título'}
+                  </span>
+                  <span class="cost-tag">✨ {reward.cost} Pts</span>
+                </div>
+                
+                <h3 class="reward-title">{reward.title}</h3>
+                <p class="reward-description">{reward.description}</p>
+                
+                <!-- Acciones -->
+                <div class="reward-actions">
+                  {!isOwned ? (
+                    <button 
+                      class="btn-reward-action btn-buy" 
+                      data-reward-id={reward.id} 
+                      data-cost={reward.cost}
+                      disabled={profile.points < reward.cost}
+                    >
+                      Comprar por {reward.cost} pts
+                    </button>
+                  ) : reward.type === 'badge' ? (
+                    <a 
+                      href="/contacto" 
+                      class="btn-reward-action btn-claim-support" 
+                      style="display: flex; align-items: center; justify-content: center; text-decoration: none;"
+                    >
+                      Reclamar en Soporte 💬
+                    </a>
+                  ) : (
+                    <button 
+                      class={`btn-reward-action btn-equip ${isEquipped ? 'equipped' : ''}`} 
+                      data-reward-id={reward.id}
+                      data-type={reward.type}
+                      data-value={reward.value}
+                      data-equipped={isEquipped ? "true" : "false"}
+                    >
+                      {isEquipped ? 'Equipado (Desequipar)' : 'Equipar'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+  </div>
+
+</MainLayout>
+
+<style>
+  .rewards-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    width: 100%;
+  }
+
+  /* --- CABECERA --- */
+  .rewards-header {
+    display: grid;
+    grid-template-columns: 1fr 450px;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .header-intro h1 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, #00F0FF, #FF3CAC, #6C3AFF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header-intro p {
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    max-width: 600px;
+  }
+
+  .user-stats-card {
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat-box {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .border-divider {
+    border-left: 1px solid var(--color-border);
+  }
+
+  .stat-icon {
+    font-size: 2.2rem;
+    filter: drop-shadow(0 0 8px rgba(255, 184, 0, 0.3));
+  }
+
+  .stat-details {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stat-value {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    font-weight: 800;
+  }
+
+  .text-points {
+    color: #FFB800;
+    text-shadow: 0 0 10px rgba(255, 184, 0, 0.2);
+  }
+
+  .text-level {
+    color: var(--color-primary-light);
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+  }
+
+  .stat-label {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .xp-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .xp-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+  }
+
+  /* --- DIARIO CHECK-IN --- */
+  .daily-checkin-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.75rem 2.25rem;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(56, 189, 248, 0.05));
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .daily-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .daily-icon-box {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 0 15px rgba(255, 60, 172, 0.4);
+  }
+
+  .daily-text h3 {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .daily-text p {
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  .daily-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
+  .btn-neon {
+    padding: 0.85rem 1.75rem;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-primary);
+    background: rgba(0, 240, 255, 0.1);
+    color: var(--color-primary-light);
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .btn-neon:hover:not(:disabled) {
+    background: var(--color-primary);
+    color: #0b0f1a;
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
+    transform: translateY(-2px);
+  }
+
+  .btn-neon:disabled.claimed {
+    border-color: rgba(34, 197, 94, 0.4);
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ADE80;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  .cooldown-timer {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+
+  /* --- SECCIÓN TIENDA --- */
+  .shop-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .shop-nav h2 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+  }
+
+  .shop-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: rgba(11, 15, 26, 0.5);
+    padding: 0.3rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+  }
+
+  .tab-btn {
+    padding: 0.5rem 1.25rem;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover {
+    color: var(--color-text-primary);
+  }
+
+  .tab-btn.active {
+    background: var(--color-surface);
+    color: var(--color-primary-light);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  /* --- GRID DE PREMIOS --- */
+  .catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+
+  .reward-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    background: rgba(30, 41, 59, 0.3);
+  }
+
+  .reward-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--color-primary);
+    box-shadow: 0 12px 30px rgba(0, 240, 255, 0.15);
+  }
+
+  /* Preview en la tarjeta */
+  .reward-preview-container {
+    height: 140px;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.3));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .preview-type-label {
+    position: absolute;
+    bottom: 0.5rem;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Preview Borde */
+  .border-preview-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .preview-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  /* Preview Título */
+  .title-preview-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    padding: 0 1rem;
+  }
+
+  /* Contenido de tarjeta */
+  .reward-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.75rem;
+  }
+
+  .reward-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .type-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    letter-spacing: 0.03em;
+  }
+
+  .type-badge.border {
+    background: rgba(0, 240, 255, 0.15);
+    color: var(--color-primary-light);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+  }
+
+  .type-badge.title {
+    background: rgba(255, 60, 172, 0.15);
+    color: var(--color-secondary-light);
+    border: 1px solid rgba(255, 60, 172, 0.25);
+  }
+
+  .cost-tag {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #FFB800;
+  }
+
+  .reward-title {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .reward-description {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 0;
+    flex: 1;
+  }
+
+  .reward-actions {
+    margin-top: 0.75rem;
+  }
+
+  .btn-reward-action {
+    width: 100%;
+    padding: 0.7rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  .btn-buy {
+    border: 1px solid var(--color-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--color-text-primary);
+  }
+
+  .btn-buy:hover:not(:disabled) {
+    border-color: #FFB800;
+    background: rgba(255, 184, 0, 0.1);
+    color: #FFD700;
+    box-shadow: 0 0 12px rgba(255, 184, 0, 0.2);
+  }
+
+  .btn-buy:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-equip {
+    border: 1px solid var(--color-primary);
+    background: transparent;
+    color: var(--color-primary-light);
+  }
+
+  .btn-equip:hover {
+    background: rgba(0, 240, 255, 0.1);
+  }
+
+  .btn-equip.equipped {
+    border-color: rgba(255, 60, 172, 0.5);
+    background: rgba(255, 60, 172, 0.15);
+    color: var(--color-secondary-light);
+    box-shadow: 0 0 10px rgba(255, 60, 172, 0.2);
+  }
+
+  .btn-equip.equipped:hover {
+    background: rgba(255, 60, 172, 0.25);
+    color: #ffffff;
+  }
+
+  /* --- ESTILOS DE MONEDAS DE JUEGO (BADGE) --- */
+  .type-badge.badge {
+    background: rgba(255, 184, 0, 0.15);
+    color: #FFD700;
+    border: 1px solid rgba(255, 184, 0, 0.25);
+  }
+
+  .coins-preview-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+  }
+
+  .coins-icon-glow {
+    font-size: 3rem;
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));
+    animation: gold-glow-coins 2.5s infinite ease-in-out;
+  }
+
+  @keyframes gold-glow-coins {
+    0%, 100% {
+      transform: scale(1) rotate(0deg);
+      filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.4));
+    }
+    50% {
+      transform: scale(1.1) rotate(5deg);
+      filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.9));
+    }
+  }
+
+  .btn-claim-support {
+    background: linear-gradient(135deg, rgba(255, 184, 0, 0.25), rgba(255, 60, 172, 0.25)) !important;
+    color: #ffffff !important;
+    border: 1px solid #FFB800 !important;
+    box-shadow: 0 0 15px rgba(255, 184, 0, 0.3) !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .btn-claim-support:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(255, 184, 0, 0.5) !important;
+    background: linear-gradient(135deg, rgba(255, 184, 0, 0.4), rgba(255, 60, 172, 0.4)) !important;
+  }
+
+  /* --- RESPONSIVE --- */
+  @media (max-width: 900px) {
+    .rewards-header {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .rewards-dashboard {
+      padding: 1rem;
+    }
+    
+    .daily-checkin-section {
+      flex-direction: column;
+      text-align: center;
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+
+    .daily-info {
+      flex-direction: column;
+    }
+
+    .daily-action {
+      align-items: center;
+      width: 100%;
+    }
+
+    .btn-neon {
+      width: 100%;
+    }
+  }
+
+</style>
+
+<script>
+  // Utilidades para notificaciones de neón delegadas a la alerta global
+  function showCustomAlert(title: string, message: string, icon = '✨', type = 'info'): Promise<void> {
+    if ((window as any).showCustomAlert) {
+      return (window as any).showCustomAlert(message, title, icon, type);
+    }
+    alert(message);
+    return Promise.resolve();
+  }
+
+  function showCustomConfirm(title: string, message: string): Promise<boolean> {
+    if ((window as any).showCustomConfirm) {
+      return (window as any).showCustomConfirm(message, title);
+    }
+    return Promise.resolve(confirm(message));
+  }
+
+  // --- TABS DE FILTRO ---
+  const tabs = document.querySelectorAll('.tab-btn');
+  const cards = document.querySelectorAll('.reward-card');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Activar tab activo
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const filter = (tab as HTMLElement).dataset.tab!;
+
+      // Filtrar tarjetas
+      cards.forEach(card => {
+        const type = (card as HTMLElement).dataset.type!;
+        if (filter === 'all' || type === filter) {
+          (card as HTMLElement).style.display = 'flex';
+        } else {
+          (card as HTMLElement).style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // --- RECLAMAR DIARIO ---
+  const claimBtn = document.getElementById('claim-daily-btn') as HTMLButtonElement;
+  if (claimBtn) {
+    claimBtn.addEventListener('click', async () => {
+      const originalText = claimBtn.textContent;
+      claimBtn.disabled = true;
+      claimBtn.textContent = 'Procesando...';
+
+      try {
+        const res = await fetch('/api/rewards/claim-daily', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          localStorage.removeItem('gamio_daily_available_notified');
+          localStorage.removeItem('gamio_daily_cooldown_hours');
+          await showCustomAlert("¡Conseguido!", `¡Felicidades! Has reclamado +${data.points} Puntos y +25 XP.`, "🎁");
+          window.location.reload();
+        } else {
+          await showCustomAlert("Error", data.error || 'No se pudo reclamar la recompensa diaria.', "⚠️", "error");
+          claimBtn.disabled = false;
+          claimBtn.textContent = originalText;
+        }
+      } catch (err) {
+        await showCustomAlert("Error de Conexión", "No se pudo conectar con el servidor.", "🔌", "error");
+        claimBtn.disabled = false;
+        claimBtn.textContent = originalText;
+      }
+    });
+  }
+
+  // --- COMPRAR RECOMPENSA ---
+  document.querySelectorAll('.btn-buy').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const rewardId = (btn as HTMLElement).dataset.rewardId!;
+      const cost = parseInt((btn as HTMLElement).dataset.cost || '0', 10);
+      
+      const isConfirmed = await showCustomConfirm("Confirmar Compra", `¿Deseas comprar esta recompensa por ${cost} puntos?`);
+      if (!isConfirmed) {
+        return;
+      }
+
+      const originalText = btn.textContent;
+      (btn as HTMLButtonElement).disabled = true;
+      btn.textContent = 'Adquiriendo...';
+
+      try {
+        const res = await fetch('/api/rewards/buy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reward_id: rewardId })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          await showCustomAlert("¡Premio Adquirido!", '¡Compra realizada con éxito! Articulo desbloqueado para tu colección.', "🎉");
+          window.location.reload();
+        } else {
+          await showCustomAlert("Error de Compra", 'Error al comprar: ' + (data.error || 'No se pudo procesar la transacción'), "❌", "error");
+          (btn as HTMLButtonElement).disabled = false;
+          btn.textContent = originalText;
+        }
+      } catch (err) {
+        await showCustomAlert("Error de Conexión", 'Error conectando con el servidor.', "🔌", "error");
+        (btn as HTMLButtonElement).disabled = false;
+        btn.textContent = originalText;
+      }
+    });
+  });
+
+  // --- EQUIPAR / DESEQUIPAR RECOMPENSA ---
+  document.querySelectorAll('.btn-equip').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const rewardId = (btn as HTMLElement).dataset.rewardId!;
+      const type = (btn as HTMLElement).dataset.type!;
+      const value = (btn as HTMLElement).dataset.value!;
+      const isEquipped = (btn as HTMLElement).dataset.equipped === 'true';
+
+      const originalText = btn.textContent;
+      (btn as HTMLButtonElement).disabled = true;
+      btn.textContent = 'Procesando...';
+
+      // Estructura para actualizar el perfil
+      const payload: Record<string, any> = {};
+      if (type === 'border') {
+        payload.selected_border = isEquipped ? '' : value; // Si está equipado, desequipa. Si no, equipa.
+      } else if (type === 'title') {
+        payload.selected_title = isEquipped ? '' : value;
+      }
+
+      try {
+        const res = await fetch('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          await showCustomAlert("Error", 'Error al equipar: ' + (data.error || 'No se pudo realizar el cambio.'), "⚠️", "error");
+          (btn as HTMLButtonElement).disabled = false;
+          btn.textContent = originalText;
+        }
+      } catch (err) {
+        await showCustomAlert("Error de Conexión", 'No se pudo conectar con el servidor.', "🔌", "error");
+        (btn as HTMLButtonElement).disabled = false;
+        btn.textContent = originalText;
+      }
+    });
+  });
+</script>

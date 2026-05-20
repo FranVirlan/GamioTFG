@@ -48,7 +48,17 @@ if (Astro.request.method === 'POST') {
       errorMessage = 'No se pudo guardar. Verifica que la política RLS de UPDATE exista en la tabla profiles.';
       console.log('WARNING: Update returned 0 rows — probable RLS issue');
     } else {
-      return Astro.redirect('/');
+      // Otorgar +15 puntos y +30 XP por completar el onboarding de bienvenida (mantiene Nivel 1)
+      try {
+        await authSupabase.rpc('earn_points', {
+          p_profile_id: user.id,
+          p_amount: 15,
+          p_xp_amount: 30
+        });
+      } catch (rpcErr) {
+        console.error('Error al otorgar puntos por onboarding:', rpcErr);
+      }
+      return Astro.redirect('/?welcome=true');
     }
   } catch (e) {
     errorMessage = 'Ocurrió un error inesperado al guardar tus preferencias.';
@@ -166,7 +176,7 @@ const popularGames = [
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
             </button>
-            <a href="/" class="skip-link">Saltar por ahora</a>
+            <a href="/?welcome=true" class="skip-link">Saltar por ahora</a>
           </div>
         </form>
       </div>

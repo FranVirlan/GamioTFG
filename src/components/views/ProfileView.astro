@@ -13,6 +13,10 @@ interface Props {
     name: string;
     avatarUrl?: string;
     level: number;
+    xp?: number;
+    points?: number;
+    selectedTitle?: string;
+    selectedBorder?: string;
     followers: number;
     gamesPlayed: number;
     description: string;
@@ -42,7 +46,7 @@ const popularGames = [
   <div class="profile-header">
     <div class="profile-banner"></div>
     <div class="profile-info-container">
-      <div class="profile-avatar">
+      <div class={`profile-avatar ${user.selectedBorder || ''}`}>
         {user.avatarUrl ? (
           <img src={user.avatarUrl} alt={user.name} />
         ) : (
@@ -50,8 +54,13 @@ const popularGames = [
         )}
       </div>
       <div class="profile-basic-info">
-        <h2 class="profile-name">{user.name}</h2>
-        <p class="profile-description">{user.description}</p>
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <h2 class="profile-name" style="margin: 0; font-family: var(--font-heading); font-size: 1.8rem;">{user.name}</h2>
+          {user.selectedTitle && (
+            <span class="profile-title-badge">{user.selectedTitle}</span>
+          )}
+        </div>
+        <p class="profile-description" style="margin-top: 0.5rem; color: var(--color-text-secondary); font-size: 0.95rem; line-height: 1.5;">{user.description}</p>
       </div>
       <div class="profile-actions">
         {isOwnProfile ? (
@@ -75,15 +84,30 @@ const popularGames = [
 
   <!-- Estadísticas -->
   <div class="profile-stats">
-    <div class="stat-card">
+    <div class="stat-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; min-height: 120px;">
       <span class="stat-value text-primary">Nv. {user.level}</span>
       <span class="stat-label">Nivel Actual</span>
+      {typeof user.xp !== 'undefined' && (
+        <div style="width: 100%; margin-top: 0.5rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--color-text-muted); margin-bottom: 0.25rem;">
+            <span>XP: {user.xp % 100}/100</span>
+            <span>Tot: {user.xp} XP</span>
+          </div>
+          <div class="xp-progress-container">
+            <div class="xp-progress-bar" style={`width: ${user.xp % 100}%`}></div>
+          </div>
+        </div>
+      )}
     </div>
-    <div class="stat-card">
+    <div class="stat-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px;">
+      <span class="stat-value" style="color: #FFB800;">✨ {user.points || 0}</span>
+      <span class="stat-label">Puntos Gamio</span>
+    </div>
+    <div class="stat-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px;">
       <span class="stat-value text-accent">{user.gamesPlayed}</span>
       <span class="stat-label">Partidas Jugadas</span>
     </div>
-    <div class="stat-card clickable-stat" id="friends-stat-card">
+    <div class="stat-card clickable-stat" id="friends-stat-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px;">
       <span class="stat-value text-secondary">{user.followers}</span>
       <span class="stat-label">Amigos</span>
     </div>

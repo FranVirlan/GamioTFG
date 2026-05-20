@@ -38,6 +38,17 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
 
     if (error) throw error;
 
+    // Otorgar +15 puntos y +30 XP al autor por crear un post
+    try {
+      await supabase.rpc('earn_points', {
+        p_profile_id: user.id,
+        p_amount: 15,
+        p_xp_amount: 30
+      });
+    } catch (rpcErr) {
+      console.error('Error al otorgar puntos por post:', rpcErr);
+    }
+
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

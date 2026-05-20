@@ -4,6 +4,7 @@
  * Gaming aesthetic: violeta/azul neón, glassmorphism
  */
 import SearchBar from '../ui/SearchBar.astro';
+import { supabase } from '../../lib/supabase';
 
 interface Props {
   user?: {
@@ -18,12 +19,20 @@ interface Props {
 
 const { user = null } = Astro.props;
 const currentPath = Astro.url.pathname;
-const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || '';
+
+let profile = null;
+if (user) {
+  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  profile = data;
+}
+
+const userName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Jugador';
 
 const navLinks = [
   { href: '/', label: 'Inicio' },
   { href: '/juegos', label: 'Juegos' },
   { href: '/comunidad', label: 'Comunidad' },
+  { href: '/premios', label: '✨ Premios' },
   { href: '/noticias', label: 'Noticias' },
 ];
 ---
@@ -80,9 +89,22 @@ const navLinks = [
             </div>
           </div>
           
-          <a href="/perfil" class="nav-user-link">
-            <span class="user-avatar">{userName.charAt(0).toUpperCase()}</span>
-            <span class="user-name-nav">{userName}</span>
+          <a href="/perfil" class="nav-user-link" title="Ir a tu perfil" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+            <span class:list={['user-avatar', profile?.selected_border]} style="position: relative; overflow: hidden; flex-shrink: 0;">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />
+              ) : (
+                userName.charAt(0).toUpperCase()
+              )}
+            </span>
+            <div class="nav-user-meta" style="display: flex; flex-direction: column; align-items: flex-start;">
+              <span class="user-name-nav" style="line-height: 1.1; font-weight: 700;">{userName}</span>
+              {profile && (
+                <span class="user-pts-nav" style="font-size: 0.72rem; color: var(--color-primary); line-height: 1.2; margin-top: 0.1rem; font-weight: 600;">
+                  ✨ Nv. {profile.level || 1} • {profile.points || 0} pts
+                </span>
+              )}
+            </div>
           </a>
           <form method="POST" action="/api/auth/logout" class="logout-form">
             <button type="submit" class="nav-logout" id="logoutBtn">
@@ -137,9 +159,22 @@ const navLinks = [
           Mis Mensajes
           <span class="unread-badge mobile-badge" id="unread-badge-mobile" style="display:none;"></span>
         </a>
-        <div class="mobile-user-info">
-          <span class="user-avatar-lg">{userName.charAt(0).toUpperCase()}</span>
-          <span>{userName}</span>
+        <div class="mobile-user-info" style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem;">
+          <span class:list={['user-avatar-lg', profile?.selected_border]} style="position: relative; overflow: hidden; flex-shrink: 0;">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />
+            ) : (
+              userName.charAt(0).toUpperCase()
+            )}
+          </span>
+          <div style="display: flex; flex-direction: column; align-items: flex-start;">
+            <span style="font-weight: 700; color: white;">{userName}</span>
+            {profile && (
+              <span style="font-size: 0.8rem; color: var(--color-primary); font-weight: 600; margin-top: 0.1rem;">
+                ✨ Nivel {profile.level || 1} • {profile.points || 0} pts
+              </span>
+            )}
+          </div>
         </div>
         <form method="POST" action="/api/auth/logout">
           <button type="submit" class="btn-primary mobile-cta mobile-logout">
@@ -233,6 +268,10 @@ const navLinks = [
     color: var(--color-text-secondary);
     border-radius: var(--radius-sm);
     transition: all 0.25s ease;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
   }
 
   .nav-link:hover {
@@ -626,6 +665,9 @@ const navLinks = [
     padding: 0.75rem 2rem;
     border-radius: var(--radius-md);
     transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
   }
 
   .mobile-link:hover,
