@@ -175,6 +175,7 @@ a {
   color: white;
   transition: all 0.25s ease;
   box-shadow: 0 4px 15px rgba(108, 58, 255, 0.3);
+  white-space: nowrap;
 }
 
 .btn-primary:hover {
@@ -200,6 +201,7 @@ a {
   color: var(--color-text-primary);
   border: 2px solid var(--color-border-light);
   transition: all 0.25s ease;
+  white-space: nowrap;
 }
 
 .btn-secondary:hover {
@@ -224,6 +226,7 @@ a {
   color: #fff;
   border: 1px solid var(--color-primary);
   transition: all 0.25s ease;
+  white-space: nowrap;
 }
 
 .btn-outline-cyan:hover {
@@ -249,6 +252,7 @@ a {
   color: #000;
   transition: all 0.25s ease;
   box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3);
+  white-space: nowrap;
 }
 
 .btn-accent:hover {
