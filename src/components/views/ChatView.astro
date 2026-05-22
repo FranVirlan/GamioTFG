@@ -466,14 +466,16 @@ const messages = messagesData || [];
 <script>
   import { supabase } from '../../lib/supabase';
 
-  const chatRoot = document.getElementById('chat-root');
-  const messagesContainer = document.getElementById('messages-container');
-  const chatForm = document.getElementById('chat-form') as HTMLFormElement | null;
-  const chatInput = document.getElementById('chat-input') as HTMLInputElement | null;
-  const chatRoomTitle = document.getElementById('chat-room-title');
-  const chatRoomDesc = document.getElementById('chat-room-desc');
+  function initChat() {
+    const chatRoot = document.getElementById('chat-root');
+    const messagesContainer = document.getElementById('messages-container');
+    const chatForm = document.getElementById('chat-form') as HTMLFormElement | null;
+    const chatInput = document.getElementById('chat-input') as HTMLInputElement | null;
+    const chatRoomTitle = document.getElementById('chat-room-title');
+    const chatRoomDesc = document.getElementById('chat-room-desc');
 
-  if (chatRoot && messagesContainer && chatForm && chatInput) {
+    if (!chatRoot || !messagesContainer) return;
+
     const currentUserId = chatRoot.dataset.currentUser;
     let currentRoom = chatRoot.dataset.activeRoom || 'global';
 
@@ -497,7 +499,7 @@ const messages = messagesData || [];
     }
     scrollToBottom();
 
-    // ── Cambio de Canales en tiempo real ──
+    // ── Cambio de Canales en tiempo real (Disponible para todos) ──
     const channelItems = document.querySelectorAll('.channel-item');
     channelItems.forEach(item => {
       item.addEventListener('click', () => {
@@ -518,7 +520,7 @@ const messages = messagesData || [];
         if (details) {
           if (chatRoomTitle) chatRoomTitle.textContent = details.title;
           if (chatRoomDesc) chatRoomDesc.textContent = details.desc;
-          chatInput.placeholder = details.placeholder;
+          if (chatInput) chatInput.placeholder = details.placeholder;
         }
 
         // Eliminar badge de no leídos al entrar
@@ -529,28 +531,30 @@ const messages = messagesData || [];
       });
     });
 
-    // ── Enviar mensajes a la base de datos ──
-    chatForm.addEventListener('submit', async (e) => {
-      e.preventDefault(); // Evitar la recarga
-      const content = chatInput.value.trim();
-      if (!content || !currentUserId) return;
+    // ── Enviar mensajes a la base de datos (Solo si está logueado) ──
+    if (chatForm && chatInput && currentUserId) {
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Evitar la recarga
+        const content = chatInput.value.trim();
+        if (!content) return;
 
-      chatInput.value = ''; // Limpiamos la caja rápido
-      chatInput.focus();
+        chatInput.value = ''; // Limpiamos la caja rápido
+        chatInput.focus();
 
-      try {
-        const res = await fetch('/api/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content, room: currentRoom })
-        });
-        
-        if (!res.ok) throw new Error('Network error');
-      } catch (err) {
-        console.error('Error enviando mensaje:', err);
-        alert('No se pudo enviar el mensaje. Error de servidor.');
-      }
-    });
+        try {
+          const res = await fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content, room: currentRoom })
+          });
+          
+          if (!res.ok) throw new Error('Network error');
+        } catch (err) {
+          console.error('Error enviando mensaje:', err);
+          alert('No se pudo enviar el mensaje. Error de servidor.');
+        }
+      });
+    }
 
     // ── MAGIA: Canal WebSockets de Supabase ──
     const channel = supabase.channel('public:messages');
@@ -617,6 +621,9 @@ const messages = messagesData || [];
       
       document.addEventListener('astro:before-swap', () => {
         supabase.removeChannel(channel);
-      });
+      }, { once: true });
   }
+
+  // Inicializar el chat cada vez que Astro carga una página
+  document.addEventListener('astro:page-load', initChat);
 </script>
