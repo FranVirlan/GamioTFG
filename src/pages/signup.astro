@@ -5,6 +5,7 @@
  */
 import MainLayout from '../layouts/MainLayout.astro';
 import { supabase } from '../lib/supabase';
+import { sendWelcomeEmail } from '../lib/emailService';
 
 let errorMessage = '';
 
@@ -36,24 +37,35 @@ if (Astro.request.method === 'POST') {
         } else {
           errorMessage = error.message;
         }
-      } else if (data.session) {
-        Astro.cookies.set('sb-access-token', data.session.access_token, {
-          path: '/',
-          httpOnly: true,
-          secure: true,
-          sameSite: 'lax',
-          maxAge: 60 * 60,
-        });
-        Astro.cookies.set('sb-refresh-token', data.session.refresh_token!, {
-          path: '/',
-          httpOnly: true,
-          secure: true,
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 7,
-        });
-        return Astro.redirect('/onboarding');
-      } else if (data.user && !data.session) {
-        return Astro.redirect('/login?success=Cuenta creada. Revisa tu email para confirmarla.');
+      } else {
+        // Enviar correo de bienvenida de forma asíncrona
+        if (data.user) {
+          try {
+            await sendWelcomeEmail(email, name);
+          } catch (mailError) {
+            console.error('Error al enviar correo de bienvenida:', mailError);
+          }
+        }
+
+        if (data.session) {
+          Astro.cookies.set('sb-access-token', data.session.access_token, {
+            path: '/',
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            maxAge: 60 * 60,
+          });
+          Astro.cookies.set('sb-refresh-token', data.session.refresh_token!, {
+            path: '/',
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7,
+          });
+          return Astro.redirect('/onboarding');
+        } else if (data.user && !data.session) {
+          return Astro.redirect('/login?success=Cuenta creada. Revisa tu email para confirmarla.');
+        }
       }
     }
   } catch (e) {
