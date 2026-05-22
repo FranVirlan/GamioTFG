@@ -9,7 +9,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
   }
 
   try {
-    const { content } = await request.json();
+    const { content, room } = await request.json();
 
     if (!content) {
       return new Response(JSON.stringify({ error: 'Contenido vacío' }), { status: 400 });
@@ -20,7 +20,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 
     const { data, error } = await supabase
       .from('messages')
-      .insert({ profile_id: user.id, content })
+      .insert({ profile_id: user.id, content, room: room || 'global' })
       .select()
       .single();
 

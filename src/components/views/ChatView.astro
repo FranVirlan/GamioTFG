@@ -3,34 +3,30 @@
 import { supabase } from '../../lib/supabase';
 
 const user = Astro.locals.user;
-// 1. Cargar historial del chat Server-Side
+// 1. Cargar historial del chat Server-Side (últimos 100 mensajes)
 const { data: messagesData } = await supabase
   .from('messages')
   .select('*, profiles(name, avatar_url)')
   .order('created_at', { ascending: true })
-  .limit(50);
+  .limit(100);
 
 const messages = messagesData || [];
 ---
 
-<div class="chat-layout animate-fade-in-up" id="chat-root" data-current-user={user?.id}>
+<div class="chat-layout animate-fade-in-up" id="chat-root" data-current-user={user?.id} data-active-room="global">
     <!-- Sidebar de Canales -->
     <aside class="chat-sidebar">
       <div class="sidebar-header">
         <h3>Salas de Gamio</h3>
       </div>
       <ul class="channel-list">
-        <li class="channel-item active">
+        <li class="channel-item active" data-room="global">
           <span class="hashtag">#</span>
           Lobby Global
         </li>
-        <li class="channel-item">
+        <li class="channel-item" data-room="rankeds">
           <span class="hashtag">#</span>
           Buscando Equipo (Rankeds)
-        </li>
-        <li class="channel-item">
-          <span class="hashtag">#</span>
-          Soporte
         </li>
       </ul>
     </aside>
@@ -40,17 +36,18 @@ const messages = messagesData || [];
       <header class="chat-header">
         <div class="header-info">
           <span class="hashtag">#</span>
-          <h2>Lobby Global</h2>
+          <h2 id="chat-room-title">Lobby Global</h2>
         </div>
-        <p class="header-desc">Chat público para encontrar jugadores de toda la comunidad.</p>
+        <p class="header-desc" id="chat-room-desc">Chat público para encontrar jugadores de toda la comunidad.</p>
       </header>
 
       <!-- Mensajes -->
       <div class="messages-container" id="messages-container">
         {messages.map((msg) => {
           const isMine = user && msg.profile_id === user.id;
+          const msgRoom = msg.room || 'global';
           return (
-            <div class={`message ${isMine ? 'message-mine' : 'message-other'}`}>
+            <div class={`message ${isMine ? 'message-mine' : 'message-other'}`} data-room={msgRoom}>
               {!isMine && (
                 <div class="avatar">
                   {msg.profiles?.avatar_url ? (
@@ -245,10 +242,43 @@ const messages = messagesData || [];
   }
 
   .message {
-    display: flex;
+    display: none;
     align-items: flex-end;
     gap: 0.75rem;
     max-width: 75%;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Filtrar mensajes según la sala activa */
+  .chat-layout[data-active-room="global"] .message[data-room="global"] {
+    display: flex;
+  }
+
+  .chat-layout[data-active-room="rankeds"] .message[data-room="rankeds"] {
+    display: flex;
+  }
+
+  /* Pulsing unread neon indicator badge */
+  .unread-badge {
+    width: 8px;
+    height: 8px;
+    background: var(--color-accent, #00f0ff);
+    border-radius: 50%;
+    margin-left: auto;
+    box-shadow: 0 0 8px var(--color-accent, #00f0ff);
+    flex-shrink: 0;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
   }
 
   .message-other {
@@ -440,9 +470,25 @@ const messages = messagesData || [];
   const messagesContainer = document.getElementById('messages-container');
   const chatForm = document.getElementById('chat-form') as HTMLFormElement | null;
   const chatInput = document.getElementById('chat-input') as HTMLInputElement | null;
+  const chatRoomTitle = document.getElementById('chat-room-title');
+  const chatRoomDesc = document.getElementById('chat-room-desc');
 
   if (chatRoot && messagesContainer && chatForm && chatInput) {
     const currentUserId = chatRoot.dataset.currentUser;
+    let currentRoom = chatRoot.dataset.activeRoom || 'global';
+
+    const roomDetails: Record<string, { title: string, desc: string, placeholder: string }> = {
+      global: {
+        title: 'Lobby Global',
+        desc: 'Chat público para encontrar jugadores de toda la comunidad.',
+        placeholder: 'Enviar mensaje al #Lobby Global...'
+      },
+      rankeds: {
+        title: 'Buscando Equipo (Rankeds)',
+        desc: 'Salas de reclutamiento para partidas competitivas y clasificatorias.',
+        placeholder: 'Enviar mensaje al #Buscando Equipo (Rankeds)...'
+      }
+    };
 
     function scrollToBottom() {
       if (messagesContainer) {
@@ -450,6 +496,38 @@ const messages = messagesData || [];
       }
     }
     scrollToBottom();
+
+    // ── Cambio de Canales en tiempo real ──
+    const channelItems = document.querySelectorAll('.channel-item');
+    channelItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const itemEl = item as HTMLElement;
+        const newRoom = itemEl.dataset.room;
+        if (!newRoom || newRoom === currentRoom) return;
+
+        // Cambiar clases activas
+        channelItems.forEach(c => c.classList.remove('active'));
+        itemEl.classList.add('active');
+
+        // Actualizar variables y dataset del contenedor
+        currentRoom = newRoom;
+        chatRoot.dataset.activeRoom = newRoom;
+
+        // Actualizar textos de cabecera y placeholders
+        const details = roomDetails[newRoom];
+        if (details) {
+          if (chatRoomTitle) chatRoomTitle.textContent = details.title;
+          if (chatRoomDesc) chatRoomDesc.textContent = details.desc;
+          chatInput.placeholder = details.placeholder;
+        }
+
+        // Eliminar badge de no leídos al entrar
+        const badge = itemEl.querySelector('.unread-badge');
+        if (badge) badge.remove();
+
+        scrollToBottom();
+      });
+    });
 
     // ── Enviar mensajes a la base de datos ──
     chatForm.addEventListener('submit', async (e) => {
@@ -464,7 +542,7 @@ const messages = messagesData || [];
         const res = await fetch('/api/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content })
+          body: JSON.stringify({ content, room: currentRoom })
         });
         
         if (!res.ok) throw new Error('Network error');
@@ -483,6 +561,7 @@ const messages = messagesData || [];
         { event: 'INSERT', schema: 'public', table: 'messages' },
         async (payload) => {
           const newMessage = payload.new;
+          const msgRoom = newMessage.room || 'global';
           
           const { data: authorProfile } = await supabase
             .from('profiles')
@@ -499,6 +578,7 @@ const messages = messagesData || [];
 
           const msgOuter = document.createElement('div');
           msgOuter.className = `message ${isMine ? 'message-mine' : 'message-other'}`;
+          msgOuter.dataset.room = msgRoom;
 
           let innerHTML = '';
           if (!isMine) {
@@ -516,7 +596,21 @@ const messages = messagesData || [];
           msgOuter.innerHTML = innerHTML;
 
           messagesContainer.appendChild(msgOuter);
-          scrollToBottom();
+
+          // Si el mensaje corresponde a la sala activa, hacer scroll. Si no, añadir un badge de alerta
+          if (msgRoom === currentRoom) {
+            scrollToBottom();
+          } else {
+            const otherChannelItem = document.querySelector(`.channel-item[data-room="${msgRoom}"]`);
+            if (otherChannelItem) {
+              let badge = otherChannelItem.querySelector('.unread-badge');
+              if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'unread-badge';
+                otherChannelItem.appendChild(badge);
+              }
+            }
+          }
         }
       )
       .subscribe();
