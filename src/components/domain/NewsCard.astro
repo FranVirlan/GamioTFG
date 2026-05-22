@@ -1,7 +1,7 @@
 ---
 /**
  * NewsCard.astro — Card de noticia tipo blog
- * Imagen portada, título, resumen, tags, fecha
+ * Imagen portada, título, resumen, tags, fecha de publicación
  */
 
 interface Props {
@@ -11,14 +11,15 @@ interface Props {
   date: string;
   image?: string;
   content?: string;
+  link?: string;
 }
 
-const { title, summary, tags, date, image, content } = Astro.props;
+const { title, summary, tags, date, image, content, link } = Astro.props;
 
 const tagColors = ['tag-violet', 'tag-green', 'tag-blue', 'tag-orange'];
 ---
 
-<article class="news-card" data-tags={JSON.stringify(tags).toLowerCase()}>
+<article class="news-card">
   <div class="news-image" style={image ? `background-image: url(${image});` : ''}>
     {!image && (
       <div class="news-placeholder">
@@ -48,7 +49,14 @@ const tagColors = ['tag-violet', 'tag-green', 'tag-blue', 'tag-orange'];
         </svg>
         {date}
       </span>
-      <button class="news-link read-more-btn" data-title={title} data-summary={summary} data-date={date} data-image={image || ''} data-tags={tags.join(',')} data-content={content || ''}>
+      <button class="news-link read-more-btn" 
+        data-title={title} 
+        data-summary={summary} 
+        data-date={date} 
+        data-image={image || ''} 
+        data-tags={tags.join(',')} 
+        data-content={content || ''}
+        data-link={link || '#'}>
         Leer más
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -74,6 +82,7 @@ const tagColors = ['tag-violet', 'tag-green', 'tag-blue', 'tag-orange'];
   }
 
   .news-image {
+    position: relative;
     height: 180px;
     background-size: cover;
     background-position: center;
