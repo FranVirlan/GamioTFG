@@ -129,12 +129,12 @@ const messages = messagesData || [];
       
       <div class="pv-form-group">
         <label>Jugador denunciado</label>
-        <input type="text" id="chat-report-target-name" value="" disabled style="background: rgba(255,255,255,0.05); color: var(--color-text-secondary);" />
+        <input type="text" id="chat-report-target-name" value="" disabled />
       </div>
 
       <div class="pv-form-group">
         <label for="chat-report-reason">Motivo de la denuncia</label>
-        <select id="chat-report-reason" style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font-sans); color: var(--color-text-primary); background: rgba(11,15,26,0.6); border: 1px solid var(--color-border); border-radius: var(--radius-sm); outline: none; cursor: pointer;" required>
+        <select id="chat-report-reason" required>
           <option value="chat_abuse" selected>Abuso o acoso en chat (insultos, toxicidad)</option>
           <option value="gameplay_abuse">Mala conducta al jugar (trampas, abandono)</option>
           <option value="spam">Spam / Publicidad molesta</option>
@@ -149,7 +149,7 @@ const messages = messagesData || [];
 
       <div class="pv-modal-footer">
         <button type="button" class="btn-secondary" data-close="chat-report-modal">Cancelar</button>
-        <button type="submit" class="btn-primary" id="chat-submit-report-btn" style="background: #ef4444; border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);">Enviar Denuncia 🚩</button>
+        <button type="submit" class="btn-primary btn-modal-submit-danger" id="chat-submit-report-btn">Enviar Denuncia 🚩</button>
       </div>
     </form>
   </div>
