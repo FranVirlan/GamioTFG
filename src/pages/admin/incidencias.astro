@@ -63,7 +63,7 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
       </div>
     </div>
 
-    {reportsCount === 0 ? (
+    {pendingCount === 0 ? (
       <div class="empty-state animate-fade-in-up">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
@@ -77,7 +77,7 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
         <div class="reports-sidebar">
           <h3>Listado de Denuncias</h3>
           <div class="reports-list">
-            {reports.map((rep) => {
+            {reports.filter(r => r.status === 'pending').map((rep) => {
               const reporterName = rep.reporter?.name || 'Desconocido';
               const reportedName = rep.reported?.name || 'Desconocido';
               const statusClass = `status-${rep.status}`;
@@ -723,7 +723,19 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
       });
 
       if (res.ok) {
-        alert(isCurrentlyBanned ? `¡Se ha levantado la suspensión de ${selectedReportedName}!` : `¡El jugador ${selectedReportedName} ha sido suspendido!`);
+        // Si el jugador fue suspendido y tenemos una incidencia seleccionada, resolverla
+        if (!isCurrentlyBanned && selectedReportId) {
+          try {
+            await fetch('/api/reports', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ report_id: selectedReportId, status: 'resolved' })
+            });
+          } catch (reportErr) {
+            console.error('Error auto-resolving report after ban:', reportErr);
+          }
+        }
+        alert(isCurrentlyBanned ? `¡Se ha levantado la suspensión de ${selectedReportedName}!` : `¡El jugador ${selectedReportedName} ha sido suspendido y su incidencia ha sido resuelta!`);
         window.location.reload();
       } else {
         alert('Error al procesar el baneo en el servidor.');
