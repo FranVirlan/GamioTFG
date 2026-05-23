@@ -709,7 +709,15 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
     const isCurrentlyBanned = card.dataset.reportedBanned === 'true';
     const actionText = isCurrentlyBanned ? 'levantar la suspensión de' : 'SUSPENDER indefinidamente a';
 
-    const confirmed = confirm(`¿Estás seguro de que deseas ${actionText} al jugador ${selectedReportedName}?`);
+    // Reemplazo del confirm nativo por el hermoso customConfirm global de Gamio
+    const confirmed = (window as any).showCustomConfirm
+      ? await (window as any).showCustomConfirm(
+          `¿Estás seguro de que deseas ${actionText} al jugador ${selectedReportedName}?`,
+          'Moderación de Cuenta 🛡️',
+          '⚠️'
+        )
+      : confirm(`¿Estás seguro de que deseas ${actionText} al jugador ${selectedReportedName}?`);
+      
     if (!confirmed) return;
 
     btnBan.disabled = true;
@@ -735,7 +743,21 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
             console.error('Error auto-resolving report after ban:', reportErr);
           }
         }
-        alert(isCurrentlyBanned ? `¡Se ha levantado la suspensión de ${selectedReportedName}!` : `¡El jugador ${selectedReportedName} ha sido suspendido y su incidencia ha sido resuelta!`);
+
+        // Reemplazo de alerta de éxito nativa por showCustomAlert global
+        if ((window as any).showCustomAlert) {
+          await (window as any).showCustomAlert(
+            isCurrentlyBanned
+              ? `¡Se ha levantado la suspensión de ${selectedReportedName} con éxito!`
+              : `¡El jugador ${selectedReportedName} ha sido suspendido de la plataforma y su incidencia ha sido resuelta!`,
+            isCurrentlyBanned ? 'Suspensión Levantada 🟢' : 'Cuenta Suspendida 🚫',
+            isCurrentlyBanned ? '🟢' : '🚫',
+            isCurrentlyBanned ? 'info' : 'error'
+          );
+        } else {
+          alert(isCurrentlyBanned ? `¡Se ha levantado la suspensión de ${selectedReportedName}!` : `¡El jugador ${selectedReportedName} ha sido suspendido y su incidencia ha sido resuelta!`);
+        }
+        
         window.location.reload();
       } else {
         alert('Error al procesar el baneo en el servidor.');
