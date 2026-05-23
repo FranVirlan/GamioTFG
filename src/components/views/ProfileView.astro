@@ -466,8 +466,130 @@ const popularGames = [
 
   /* ── Responsive ── */
   @media (max-width: 768px) {
-    .profile-info-container { flex-direction: column; align-items: center; text-align: center; }
-    .profile-actions { justify-content: center; width: 100%; }
+    .profile-view { gap: 1.25rem; }
+
+    .profile-banner { height: 100px; }
+    .profile-info-container {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 1rem 1.5rem;
+      margin-top: -40px;
+      gap: 1rem;
+    }
+
+    .profile-avatar { width: 80px; height: 80px; font-size: 2rem; border-width: 3px; }
+    .profile-basic-info { min-width: unset; width: 100%; padding-bottom: 0; }
+    .profile-basic-info h2,
+    .profile-basic-info .profile-name { font-size: 1.4rem !important; }
+    .profile-basic-info p,
+    .profile-basic-info .profile-description { font-size: 0.85rem !important; }
+
+    .profile-actions {
+      justify-content: center;
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding-bottom: 0;
+    }
+    .profile-actions .btn-primary,
+    .profile-actions .btn-secondary,
+    .profile-actions .btn-danger {
+      font-size: 0.85rem !important;
+      padding: 0.55rem 1rem !important;
+      flex: 1 1 auto;
+      min-width: 0;
+      justify-content: center;
+    }
+
+    /* Stats grid: 2 cols on mobile */
+    .profile-stats {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    .stat-card { padding: 1rem; min-height: 90px !important; }
+    .stat-value { font-size: 1.5rem; }
+    .stat-label { font-size: 0.75rem; }
+
+    /* Preferences */
+    .profile-preferences h3 { font-size: 1.1rem; }
+    .preferences-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .preference-card { padding: 1rem; }
+    .preference-card h4 { font-size: 0.95rem; margin-bottom: 0.75rem; }
+    .tag { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+
+    /* Recent */
+    .profile-recent h3 { font-size: 1.1rem; }
+    .empty-state { padding: 2rem 1rem; font-size: 0.9rem; }
+
+    /* ── Modals: full-screen feel on mobile ── */
+    .pv-modal-overlay { padding: 0.5rem; align-items: flex-start; padding-top: 2rem; }
+    .pv-modal-content {
+      max-width: 100%;
+      padding: 1.25rem;
+      border-radius: var(--radius-md);
+      max-height: calc(100vh - 3rem);
+    }
+    .pv-modal-header { margin-bottom: 1rem; }
+    .pv-modal-header h3 { font-size: 1.1rem; }
+    .pv-close-btn { font-size: 1.8rem; padding: 0.25rem; }
+
+    /* Form inputs touch-friendly */
+    .pv-form { gap: 1rem; }
+    .pv-form-group label { font-size: 0.85rem; }
+    .pv-form-group input, .pv-form-group textarea {
+      padding: 0.7rem 0.85rem;
+      font-size: 1rem; /* 16px prevents iOS zoom */
+    }
+
+    /* Games grid pills */
+    .pv-games-grid { gap: 0.5rem; }
+    .pv-game-pill { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+
+    /* Radio pills */
+    .pv-radio-group { gap: 0.5rem; }
+    .pv-radio-pill { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+
+    .pv-modal-footer {
+      flex-direction: column-reverse;
+      gap: 0.75rem;
+    }
+    .pv-modal-footer .btn-primary,
+    .pv-modal-footer .btn-secondary {
+      width: 100%;
+      text-align: center;
+      padding: 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    /* Settings specific */
+    .pv-settings-section h4 { font-size: 1rem; }
+    .btn-block { padding: 0.7rem; font-size: 0.9rem; }
+    .pv-danger-text { font-size: 0.8rem; }
+    .pv-divider { margin: 0.75rem 0; }
+
+    /* Friends list */
+    .pv-friends-list { max-height: 50vh; }
+    .pv-friend-link { padding: 0.75rem; }
+    .pv-friend-avatar { width: 36px; height: 36px; }
+    .pv-friend-name { font-size: 0.95rem; }
+
+    /* Profile title badge */
+    .profile-title-badge { font-size: 0.75rem; }
+  }
+
+  /* Extra small screens */
+  @media (max-width: 400px) {
+    .profile-stats { grid-template-columns: 1fr; }
+    .profile-actions { flex-direction: column; }
+    .profile-actions .btn-primary,
+    .profile-actions .btn-secondary,
+    .profile-actions .btn-danger {
+      width: 100%;
+    }
+    .pv-modal-content { padding: 1rem; }
+    .pv-games-grid { gap: 0.4rem; }
+    .pv-game-pill { padding: 0.35rem 0.6rem; font-size: 0.75rem; }
   }
 </style>
 

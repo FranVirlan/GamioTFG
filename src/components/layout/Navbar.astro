@@ -587,20 +587,35 @@ const navLinks = [
     font-size: 1.1rem;
     font-weight: 600;
     color: var(--color-text-primary);
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 320px;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-user-info:hover,
+  .mobile-user-info:active {
+    background: rgba(124, 58, 237, 0.2);
+    border-color: rgba(124, 58, 237, 0.4);
+    transform: translateY(-2px);
   }
 
   .user-avatar-lg {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
   .mobile-logout {
@@ -667,10 +682,12 @@ const navLinks = [
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 1.5rem;
+    justify-content: flex-start;
+    gap: 1.25rem;
     height: 100%;
-    padding: 2rem;
+    padding: 5rem 2rem 2rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .mobile-link {
@@ -743,7 +760,7 @@ const navLinks = [
     document.body.style.overflow = mobileMenu?.classList.contains('open') ? 'hidden' : '';
   });
 
-  mobileMenu?.querySelectorAll('a').forEach((link) => {
+  mobileMenu?.querySelectorAll('a, .mobile-user-info').forEach((link) => {
     link.addEventListener('click', () => {
       hamburger?.classList.remove('open');
       mobileMenu?.classList.remove('open');
