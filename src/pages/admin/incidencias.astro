@@ -131,10 +131,10 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
                 <h2 id="auditor-title">Jugador</h2>
                 <p id="auditor-subtitle">Reportado por ...</p>
               </div>
-              <div id="auditor-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button class="btn-primary" id="btn-resolve" style="background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3); color: #4ade80;">Resolver</button>
-                <button class="btn-secondary" id="btn-dismiss">Desestimar</button>
-                <button class="btn-danger" id="btn-ban" style="background: #ef4444; border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.25);">Suspender Cuenta 🚫</button>
+              <div id="auditor-actions">
+                <button class="btn-action-resolve" id="btn-resolve">Resolver ✓</button>
+                <button class="btn-action-dismiss" id="btn-dismiss">Desestimar ✕</button>
+                <button class="btn-action-ban" id="btn-ban">Suspender Cuenta 🚫</button>
               </div>
             </div>
 
@@ -557,6 +557,85 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
       height: 350px;
     }
   }
+
+  /* ── Auditor Actions Buttons (Cyberpunk Moderation Actions) ── */
+  #auditor-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  #auditor-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.85rem;
+    font-family: var(--font-sans);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+  }
+
+  /* Resolver (Neon Emerald Green) */
+  .btn-action-resolve {
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.05);
+  }
+
+  .btn-action-resolve:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.6);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+    color: #fff;
+  }
+
+  /* Desestimar (Muted Cyberpunk Slate/Slate-Cyan) */
+  .btn-action-dismiss {
+    background: rgba(148, 163, 184, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    color: #94a3b8;
+    box-shadow: 0 4px 15px rgba(148, 163, 184, 0.03);
+  }
+
+  .btn-action-dismiss:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(148, 163, 184, 0.18);
+    border-color: rgba(148, 163, 184, 0.5);
+    box-shadow: 0 0 20px rgba(148, 163, 184, 0.15);
+    color: #f1f5f9;
+  }
+
+  /* Suspender / Banear (Vibrant Cyberpunk Red/Crimson) */
+  .btn-action-ban {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.05);
+  }
+
+  .btn-action-ban:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.35);
+    color: #fff;
+  }
+
+  #auditor-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
 </style>
 
 <script>
@@ -566,209 +645,220 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
   let selectedReportedId: string | null = null;
   let selectedReportedName: string | null = null;
 
-  function initIncidencias() {
-    const reportsListContainer = document.querySelector('.reports-list');
+  // Manejadores globales para evitar duplicación de eventos al reinicializar
+  const onResolveClick = async (e: Event) => {
+    const btnResolve = document.getElementById('btn-resolve') as HTMLButtonElement | null;
+    if (!selectedReportId || !btnResolve) return;
+    btnResolve.disabled = true;
+    btnResolve.textContent = 'Resolviendo...';
+
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report_id: selectedReportId, status: 'resolved' })
+      });
+
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        alert('Error al resolver la incidencia.');
+        btnResolve.disabled = false;
+        btnResolve.textContent = 'Resolver ✓';
+      }
+    } catch (err) {
+      alert('Error de conexión.');
+      btnResolve.disabled = false;
+      btnResolve.textContent = 'Resolver ✓';
+    }
+  };
+
+  const onDismissClick = async (e: Event) => {
+    const btnDismiss = document.getElementById('btn-dismiss') as HTMLButtonElement | null;
+    if (!selectedReportId || !btnDismiss) return;
+    btnDismiss.disabled = true;
+    btnDismiss.textContent = 'Desestimando...';
+
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report_id: selectedReportId, status: 'dismissed' })
+      });
+
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        alert('Error al desestimar la incidencia.');
+        btnDismiss.disabled = false;
+        btnDismiss.textContent = 'Desestimar ✕';
+      }
+    } catch (err) {
+      alert('Error de conexión.');
+      btnDismiss.disabled = false;
+      btnDismiss.textContent = 'Desestimar ✕';
+    }
+  };
+
+  const onBanClick = async (e: Event) => {
+    const btnBan = document.getElementById('btn-ban') as HTMLButtonElement | null;
+    if (!selectedReportedId || !selectedReportedName || !btnBan) return;
+    
+    const card = document.querySelector(`.report-card[data-reported-id="${selectedReportedId}"]`) as HTMLElement | null;
+    if (!card) return;
+    const isCurrentlyBanned = card.dataset.reportedBanned === 'true';
+    const actionText = isCurrentlyBanned ? 'levantar la suspensión de' : 'SUSPENDER indefinidamente a';
+
+    const confirmed = confirm(`¿Estás seguro de que deseas ${actionText} al jugador ${selectedReportedName}?`);
+    if (!confirmed) return;
+
+    btnBan.disabled = true;
+    btnBan.textContent = 'Procesando...';
+
+    try {
+      const res = await fetch('/api/admin/ban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_profile_id: selectedReportedId, banned: !isCurrentlyBanned })
+      });
+
+      if (res.ok) {
+        alert(isCurrentlyBanned ? `¡Se ha levantado la suspensión de ${selectedReportedName}!` : `¡El jugador ${selectedReportedName} ha sido suspendido!`);
+        window.location.reload();
+      } else {
+        alert('Error al procesar el baneo en el servidor.');
+        btnBan.disabled = false;
+        btnBan.textContent = isCurrentlyBanned ? 'Quitar Suspensión 🟢' : 'Suspender Cuenta 🚫';
+      }
+    } catch (err) {
+      alert('Error de conexión.');
+      btnBan.disabled = false;
+      btnBan.textContent = isCurrentlyBanned ? 'Quitar Suspensión 🟢' : 'Suspender Cuenta 🚫';
+    }
+  };
+
+  const onCardClick = async (e: Event) => {
+    const target = e.target as HTMLElement;
+    const card = target.closest('.report-card') as HTMLElement | null;
+    if (!card) return;
+
     const placeholder = document.getElementById('auditor-placeholder');
     const content = document.getElementById('auditor-content');
-
     const titleEl = document.getElementById('auditor-title');
     const subtitleEl = document.getElementById('auditor-subtitle');
     const roomEl = document.getElementById('info-room');
     const detailsEl = document.getElementById('info-details');
     const messageList = document.getElementById('audit-messages-list');
+    const btnBan = document.getElementById('btn-ban') as HTMLButtonElement | null;
 
+    // Remover selecciones anteriores
+    document.querySelectorAll('.report-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+
+    const reportId = card.dataset.reportId || '';
+    const reportedId = card.dataset.reportedId || '';
+    const reportedName = card.dataset.reportedName || '';
+    const reporterName = card.dataset.reporterName || '';
+    const reason = card.dataset.reason || '';
+    const details = card.dataset.details || '';
+    const room = card.dataset.room || '';
+    const isBanned = card.dataset.reportedBanned === 'true';
+
+    selectedReportId = reportId;
+    selectedReportedId = reportedId;
+    selectedReportedName = reportedName;
+
+    // Ocultar placeholder y mostrar contenido
+    placeholder?.classList.add('hidden');
+    content?.classList.remove('hidden');
+
+    // Asignar datos del reporte a la UI
+    if (titleEl) titleEl.textContent = `Auditoría: ${reportedName}`;
+    if (subtitleEl) subtitleEl.textContent = `Reportado por ${reporterName} • Motivo: ${reason}`;
+    if (roomEl) roomEl.textContent = room;
+    if (detailsEl) detailsEl.textContent = details;
+
+    // Configurar estado del botón de baneo usando clases cyberpunk dinámicas en lugar de estilos inline rígidos
+    if (btnBan) {
+      btnBan.textContent = isBanned ? 'Quitar Suspensión 🟢' : 'Suspender Cuenta 🚫';
+      btnBan.className = isBanned ? 'btn-action-resolve' : 'btn-action-ban';
+      // Limpiamos estilos inline viejos si existiesen
+      btnBan.style.background = '';
+      btnBan.style.borderColor = '';
+      btnBan.style.color = '';
+      btnBan.style.boxShadow = '';
+    }
+
+    // ── Cargar historial de chats del reportado ──
+    if (messageList) {
+      messageList.innerHTML = '<div class="loader">Consultando base de datos...</div>';
+      
+      try {
+        const { data: messages, error } = await supabase
+          .from('messages')
+          .select('content, room, created_at')
+          .eq('profile_id', reportedId)
+          .order('created_at', { ascending: false })
+          .limit(15);
+
+        if (error) throw error;
+
+        if (!messages || messages.length === 0) {
+          messageList.innerHTML = '<div class="empty-chat">El jugador no ha enviado ningún mensaje de chat público recientemente.</div>';
+        } else {
+          messageList.innerHTML = '';
+          messages.forEach(msg => {
+            const msgTime = new Date(msg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            const msgDate = new Date(msg.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+            
+            const item = document.createElement('div');
+            item.className = 'audit-msg-item';
+            item.innerHTML = `
+              <div class="audit-msg-head">
+                <span>Sala: #${msg.room || 'global'}</span>
+                <span>${msgDate} - ${msgTime}</span>
+              </div>
+              <div class="audit-msg-bubble">${msg.content}</div>
+            `;
+            messageList.appendChild(item);
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching audited chats:', err);
+        messageList.innerHTML = '<div class="loader" style="color: #f87171;">Error al consultar el historial de chats de Supabase.</div>';
+      }
+    }
+  };
+
+  function initIncidencias() {
+    const reportsListContainer = document.querySelector('.reports-list');
     const btnResolve = document.getElementById('btn-resolve') as HTMLButtonElement | null;
     const btnDismiss = document.getElementById('btn-dismiss') as HTMLButtonElement | null;
     const btnBan = document.getElementById('btn-ban') as HTMLButtonElement | null;
 
     if (!reportsListContainer) return;
 
-    // ── Delegación de eventos para las tarjetas de reporte ──
-    const onCardClick = async (e: Event) => {
-      const target = e.target as HTMLElement;
-      const card = target.closest('.report-card') as HTMLElement | null;
-      if (!card) return;
-
-      // Remover selecciones anteriores
-      document.querySelectorAll('.report-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-
-      const reportId = card.dataset.reportId || '';
-      const reportedId = card.dataset.reportedId || '';
-      const reportedName = card.dataset.reportedName || '';
-      const reporterName = card.dataset.reporterName || '';
-      const reason = card.dataset.reason || '';
-      const details = card.dataset.details || '';
-      const room = card.dataset.room || '';
-      const isBanned = card.dataset.reportedBanned === 'true';
-
-      selectedReportId = reportId;
-      selectedReportedId = reportedId;
-      selectedReportedName = reportedName;
-
-      // Ocultar placeholder y mostrar contenido
-      placeholder?.classList.add('hidden');
-      content?.classList.remove('hidden');
-
-      // Asignar datos del reporte a la UI
-      if (titleEl) titleEl.textContent = `Auditoría: ${reportedName}`;
-      if (subtitleEl) subtitleEl.textContent = `Reportado por ${reporterName} • Motivo: ${reason}`;
-      if (roomEl) roomEl.textContent = room;
-      if (detailsEl) detailsEl.textContent = details;
-
-      // Configurar estado del botón de baneo
-      if (btnBan) {
-        btnBan.textContent = isBanned ? 'Quitar Suspensión 🟢' : 'Suspender Cuenta 🚫';
-        btnBan.style.background = isBanned ? 'rgba(34, 197, 94, 0.15)' : '#ef4444';
-        btnBan.style.borderColor = isBanned ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.4)';
-        btnBan.style.color = isBanned ? '#4ade80' : 'white';
-      }
-
-      // ── Cargar historial de chats del reportado ──
-      if (messageList) {
-        messageList.innerHTML = '<div class="loader">Consultando base de datos...</div>';
-        
-        try {
-          const { data: messages, error } = await supabase
-            .from('messages')
-            .select('content, room, created_at')
-            .eq('profile_id', reportedId)
-            .order('created_at', { ascending: false })
-            .limit(15);
-
-          if (error) throw error;
-
-          if (!messages || messages.length === 0) {
-            messageList.innerHTML = '<div class="empty-chat">El jugador no ha enviado ningún mensaje de chat público recientemente.</div>';
-          } else {
-            messageList.innerHTML = '';
-            messages.forEach(msg => {
-              const msgTime = new Date(msg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-              const msgDate = new Date(msg.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
-              
-              const item = document.createElement('div');
-              item.className = 'audit-msg-item';
-              item.innerHTML = `
-                <div class="audit-msg-head">
-                  <span>Sala: #${msg.room || 'global'}</span>
-                  <span>${msgDate} - ${msgTime}</span>
-                </div>
-                <div class="audit-msg-bubble">${msg.content}</div>
-              `;
-              messageList.appendChild(item);
-            });
-          }
-        } catch (err) {
-          console.error('Error fetching audited chats:', err);
-          messageList.innerHTML = '<div class="loader" style="color: #f87171;">Error al consultar el historial de chats de Supabase.</div>';
-        }
-      }
-    };
-
+    // Vinculamos manejadores globales de forma limpia
     reportsListContainer.removeEventListener('click', onCardClick);
     reportsListContainer.addEventListener('click', onCardClick);
 
-    // ── BOTÓN: Resolver Incidencia ──
-    const onResolveClick = async () => {
-      if (!selectedReportId || !btnResolve) return;
-      btnResolve.disabled = true;
-      btnResolve.textContent = 'Resolviendo...';
-
-      try {
-        const res = await fetch('/api/reports', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ report_id: selectedReportId, status: 'resolved' })
-        });
-
-        if (res.ok) {
-          window.location.reload();
-        } else {
-          alert('Error al resolver la incidencia.');
-          btnResolve.disabled = false;
-          btnResolve.textContent = 'Resolver';
-        }
-      } catch (err) {
-        alert('Error de conexión.');
-        btnResolve.disabled = false;
-        btnResolve.textContent = 'Resolver';
-      }
-    };
     btnResolve?.removeEventListener('click', onResolveClick);
     btnResolve?.addEventListener('click', onResolveClick);
 
-    // ── BOTÓN: Desestimar Incidencia ──
-    const onDismissClick = async () => {
-      if (!selectedReportId || !btnDismiss) return;
-      btnDismiss.disabled = true;
-      btnDismiss.textContent = 'Desestimando...';
-
-      try {
-        const res = await fetch('/api/reports', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ report_id: selectedReportId, status: 'dismissed' })
-        });
-
-        if (res.ok) {
-          window.location.reload();
-        } else {
-          alert('Error al desestimar la incidencia.');
-          btnDismiss.disabled = false;
-          btnDismiss.textContent = 'Desestimar';
-        }
-      } catch (err) {
-        alert('Error de conexión.');
-        btnDismiss.disabled = false;
-        btnDismiss.textContent = 'Desestimar';
-      }
-    };
     btnDismiss?.removeEventListener('click', onDismissClick);
     btnDismiss?.addEventListener('click', onDismissClick);
 
-    // ── BOTÓN: Banear / Suspender Cuenta ──
-    const onBanClick = async () => {
-      if (!selectedReportedId || !selectedReportedName || !btnBan) return;
-      
-      const card = document.querySelector(`.report-card[data-reported-id="${selectedReportedId}"]`) as HTMLElement | null;
-      if (!card) return;
-      const isCurrentlyBanned = card.dataset.reportedBanned === 'true';
-      const actionText = isCurrentlyBanned ? 'levantar la suspensión de' : 'SUSPENDER indefinidamente a';
-
-      const confirmed = confirm(`¿Estás seguro de que deseas ${actionText} al jugador ${selectedReportedName}?`);
-      if (!confirmed) return;
-
-      btnBan.disabled = true;
-      btnBan.textContent = 'Procesando...';
-
-      try {
-        const res = await fetch('/api/admin/ban', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ target_profile_id: selectedReportedId, banned: !isCurrentlyBanned })
-        });
-
-        if (res.ok) {
-          alert(isCurrentlyBanned ? `¡Se ha levantado la suspensión de ${selectedReportedName}!` : `¡El jugador ${selectedReportedName} ha sido suspendido!`);
-          window.location.reload();
-        } else {
-          alert('Error al procesar el baneo en el servidor.');
-          btnBan.disabled = false;
-          btnBan.textContent = isCurrentlyBanned ? 'Quitar Suspensión 🟢' : 'Suspender Cuenta 🚫';
-        }
-      } catch (err) {
-        alert('Error de conexión.');
-        btnBan.disabled = false;
-        btnBan.textContent = isCurrentlyBanned ? 'Quitar Suspensión 🟢' : 'Suspender Cuenta 🚫';
-      }
-    };
     btnBan?.removeEventListener('click', onBanClick);
     btnBan?.addEventListener('click', onBanClick);
   }
 
-  // Inicializar inmediatamente al cargar el script en el navegador
-  initIncidencias();
+  // Inicializar de forma completamente segura garantizando que el DOM está listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initIncidencias);
+  } else {
+    initIncidencias();
+  }
 
-  // Inicializar en cada navegación con View Transitions de Astro
+  // Compatibilidad con Astro View Transitions
   document.addEventListener('astro:page-load', initIncidencias);
 </script>
