@@ -527,17 +527,20 @@ const popularGames = [
       padding: 0;
       align-items: flex-start;
       justify-content: flex-start;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .pv-modal-content {
       max-width: 100%;
       width: 100%;
       padding: 1.25rem;
       border-radius: 0;
-      max-height: 100vh;
-      min-height: 100vh;
+      max-height: none;
+      min-height: auto;
       margin: 0;
       box-shadow: none;
       border: none;
+      overflow-y: visible;
     }
     .pv-modal-header { margin-bottom: 1rem; }
     .pv-modal-header h3 { font-size: 1.1rem; }
