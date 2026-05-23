@@ -106,6 +106,13 @@ const navLinks = [
               )}
             </div>
           </a>
+          {profile?.is_admin && (
+            <a href="/admin/incidencias" class="nav-icon-link" aria-label="Admin" title="Panel de Incidencias" style="color: #f87171; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.15);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </a>
+          )}
           <form method="POST" action="/api/auth/logout" class="logout-form">
             <button type="submit" class="nav-logout" id="logoutBtn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -152,6 +159,14 @@ const navLinks = [
 
     {user ? (
       <>
+        {profile?.is_admin && (
+          <a href="/admin/incidencias" class="mobile-link" style="color: #f87171; display: flex; align-items: center; gap: 0.5rem; margin-top: -0.5rem;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Panel de Moderación
+          </a>
+        )}
         <a href="/mensajes" class="mobile-link" id="mobile-messages-link" style="color: var(--color-primary-light); display: flex; align-items: center; gap: 0.5rem; margin-top: -0.5rem; position: relative;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>

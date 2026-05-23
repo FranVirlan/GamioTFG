@@ -54,7 +54,17 @@ const messages = messagesData || [];
                 </div>
               )}
               <div class="message-content">
-                {!isMine && <div class="message-author">{msg.profiles?.name || 'Usuario'}</div>}
+                {!isMine && (
+                  <div class="message-header-row" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
+                    <div class="message-author">{msg.profiles?.name || 'Usuario'}</div>
+                    <button class="chat-report-btn" data-reported-id={msg.profile_id} data-reported-name={msg.profiles?.name} data-message-content={msg.content} data-room={msgRoom} title="Reportar mensaje" style="background: transparent; border: none; color: var(--color-text-muted); cursor: pointer; padding: 2px 4px; border-radius: 4px; display: flex; align-items: center; gap: 2px; font-size: 0.72rem; transition: all 0.2s;">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+                      </svg>
+                      Reportar
+                    </button>
+                  </div>
+                )}
                 <div class="message-bubble">
                   {msg.content}
                 </div>
@@ -99,6 +109,52 @@ const messages = messagesData || [];
       </div>
     </main>
   </div>
+
+<!-- ══════════ MODAL: Reportar Mensaje ══════════ -->
+{user && (
+<div id="chat-report-modal" class="pv-modal-overlay pv-hidden">
+  <div class="pv-modal-content animate-fade-in-up">
+    <div class="pv-modal-header">
+      <h3 style="color: #f87171; display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-heading);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+        </svg>
+        Reportar Comportamiento
+      </h3>
+      <button class="pv-close-btn" data-close="chat-report-modal">&times;</button>
+    </div>
+    <form id="chat-report-form" class="pv-form">
+      <input type="hidden" id="chat-report-target-id" value="" />
+      <input type="hidden" id="chat-report-room" value="" />
+      
+      <div class="pv-form-group">
+        <label>Jugador denunciado</label>
+        <input type="text" id="chat-report-target-name" value="" disabled style="background: rgba(255,255,255,0.05); color: var(--color-text-secondary);" />
+      </div>
+
+      <div class="pv-form-group">
+        <label for="chat-report-reason">Motivo de la denuncia</label>
+        <select id="chat-report-reason" style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font-sans); color: var(--color-text-primary); background: rgba(11,15,26,0.6); border: 1px solid var(--color-border); border-radius: var(--radius-sm); outline: none; cursor: pointer;" required>
+          <option value="chat_abuse" selected>Abuso o acoso en chat (insultos, toxicidad)</option>
+          <option value="gameplay_abuse">Mala conducta al jugar (trampas, abandono)</option>
+          <option value="spam">Spam / Publicidad molesta</option>
+          <option value="other">Otro motivo</option>
+        </select>
+      </div>
+
+      <div class="pv-form-group">
+        <label for="chat-report-details">Mensaje reportado y detalles</label>
+        <textarea id="chat-report-details" rows="4" placeholder="Describe brevemente lo ocurrido..." required></textarea>
+      </div>
+
+      <div class="pv-modal-footer">
+        <button type="button" class="btn-secondary" data-close="chat-report-modal">Cancelar</button>
+        <button type="submit" class="btn-primary" id="chat-submit-report-btn" style="background: #ef4444; border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);">Enviar Denuncia 🚩</button>
+      </div>
+    </form>
+  </div>
+</div>
+)}
 
 <style is:global>
   .chat-layout {
@@ -587,7 +643,17 @@ const messages = messagesData || [];
 
           innerHTML += `<div class="message-content">`;
           if (!isMine) {
-            innerHTML += `<div class="message-author">${authorName}</div>`;
+            innerHTML += `
+              <div class="message-header-row" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
+                <div class="message-author">${authorName}</div>
+                <button class="chat-report-btn" data-reported-id="${newMessage.profile_id}" data-reported-name="${authorName}" data-message-content="${newMessage.content}" data-room="${msgRoom}" title="Reportar mensaje" style="background: transparent; border: none; color: var(--color-text-muted); cursor: pointer; padding: 2px 4px; border-radius: 4px; display: flex; align-items: center; gap: 2px; font-size: 0.72rem; transition: all 0.2s;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+                  </svg>
+                  Reportar
+                </button>
+              </div>
+            `;
           }
           innerHTML += `<div class="message-bubble">${newMessage.content}</div>`;
           innerHTML += `<div class="message-time">${time}</div>`;
@@ -614,6 +680,85 @@ const messages = messagesData || [];
         }
       )
       .subscribe();
+
+      // ── Delegación de Eventos para Reporte desde Chat (Evita desvinculaciones por Astro swaps) ──
+      const onChatClick = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        const btn = target.closest('.chat-report-btn') as HTMLButtonElement | null;
+        if (btn) {
+          const reportedId = btn.dataset.reportedId;
+          const reportedName = btn.dataset.reportedName;
+          const messageContent = btn.dataset.messageContent;
+          const room = btn.dataset.room;
+
+          if (reportedId && reportedName) {
+            const modal = document.getElementById('chat-report-modal');
+            const inputId = document.getElementById('chat-report-target-id') as HTMLInputElement;
+            const inputName = document.getElementById('chat-report-target-name') as HTMLInputElement;
+            const inputRoom = document.getElementById('chat-report-room') as HTMLInputElement;
+            const textDetails = document.getElementById('chat-report-details') as HTMLTextAreaElement;
+
+            if (modal && inputId && inputName && inputRoom && textDetails) {
+              inputId.value = reportedId;
+              inputName.value = reportedName;
+              inputRoom.value = room || 'global';
+              textDetails.value = `Mala conducta en chat: "${messageContent}"`;
+              
+              modal.classList.remove('pv-hidden');
+            }
+          }
+          return;
+        }
+
+        // Cerrar modal al hacer clic en botones de cerrar o fuera del modal
+        const closeBtn = target.closest('[data-close="chat-report-modal"]');
+        if (closeBtn || target === document.getElementById('chat-report-modal')) {
+          document.getElementById('chat-report-modal')?.classList.add('pv-hidden');
+        }
+      };
+
+      document.removeEventListener('click', onChatClick);
+      document.addEventListener('click', onChatClick);
+
+      // Enviar reporte del chat
+      const chatReportForm = document.getElementById('chat-report-form') as HTMLFormElement | null;
+      if (chatReportForm) {
+        chatReportForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const submitBtn = document.getElementById('chat-submit-report-btn') as HTMLButtonElement;
+          const originalText = submitBtn.textContent;
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Enviando...';
+
+          const reported_id = (document.getElementById('chat-report-target-id') as HTMLInputElement).value;
+          const reason = (document.getElementById('chat-report-reason') as HTMLSelectElement).value;
+          const details = (document.getElementById('chat-report-details') as HTMLTextAreaElement).value;
+          const chat_room = (document.getElementById('chat-report-room') as HTMLInputElement).value;
+
+          try {
+            const res = await fetch('/api/reports', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ reported_id, reason, details, chat_room })
+            });
+
+            if (res.ok) {
+              alert('¡Reporte enviado con éxito! Los moderadores revisarán la conducta en este chat.');
+              document.getElementById('chat-report-modal')?.classList.add('pv-hidden');
+              chatReportForm.reset();
+            } else {
+              const data = await res.json();
+              alert('Error: ' + (data.error || 'No se pudo enviar el reporte.'));
+              submitBtn.disabled = false;
+              submitBtn.textContent = originalText;
+            }
+          } catch (err) {
+            alert('Error conectando con el servidor.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+          }
+        });
+      }
       
       document.addEventListener('astro:before-swap', () => {
         supabase.removeChannel(channel);

@@ -1,0 +1,245 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+---
+
+<MainLayout title="Cuenta Suspendida — Gamio 🚫">
+  <section class="ban-page">
+    <div class="ban-orb ban-orb-1"></div>
+    <div class="ban-orb ban-orb-2"></div>
+    <div class="ban-grid-bg"></div>
+
+    <div class="ban-container animate-fade-in-up">
+      <div class="ban-card">
+        <div class="ban-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        
+        <h1>Acceso Suspendido</h1>
+        <div class="ban-divider"></div>
+        
+        <p class="warning-text">
+          Tu cuenta en <strong>Gamio</strong> ha sido suspendida permanentemente por violar nuestros términos de servicio y políticas de conducta en la comunidad.
+        </p>
+
+        <div class="ban-reasons">
+          <h3>Infracciones de Conducta Comunes:</h3>
+          <ul>
+            <li>🚫 Lenguaje ofensivo, acoso o toxicidad en el chat global o privado.</li>
+            <li>🚫 Comportamientos antideportivos o trampas en partidas organizadas.</li>
+            <li>🚫 Publicación de spam, publicidad molesta o links maliciosos.</li>
+          </ul>
+        </div>
+
+        <p class="appeal-text">
+          Si crees que esto se trata de un error o deseas apelar la sanción, puedes ponerte en contacto con nuestro equipo de soporte técnico enviando un correo a <a href="mailto:soporte@gamio.com">soporte@gamio.com</a>.
+        </p>
+
+        <div class="ban-actions">
+          <a href="/api/auth/signout" class="btn-primary ban-btn">Cerrar Sesión</a>
+          <a href="/contacto" class="skip-link">Contactar Soporte</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</MainLayout>
+
+<style>
+  .ban-page {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ban-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .ban-orb-1 {
+    width: 500px;
+    height: 500px;
+    background: rgba(239, 68, 68, 0.12); /* Red warning glow */
+    top: -150px;
+    right: -150px;
+  }
+
+  .ban-orb-2 {
+    width: 400px;
+    height: 400px;
+    background: rgba(220, 38, 38, 0.08);
+    bottom: -100px;
+    left: -100px;
+  }
+
+  .ban-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(239, 68, 68, 0.01) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(239, 68, 68, 0.01) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .ban-container {
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .ban-card {
+    background: rgba(15, 20, 31, 0.85);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(239, 68, 68, 0.25); /* Crimson red border */
+    border-radius: var(--radius-xl);
+    padding: 3rem;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(239, 68, 68, 0.05);
+  }
+
+  .ban-icon {
+    width: 70px;
+    height: 70px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 2px solid rgba(239, 68, 68, 0.4);
+    border-radius: 50%;
+    color: #f87171;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem auto;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+    animation: pulseRed 2s infinite;
+  }
+
+  @keyframes pulseRed {
+    0% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+    50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(239, 68, 68, 0.4); }
+    100% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+  }
+
+  .ban-card h1 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+    color: white;
+    letter-spacing: -0.01em;
+  }
+
+  .ban-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.3), transparent);
+    margin-bottom: 1.5rem;
+  }
+
+  .warning-text {
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .ban-reasons {
+    background: rgba(11, 15, 26, 0.5);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    text-align: left;
+    margin-bottom: 1.5rem;
+  }
+
+  .ban-reasons h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #f87171;
+  }
+
+  .ban-reasons ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ban-reasons li {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+  }
+
+  .appeal-text {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    margin-bottom: 2rem;
+  }
+
+  .appeal-text a {
+    color: #f87171;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .appeal-text a:hover {
+    text-decoration: underline;
+  }
+
+  .ban-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .ban-btn {
+    width: 100%;
+    padding: 0.85rem;
+    font-size: 1rem;
+    background: #ef4444;
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+  }
+
+  .ban-btn:hover {
+    background: #dc2626;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+  }
+
+  .skip-link {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .skip-link:hover {
+    color: var(--color-text-secondary);
+    text-decoration: underline;
+  }
+
+  @media (max-width: 480px) {
+    .ban-card {
+      padding: 2rem 1.5rem;
+    }
+  }
+</style>

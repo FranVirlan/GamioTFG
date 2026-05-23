@@ -76,6 +76,12 @@ const popularGames = [
             {friendStatus === 'none' && <button class="btn-primary btn-add-friend" data-target-id={user.id}>Añadir Amigo</button>}
             
             <button class="btn-secondary message-btn" data-target-id={user.id}>Mensaje</button>
+            <button class="btn-danger report-profile-btn" data-target-id={user.id} style="padding: 0.6rem 1.2rem; display: flex; align-items: center; gap: 0.5rem; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: all 0.2s;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+              </svg>
+              Reportar
+            </button>
           </>
         )}
       </div>
@@ -252,6 +258,47 @@ const popularGames = [
         <a href="/api/auth/signout" class="btn-danger btn-block" id="logout-btn">Cerrar Sesión</a>
       </div>
     </div>
+  </div>
+</div>
+)}
+
+<!-- ══════════ MODAL: Reportar Jugador ══════════ -->
+{!isOwnProfile && (
+<div id="report-user-modal" class="pv-modal-overlay pv-hidden">
+  <div class="pv-modal-content animate-fade-in-up">
+    <div class="pv-modal-header">
+      <h3 style="color: #f87171; display: flex; align-items: center; gap: 0.5rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+        </svg>
+        Reportar a {user.name}
+      </h3>
+      <button class="pv-close-btn" data-close="report-user-modal">&times;</button>
+    </div>
+    <form id="report-user-form" class="pv-form">
+      <input type="hidden" id="report-target-id" value={user.id} />
+      
+      <div class="pv-form-group">
+        <label for="report-reason">Motivo de la denuncia</label>
+        <select id="report-reason" style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font-sans); color: var(--color-text-primary); background: rgba(11,15,26,0.6); border: 1px solid var(--color-border); border-radius: var(--radius-sm); outline: none; cursor: pointer;" required>
+          <option value="" disabled selected>Selecciona un motivo...</option>
+          <option value="chat_abuse">Abuso o acoso en chat (insultos, toxicidad)</option>
+          <option value="gameplay_abuse">Mala conducta al jugar (trampas, abandono)</option>
+          <option value="spam">Spam / Publicidad molesta</option>
+          <option value="other">Otro motivo</option>
+        </select>
+      </div>
+
+      <div class="pv-form-group">
+        <label for="report-details">Detalles adicionales</label>
+        <textarea id="report-details" rows="4" placeholder="Describe brevemente lo ocurrido..." required></textarea>
+      </div>
+
+      <div class="pv-modal-footer">
+        <button type="button" class="btn-secondary" data-close="report-user-modal">Cancelar</button>
+        <button type="submit" class="btn-primary" id="submit-report-btn" style="background: #ef4444; border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);">Enviar Denuncia 🚩</button>
+      </div>
+    </form>
   </div>
 </div>
 )}
@@ -452,6 +499,50 @@ const popularGames = [
   document.getElementById('edit-profile-btn')?.addEventListener('click', () => {
     openModal('edit-profile-modal');
   });
+
+  // ── Open Report User Modal ──
+  document.querySelector('.report-profile-btn')?.addEventListener('click', () => {
+    openModal('report-user-modal');
+  });
+
+  // ── Submit Report ──
+  const reportForm = document.getElementById('report-user-form') as HTMLFormElement;
+  if (reportForm) {
+    reportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submit-report-btn') as HTMLButtonElement;
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando...';
+
+      const reported_id = (document.getElementById('report-target-id') as HTMLInputElement).value;
+      const reason = (document.getElementById('report-reason') as HTMLSelectElement).value;
+      const details = (document.getElementById('report-details') as HTMLTextAreaElement).value;
+
+      try {
+        const res = await fetch('/api/reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reported_id, reason, details })
+        });
+
+        if (res.ok) {
+          alert('¡Denuncia enviada correctamente! Un administrador revisará la incidencia.');
+          closeModal('report-user-modal');
+          reportForm.reset();
+        } else {
+          const data = await res.json();
+          alert('Error: ' + (data.error || 'No se pudo enviar la denuncia.'));
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      } catch (err) {
+        alert('Error conectando con el servidor.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+  }
 
   // ── Open Settings ──
   document.getElementById('settings-btn')?.addEventListener('click', () => {

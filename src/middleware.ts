@@ -50,6 +50,25 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
+  // Si obtuvimos un usuario (de sesión activa o refrescada), verificar si está suspendido
+  if (context.locals.user) {
+    if (url.pathname !== '/banned' && !url.pathname.startsWith('/api/auth/')) {
+      const supabase = createServerClient(accessToken || refreshToken);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_banned')
+        .eq('id', context.locals.user.id)
+        .single();
+
+      if (profile?.is_banned) {
+        cookies.delete('sb-access-token', { path: '/' });
+        cookies.delete('sb-refresh-token', { path: '/' });
+        context.locals.user = null;
+        return redirect('/banned');
+      }
+    }
+  }
+
   // Proteger rutas privadas
   const isProtected = protectedRoutes.some((route) =>
     url.pathname.startsWith(route)
