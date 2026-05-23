@@ -566,8 +566,8 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
   let selectedReportedId: string | null = null;
   let selectedReportedName: string | null = null;
 
-  document.addEventListener('astro:page-load', () => {
-    const cards = document.querySelectorAll('.report-card');
+  function initIncidencias() {
+    const reportsListContainer = document.querySelector('.reports-list');
     const placeholder = document.getElementById('auditor-placeholder');
     const content = document.getElementById('auditor-content');
 
@@ -577,97 +577,100 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
     const detailsEl = document.getElementById('info-details');
     const messageList = document.getElementById('audit-messages-list');
 
-    const btnResolve = document.getElementById('btn-resolve') as HTMLButtonElement;
-    const btnDismiss = document.getElementById('btn-dismiss') as HTMLButtonElement;
-    const btnBan = document.getElementById('btn-ban') as HTMLButtonElement;
+    const btnResolve = document.getElementById('btn-resolve') as HTMLButtonElement | null;
+    const btnDismiss = document.getElementById('btn-dismiss') as HTMLButtonElement | null;
+    const btnBan = document.getElementById('btn-ban') as HTMLButtonElement | null;
 
-    if (cards.length === 0) return;
+    if (!reportsListContainer) return;
 
-    // ── Seleccionar un reporte de la lista ──
-    cards.forEach(card => {
-      card.addEventListener('click', async () => {
-        // Remover selecciones anteriores
-        cards.forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
+    // ── Delegación de eventos para las tarjetas de reporte ──
+    const onCardClick = async (e: Event) => {
+      const target = e.target as HTMLElement;
+      const card = target.closest('.report-card') as HTMLElement | null;
+      if (!card) return;
 
-        const cardEl = card as HTMLElement;
-        const reportId = cardEl.dataset.reportId || '';
-        const reportedId = cardEl.dataset.reportedId || '';
-        const reportedName = cardEl.dataset.reportedName || '';
-        const reporterName = cardEl.dataset.reporterName || '';
-        const reason = cardEl.dataset.reason || '';
-        const details = cardEl.dataset.details || '';
-        const room = cardEl.dataset.room || '';
-        const status = cardEl.dataset.status || '';
-        const isBanned = cardEl.dataset.reportedBanned === 'true';
+      // Remover selecciones anteriores
+      document.querySelectorAll('.report-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
 
-        selectedReportId = reportId;
-        selectedReportedId = reportedId;
-        selectedReportedName = reportedName;
+      const reportId = card.dataset.reportId || '';
+      const reportedId = card.dataset.reportedId || '';
+      const reportedName = card.dataset.reportedName || '';
+      const reporterName = card.dataset.reporterName || '';
+      const reason = card.dataset.reason || '';
+      const details = card.dataset.details || '';
+      const room = card.dataset.room || '';
+      const isBanned = card.dataset.reportedBanned === 'true';
 
-        // Ocultar placeholder y mostrar contenido
-        placeholder?.classList.add('hidden');
-        content?.classList.remove('hidden');
+      selectedReportId = reportId;
+      selectedReportedId = reportedId;
+      selectedReportedName = reportedName;
 
-        // Asignar datos del reporte a la UI
-        if (titleEl) titleEl.textContent = `Auditoría: ${reportedName}`;
-        if (subtitleEl) subtitleEl.textContent = `Reportado por ${reporterName} • Motivo: ${reason}`;
-        if (roomEl) roomEl.textContent = room;
-        if (detailsEl) detailsEl.textContent = details;
+      // Ocultar placeholder y mostrar contenido
+      placeholder?.classList.add('hidden');
+      content?.classList.remove('hidden');
 
-        // Configurar estado de botones
-        if (btnBan) {
-          btnBan.textContent = isBanned ? 'Quitar Suspensión 🟢' : 'Suspender Cuenta 🚫';
-          btnBan.style.background = isBanned ? 'rgba(34, 197, 94, 0.15)' : '#ef4444';
-          btnBan.style.borderColor = isBanned ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.4)';
-          btnBan.style.color = isBanned ? '#4ade80' : 'white';
-        }
+      // Asignar datos del reporte a la UI
+      if (titleEl) titleEl.textContent = `Auditoría: ${reportedName}`;
+      if (subtitleEl) subtitleEl.textContent = `Reportado por ${reporterName} • Motivo: ${reason}`;
+      if (roomEl) roomEl.textContent = room;
+      if (detailsEl) detailsEl.textContent = details;
 
-        // ── Cargar historial de chats del reportado ──
-        if (messageList) {
-          messageList.innerHTML = '<div class="loader">Consultando base de datos...</div>';
-          
-          try {
-            const { data: messages, error } = await supabase
-              .from('messages')
-              .select('content, room, created_at')
-              .eq('profile_id', reportedId)
-              .order('created_at', { ascending: false })
-              .limit(15);
+      // Configurar estado del botón de baneo
+      if (btnBan) {
+        btnBan.textContent = isBanned ? 'Quitar Suspensión 🟢' : 'Suspender Cuenta 🚫';
+        btnBan.style.background = isBanned ? 'rgba(34, 197, 94, 0.15)' : '#ef4444';
+        btnBan.style.borderColor = isBanned ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.4)';
+        btnBan.style.color = isBanned ? '#4ade80' : 'white';
+      }
 
-            if (error) throw error;
+      // ── Cargar historial de chats del reportado ──
+      if (messageList) {
+        messageList.innerHTML = '<div class="loader">Consultando base de datos...</div>';
+        
+        try {
+          const { data: messages, error } = await supabase
+            .from('messages')
+            .select('content, room, created_at')
+            .eq('profile_id', reportedId)
+            .order('created_at', { ascending: false })
+            .limit(15);
 
-            if (!messages || messages.length === 0) {
-              messageList.innerHTML = '<div class="empty-chat">El jugador no ha enviado ningún mensaje de chat público recientemente.</div>';
-            } else {
-              messageList.innerHTML = '';
-              messages.forEach(msg => {
-                const msgTime = new Date(msg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                const msgDate = new Date(msg.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
-                
-                const item = document.createElement('div');
-                item.className = 'audit-msg-item';
-                item.innerHTML = `
-                  <div class="audit-msg-head">
-                    <span>Sala: #${msg.room || 'global'}</span>
-                    <span>${msgDate} - ${msgTime}</span>
-                  </div>
-                  <div class="audit-msg-bubble">${msg.content}</div>
-                `;
-                messageList.appendChild(item);
-              });
-            }
-          } catch (err) {
-            console.error('Error fetching audited chats:', err);
-            messageList.innerHTML = '<div class="loader" style="color: #f87171;">Error al consultar el historial de chats de Supabase.</div>';
+          if (error) throw error;
+
+          if (!messages || messages.length === 0) {
+            messageList.innerHTML = '<div class="empty-chat">El jugador no ha enviado ningún mensaje de chat público recientemente.</div>';
+          } else {
+            messageList.innerHTML = '';
+            messages.forEach(msg => {
+              const msgTime = new Date(msg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+              const msgDate = new Date(msg.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+              
+              const item = document.createElement('div');
+              item.className = 'audit-msg-item';
+              item.innerHTML = `
+                <div class="audit-msg-head">
+                  <span>Sala: #${msg.room || 'global'}</span>
+                  <span>${msgDate} - ${msgTime}</span>
+                </div>
+                <div class="audit-msg-bubble">${msg.content}</div>
+              `;
+              messageList.appendChild(item);
+            });
           }
+        } catch (err) {
+          console.error('Error fetching audited chats:', err);
+          messageList.innerHTML = '<div class="loader" style="color: #f87171;">Error al consultar el historial de chats de Supabase.</div>';
         }
-      });
-    });
+      }
+    };
+
+    reportsListContainer.removeEventListener('click', onCardClick);
+    reportsListContainer.addEventListener('click', onCardClick);
 
     // ── BOTÓN: Resolver Incidencia ──
-    btnResolve?.addEventListener('click', async () => {
-      if (!selectedReportId) return;
+    const onResolveClick = async () => {
+      if (!selectedReportId || !btnResolve) return;
       btnResolve.disabled = true;
       btnResolve.textContent = 'Resolviendo...';
 
@@ -690,11 +693,13 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
         btnResolve.disabled = false;
         btnResolve.textContent = 'Resolver';
       }
-    });
+    };
+    btnResolve?.removeEventListener('click', onResolveClick);
+    btnResolve?.addEventListener('click', onResolveClick);
 
     // ── BOTÓN: Desestimar Incidencia ──
-    btnDismiss?.addEventListener('click', async () => {
-      if (!selectedReportId) return;
+    const onDismissClick = async () => {
+      if (!selectedReportId || !btnDismiss) return;
       btnDismiss.disabled = true;
       btnDismiss.textContent = 'Desestimando...';
 
@@ -717,17 +722,20 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
         btnDismiss.disabled = false;
         btnDismiss.textContent = 'Desestimar';
       }
-    });
+    };
+    btnDismiss?.removeEventListener('click', onDismissClick);
+    btnDismiss?.addEventListener('click', onDismissClick);
 
     // ── BOTÓN: Banear / Suspender Cuenta ──
-    btnBan?.addEventListener('click', async () => {
-      if (!selectedReportedId || !selectedReportedName) return;
+    const onBanClick = async () => {
+      if (!selectedReportedId || !selectedReportedName || !btnBan) return;
       
-      const card = document.querySelector(`.report-card[data-reported-id="${selectedReportedId}"]`) as HTMLElement;
-      const isCurrentlyBanned = card?.dataset.reportedBanned === 'true';
+      const card = document.querySelector(`.report-card[data-reported-id="${selectedReportedId}"]`) as HTMLElement | null;
+      if (!card) return;
+      const isCurrentlyBanned = card.dataset.reportedBanned === 'true';
       const actionText = isCurrentlyBanned ? 'levantar la suspensión de' : 'SUSPENDER indefinidamente a';
 
-      const confirmed = confirm(`¿Estás seguro de que deseas ${actionText}l jugador ${selectedReportedName}?`);
+      const confirmed = confirm(`¿Estás seguro de que deseas ${actionText} al jugador ${selectedReportedName}?`);
       if (!confirmed) return;
 
       btnBan.disabled = true;
@@ -753,6 +761,14 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
         btnBan.disabled = false;
         btnBan.textContent = isCurrentlyBanned ? 'Quitar Suspensión 🟢' : 'Suspender Cuenta 🚫';
       }
-    });
-  });
+    };
+    btnBan?.removeEventListener('click', onBanClick);
+    btnBan?.addEventListener('click', onBanClick);
+  }
+
+  // Inicializar inmediatamente al cargar el script en el navegador
+  initIncidencias();
+
+  // Inicializar en cada navegación con View Transitions de Astro
+  document.addEventListener('astro:page-load', initIncidencias);
 </script>
