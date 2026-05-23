@@ -30,11 +30,12 @@ CREATE POLICY "Authenticated users can insert reports" ON public.reports
     FOR INSERT TO authenticated
     WITH CHECK (auth.uid() = reporter_id);
 
--- Permiso para ver: Solo los administradores pueden listar reportes
+-- Permiso para ver: Los usuarios pueden ver sus propios reportes, y los administradores pueden ver todos
 DROP POLICY IF EXISTS "Only administrators can view reports" ON public.reports;
 CREATE POLICY "Only administrators can view reports" ON public.reports
     FOR SELECT TO authenticated
     USING (
+        auth.uid() = reporter_id OR
         EXISTS (
             SELECT 1 FROM public.profiles 
             WHERE id = auth.uid() AND is_admin = true
