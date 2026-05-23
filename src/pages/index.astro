@@ -510,6 +510,10 @@ const carouselGames = [
     padding-bottom: 2rem;
     scroll-snap-type: x mandatory;
     scrollbar-width: none; /* Firefox */
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    -webkit-overflow-scrolling: touch;
   }
   .games-carousel::-webkit-scrollbar {
     display: none; /* Safari/Chrome */
@@ -702,6 +706,9 @@ const carouselGames = [
     .how-header {
       margin-left: -1rem;
       border-radius: var(--radius-sm);
+    }
+    .hero-games-deco {
+      display: none;
     }
   }
 </style>
