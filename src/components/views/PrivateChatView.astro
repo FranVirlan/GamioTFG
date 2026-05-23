@@ -26,6 +26,12 @@ const accessToken = Astro.cookies.get('sb-access-token')?.value || '';
 
 <div class="private-chat-container" id="private-chat-root" data-conversation-id={conversationId} data-current-user={user?.id} data-access-token={accessToken}>
   <header class="chat-header">
+    <a href="/mensajes" class="back-button" title="Volver a la lista de mensajes">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    </a>
     <div class="header-user-info">
       <div class="avatar">
         {otherUser.avatar_url ? (
@@ -301,6 +307,49 @@ const accessToken = Astro.cookies.get('sb-access-token')?.value || '';
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
+  }
+
+  .back-button {
+    display: none; /* Oculto por defecto en escritorio */
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    margin-right: 0.75rem;
+    transition: all 0.2s ease;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+  }
+
+  .back-button:hover {
+    color: var(--color-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  @media (max-width: 768px) {
+    .back-button {
+      display: inline-flex; /* Visible únicamente en móvil */
+    }
+    
+    .chat-header {
+      padding: 0.75rem 1rem;
+    }
+    
+    .messages-container {
+      padding: 1rem;
+      gap: 1rem;
+    }
+    
+    .message {
+      max-width: 85%;
+    }
+    
+    .chat-input-area {
+      padding: 0.75rem 1rem;
+    }
   }
 </style>
 
