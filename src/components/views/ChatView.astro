@@ -765,6 +765,13 @@ const messages = messagesData || [];
       }, { once: true });
   }
 
-  // Inicializar el chat cada vez que Astro carga una página
+  // Inicializar de forma completamente segura garantizando que el DOM está listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initChat);
+  } else {
+    initChat();
+  }
+
+  // Compatibilidad con Astro View Transitions
   document.addEventListener('astro:page-load', initChat);
 </script>
