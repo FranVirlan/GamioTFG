@@ -19,6 +19,7 @@ interface Props {
 
 const { user = null } = Astro.props;
 const currentPath = Astro.url.pathname;
+const accessToken = Astro.cookies.get('sb-access-token')?.value || '';
 
 let profile = null;
 if (user) {
@@ -37,7 +38,7 @@ const navLinks = [
 ];
 ---
 
-<nav class:list={['navbar', 'glass-strong', { 'navbar-landing': currentPath === '/' }]} id="mainNav">
+<nav class:list={['navbar', 'glass-strong', { 'navbar-landing': currentPath === '/' }]} id="mainNav" data-access-token={accessToken}>
   <div class="nav-container container">
     <!-- Logo -->
     <a href="/" class="nav-logo">
@@ -810,6 +811,12 @@ const navLinks = [
 
   // --- Realtime: actualización instantánea ---
   import { supabase } from '../../lib/supabase';
+
+  const mainNav = document.getElementById('mainNav');
+  const accessToken = mainNav?.dataset.accessToken;
+  if (accessToken) {
+    supabase.realtime.setAuth(accessToken);
+  }
 
   const realtimeChannel = supabase.channel('navbar-realtime-events');
 

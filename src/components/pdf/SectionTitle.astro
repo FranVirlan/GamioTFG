@@ -1,0 +1,28 @@
+---
+// src/components/pdf/SectionTitle.astro
+interface Props {
+  title: string;
+  subtitle?: string;
+  number?: string;
+}
+
+const { title, subtitle, number } = Astro.props;
+---
+
+<div class="page-break pt-12 mb-8 border-b border-[#1E2E4A] pb-4 avoid-break">
+  <div class="flex items-baseline gap-2">
+    {number && (
+      <span class="text-xl font-mono font-bold text-[#00E5FF] tracking-wider select-none">
+        {number}.
+      </span>
+    )}
+    <h1 class="text-3xl font-extrabold tracking-tight text-white border-0 p-0 m-0 leading-tight">
+      {title}
+    </h1>
+  </div>
+  {subtitle && (
+    <p class="text-sm text-[#7A93B8] font-medium tracking-wide mt-2 mb-0">
+      {subtitle}
+    </p>
+  )}
+</div>

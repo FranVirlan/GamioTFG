@@ -1,0 +1,59 @@
+---
+// src/components/pdf/CoverPage.astro
+interface Props {
+  title: string;
+  subtitle: string;
+  version: string;
+  date: string;
+  author: string;
+  institution: string;
+}
+
+const { title, subtitle, version, date, author, institution } = Astro.props;
+---
+
+<div class="cover-page-card select-none shadow-2xl relative overflow-hidden">
+  <!-- Glowing Background Grid -->
+  <div class="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#1E2E4A_1px,transparent_1px),linear-gradient(to_bottom,#1E2E4A_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+  <div class="absolute top-0 left-1/4 w-96 h-96 bg-[#00E5FF] rounded-full blur-[120px] opacity-15"></div>
+  <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-[#7C3AED] rounded-full blur-[120px] opacity-15"></div>
+
+  <!-- Header Branding -->
+  <div class="z-10 flex justify-between items-center text-left border-b border-[#1E2E4A] pb-8">
+    <div>
+      <span class="text-sm font-semibold tracking-wider text-[#00E5FF] uppercase">PROYECTO TFG</span>
+      <h4 class="text-xs text-[#7A93B8] font-mono mt-1">ESTÁNDAR EDITORIAL CORPORATIVO</h4>
+    </div>
+    <div class="text-right">
+      <span class="px-3 py-1 text-xs font-mono rounded-full border border-[#00E5FF]/20 bg-[#060B19] text-[#00E5FF]">v{version}</span>
+    </div>
+  </div>
+
+  <!-- Main Title Area -->
+  <div class="z-10 my-auto flex flex-col items-center">
+    <div class="w-24 h-24 rounded-2xl border-2 border-[#00E5FF] flex items-center justify-center bg-[#060B19] text-5xl shadow-[0_0_20px_rgba(0,229,255,0.2)] mb-8">
+      🎮
+    </div>
+    <h1 class="text-6xl font-black font-sans tracking-tight text-white m-0 leading-none">
+      {title}
+    </h1>
+    <div class="h-1.5 w-32 bg-gradient-to-r from-[#00E5FF] to-[#7C3AED] rounded-full my-6"></div>
+    <h3 class="text-xl text-[#7A93B8] max-w-xl font-medium tracking-wide">
+      {subtitle}
+    </h3>
+  </div>
+
+  <!-- Bottom Metadata Area -->
+  <div class="z-10 border-t border-[#1E2E4A] pt-8 text-left grid grid-cols-2 gap-4">
+    <div class="space-y-1">
+      <span class="text-xs uppercase tracking-wider text-[#7A93B8]">AUTORÍA</span>
+      <p class="text-sm font-bold text-white mb-0">{author}</p>
+      <p class="text-xs text-[#7A93B8]">{institution}</p>
+    </div>
+    <div class="space-y-1 text-right">
+      <span class="text-xs uppercase tracking-wider text-[#7A93B8]">FECHA Y DESTINO</span>
+      <p class="text-sm font-bold text-white mb-0">{date}</p>
+      <p class="text-xs text-[#7A93B8]">Tribunal de Evaluación Final</p>
+    </div>
+  </div>
+</div>

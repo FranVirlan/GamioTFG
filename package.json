@@ -9,7 +9,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "export:pdf": "node scripts/export-pdf.js"
   },
   "dependencies": {
     "@astrojs/node": "^10.1.1",
@@ -18,6 +19,7 @@
     "@supabase/supabase-js": "^2.99.1",
     "@tailwindcss/vite": "^4.2.1",
     "astro": "^6.3.3",
+    "html-to-docx": "^1.8.0",
     "nodemailer": "^8.0.7",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -26,6 +28,7 @@
   "devDependencies": {
     "@types/nodemailer": "^8.0.0",
     "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "puppeteer": "^24.2.1"
   }
 }

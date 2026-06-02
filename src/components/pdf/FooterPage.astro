@@ -1,0 +1,13 @@
+---
+// src/components/pdf/FooterPage.astro
+interface Props {
+  text?: string;
+}
+
+const { text = "GAMIO 🎮 — Plataforma Social de Gamificación e Interacción" } = Astro.props;
+---
+
+<div class="mt-8 border-t border-[#1E2E4A] pt-4 flex justify-between items-center text-xs text-[#7A93B8] font-mono select-none avoid-break">
+  <span>{text}</span>
+  <span class="text-[#00E5FF] font-semibold">CONFIDENCIAL • TFG PROD</span>
+</div>

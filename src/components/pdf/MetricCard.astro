@@ -1,0 +1,52 @@
+---
+// src/components/pdf/MetricCard.astro
+interface Props {
+  name: string;
+  value: string;
+  target: string;
+  description: string;
+  percentage: number; // 0 to 100
+  status: "excelente" | "bueno" | "mejorable";
+}
+
+const { name, value, target, description, percentage, status } = Astro.props;
+
+const statusColors = {
+  excelente: "text-[#00E5FF] border-[#00E5FF]/20 bg-[#00E5FF]/10",
+  bueno: "text-[#10B981] border-[#10B981]/20 bg-[#10B981]/10",
+  mejorable: "text-[#F59E0B] border-[#F59E0B]/20 bg-[#F59E0B]/10"
+};
+
+const barColors = {
+  excelente: "from-[#00E5FF] to-[#00E5FF]/50",
+  bueno: "from-[#10B981] to-[#10B981]/50",
+  mejorable: "from-[#F59E0B] to-[#F59E0B]/50"
+};
+---
+
+<div class="card border border-[#1E2E4A] bg-[#0D162B] p-5 avoid-break">
+  <div class="flex justify-between items-baseline mb-2">
+    <h3 class="text-sm font-extrabold text-white m-0 flex items-center gap-2">
+      {name}
+      <span class="text-[9pt] font-mono text-[#7A93B8] font-normal">(Target: {target})</span>
+    </h3>
+    <span class={`text-[8.5pt] font-mono font-bold uppercase px-2 py-0.5 rounded border ${statusColors[status]}`}>
+      {status}
+    </span>
+  </div>
+  
+  <div class="flex items-baseline gap-2 mb-3">
+    <div class="text-2xl font-black font-mono text-white leading-none">
+      {value}
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="w-full h-1.5 bg-[#060B19] rounded-full overflow-hidden border border-[#1E2E4A]/50 mb-3">
+    <div class={`h-full rounded-full bg-gradient-to-r ${barColors[status]}`} style={`width: ${percentage}%`}></div>
+  </div>
+
+  <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+    {description}
+  </p>
+</div>

@@ -1,0 +1,227 @@
+/* styles/memoria.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #060B19;
+  --surface: #0D162B;
+  --primary: #00E5FF;
+  --text: #EAF4FF;
+  --muted: #7A93B8;
+  --border: #1E2E4A;
+}
+
+/* Global Reset & Base Styling */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-size: 10.5pt;
+  line-height: 1.5;
+}
+
+/* A4 Print Layout Configuration with NO margins for full bleed */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+/* Page containers */
+.page {
+  width: 210mm;
+  height: 297mm;
+  padding: 20mm 15mm;
+  box-sizing: border-box;
+  background-color: var(--bg);
+  position: relative;
+  page-break-after: always;
+  break-after: page;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Prevent CoverPage overflow */
+.page-cover {
+  padding: 0;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+h1 {
+  font-size: 22pt;
+  color: var(--primary);
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 12pt;
+}
+
+h2 {
+  font-size: 14pt;
+  margin-top: 16pt;
+  margin-bottom: 10pt;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+h3 {
+  font-size: 11pt;
+  margin-top: 12pt;
+  margin-bottom: 6pt;
+}
+
+p {
+  color: var(--text);
+  margin-bottom: 8pt;
+  font-weight: 400;
+  text-align: justify;
+}
+
+strong {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* Card design for metrics/sections */
+.card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14pt;
+  margin-bottom: 10pt;
+}
+
+/* Codeblock rendering */
+pre {
+  background-color: #040812;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10pt;
+  overflow: hidden;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 8.5pt;
+  color: #E2E8F0;
+  line-height: 1.35;
+  margin-bottom: 8pt;
+}
+
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  background-color: #040812;
+  color: var(--primary);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 8.5pt;
+}
+
+pre code {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+/* Lists styling */
+ul {
+  padding-left: 18pt;
+  margin-bottom: 8pt;
+}
+
+li {
+  margin-bottom: 4pt;
+  color: var(--text);
+}
+
+/* Clean tabular representations */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12pt 0;
+}
+
+th, td {
+  border: 1px solid var(--border);
+  padding: 6pt 8pt;
+  text-align: left;
+  font-size: 9pt;
+}
+
+th {
+  background-color: var(--surface);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+td {
+  color: var(--muted);
+}
+
+tr:nth-child(even) {
+  background-color: #0A1121;
+}
+
+/* Page Break Utility */
+.page-break {
+  page-break-before: always;
+  break-before: page;
+}
+
+.avoid-break {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Explicit A4 cover container to guarantee padding and avoid rounded corner clipping */
+.cover-page-card {
+  height: 257mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #1E2E4A;
+  border-radius: 16px;
+  background-color: #0D162B;
+  padding: 20mm 15mm;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Print simulation styling (Only applies when viewed on screen) */
+@media screen {
+  body {
+    background-color: #0F172A;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page {
+    background-color: var(--bg);
+    width: 210mm;
+    height: 297mm;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    page-break-after: always;
+    break-after: page;
+  }
+}

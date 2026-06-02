@@ -3,6 +3,18 @@
 import { supabase } from '../../lib/supabase';
 
 const user = Astro.locals.user;
+const accessToken = Astro.cookies.get('sb-access-token')?.value || '';
+
+let currentUserProfile = null;
+if (user) {
+  const { data } = await supabase
+    .from('profiles')
+    .select('name, avatar_url')
+    .eq('id', user.id)
+    .single();
+  currentUserProfile = data;
+}
+
 // 1. Cargar historial del chat Server-Side (últimos 100 mensajes)
 const { data: messagesData } = await supabase
   .from('messages')
@@ -13,7 +25,7 @@ const { data: messagesData } = await supabase
 const messages = messagesData || [];
 ---
 
-<div class="chat-layout animate-fade-in-up" id="chat-root" data-current-user={user?.id} data-active-room="global">
+<div class="chat-layout animate-fade-in-up" id="chat-root" data-current-user={user?.id} data-active-room="global" data-access-token={accessToken} data-current-user-name={currentUserProfile?.name || 'Tú'} data-current-user-avatar={currentUserProfile?.avatar_url || ''}>
     <!-- Sidebar de Canales -->
     <aside class="chat-sidebar">
       <div class="sidebar-header">
@@ -580,7 +592,12 @@ const messages = messagesData || [];
     if (!chatRoot || !messagesContainer) return;
 
     const currentUserId = chatRoot.dataset.currentUser;
+    const accessToken = chatRoot.dataset.accessToken;
     let currentRoom = chatRoot.dataset.activeRoom || 'global';
+
+    if (accessToken) {
+      supabase.realtime.setAuth(accessToken);
+    }
 
     const roomDetails: Record<string, { title: string, desc: string, placeholder: string }> = {
       global: {
@@ -601,6 +618,23 @@ const messages = messagesData || [];
       }
     }
     scrollToBottom();
+
+    // ── CACHÉ DE PERFILES EN CLIENTE (Optimiza la carga y evita lentitud) ──
+    const profilesCache = new Map();
+    // Pre-poblar caché con los perfiles ya renderizados en el DOM para evitar peticiones iniciales
+    messagesContainer.querySelectorAll('.message-other').forEach(msgEl => {
+      const pEl = msgEl as HTMLElement;
+      const reportBtn = pEl.querySelector('.chat-report-btn') as HTMLElement | null;
+      const pId = reportBtn?.dataset.reportedId;
+      const authorEl = pEl.querySelector('.message-author');
+      const avatarEl = pEl.querySelector('.avatar img');
+      if (pId && authorEl) {
+        profilesCache.set(pId, {
+          name: authorEl.textContent.trim(),
+          avatar_url: avatarEl ? avatarEl.getAttribute('src') : null
+        });
+      }
+    });
 
     // ── Cambio de Canales en tiempo real (Disponible para todos) ──
     const channelItems = document.querySelectorAll('.channel-item');
@@ -634,8 +668,11 @@ const messages = messagesData || [];
       });
     });
 
-    // ── Enviar mensajes a la base de datos (Solo si está logueado) ──
+    // ── Enviar mensajes a la base de datos (Solo si está logueado con UI Optimista) ──
     if (chatForm && chatInput && currentUserId) {
+      const currentUserName = chatRoot.dataset.currentUserName || 'Tú';
+      const currentUserAvatar = chatRoot.dataset.currentUserAvatar || '';
+
       chatForm.addEventListener('submit', async (e) => {
         e.preventDefault(); // Evitar la recarga
         const content = chatInput.value.trim();
@@ -643,6 +680,21 @@ const messages = messagesData || [];
 
         chatInput.value = ''; // Limpiamos la caja rápido
         chatInput.focus();
+
+        // UI Optimista: Mostrar el mensaje instantáneamente
+        const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        const msgOuter = document.createElement('div');
+        msgOuter.className = `message message-mine`;
+        msgOuter.dataset.room = currentRoom;
+        msgOuter.dataset.isOptimistic = "true";
+        msgOuter.innerHTML = `
+          <div class="message-content">
+            <div class="message-bubble">${content}</div>
+            <div class="message-time">${time}</div>
+          </div>
+        `;
+        messagesContainer.appendChild(msgOuter);
+        scrollToBottom();
 
         try {
           const res = await fetch('/api/messages', {
@@ -654,6 +706,7 @@ const messages = messagesData || [];
           if (!res.ok) throw new Error('Network error');
         } catch (err) {
           console.error('Error enviando mensaje:', err);
+          msgOuter.remove(); // Quitar si falló
           alert('No se pudo enviar el mensaje. Error de servidor.');
         }
       });
@@ -669,14 +722,37 @@ const messages = messagesData || [];
         async (payload) => {
           const newMessage = payload.new;
           const msgRoom = newMessage.room || 'global';
-          
-          const { data: authorProfile } = await supabase
-            .from('profiles')
-            .select('name, avatar_url')
-            .eq('id', newMessage.profile_id)
-            .single();
-
           const isMine = newMessage.profile_id === currentUserId;
+
+          // Si es mi propio mensaje, buscar si existe el optimista en pantalla para confirmarlo y no duplicar
+          if (isMine) {
+            const optimisticMsg = Array.from(messagesContainer.querySelectorAll('.message-mine[data-is-optimistic="true"]'))
+              .find(el => {
+                const bubble = el.querySelector('.message-bubble');
+                return bubble && bubble.textContent === newMessage.content;
+              }) as HTMLElement | null;
+            if (optimisticMsg) {
+              optimisticMsg.removeAttribute('data-is-optimistic');
+              optimisticMsg.dataset.id = newMessage.id;
+              return; // Evitamos duplicar
+            }
+          }
+
+          // Obtener perfil rápido desde la caché
+          let authorProfile = profilesCache.get(newMessage.profile_id);
+          if (!authorProfile) {
+            // Hacemos la consulta solo si no existe en la caché (evita saturar la base de datos)
+            const { data } = await supabase
+              .from('profiles')
+              .select('name, avatar_url')
+              .eq('id', newMessage.profile_id)
+              .single();
+            if (data) {
+              authorProfile = data;
+              profilesCache.set(newMessage.profile_id, data);
+            }
+          }
+
           const time = new Date(newMessage.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
           const authorName = authorProfile?.name || 'Usuario';
           const authorAvatar = authorProfile?.avatar_url 
@@ -686,6 +762,7 @@ const messages = messagesData || [];
           const msgOuter = document.createElement('div');
           msgOuter.className = `message ${isMine ? 'message-mine' : 'message-other'}`;
           msgOuter.dataset.room = msgRoom;
+          msgOuter.dataset.id = newMessage.id;
 
           let innerHTML = '';
           if (!isMine) {
@@ -711,7 +788,6 @@ const messages = messagesData || [];
           innerHTML += `</div>`;
 
           msgOuter.innerHTML = innerHTML;
-
           messagesContainer.appendChild(msgOuter);
 
           // Si el mensaje corresponde a la sala activa, hacer scroll. Si no, añadir un badge de alerta

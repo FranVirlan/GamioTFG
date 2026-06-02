@@ -636,6 +636,12 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
     transform: none !important;
     box-shadow: none !important;
   }
+
+  @media (min-width: 993px) {
+    html, body {
+      overflow: hidden !important;
+    }
+  }
 </style>
 
 <script>

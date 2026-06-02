@@ -1,0 +1,76 @@
+---
+// src/components/pdf/TechStackGrid.astro
+interface TechItem {
+  layer: string;
+  name: string;
+  version: string;
+  reason: string;
+  icon: string;
+}
+
+const techItems: TechItem[] = [
+  {
+    layer: "Core & SSR",
+    name: "Astro",
+    version: "v6.3.3",
+    reason: "Aporta renderizado en el servidor dinámico (SSR) nativo con arquitectura de islas React, logrando un SEO perfecto e inigualable y latencias mínimas.",
+    icon: "🚀"
+  },
+  {
+    layer: "Interactive Islands",
+    name: "React",
+    version: "v19.2.4",
+    reason: "Ideal para islas altamente interactivas como el chat privado por WebSockets y formularios complejos de onboarding e incidencias.",
+    icon: "⚛️"
+  },
+  {
+    layer: "Styles & Utility",
+    name: "TailwindCSS",
+    version: "v4.2.1",
+    reason: "Facilita estilos reactivos de estética premium mediante clases utilitarias, logrando un bundle final ultraligero y alto rendimiento en dispositivos móviles.",
+    icon: "🎨"
+  },
+  {
+    layer: "Database & Auth",
+    name: "Supabase (PostgreSQL)",
+    version: "Cloud Platform",
+    reason: "Gestiona persistencia relacional estricta, políticas RLS atómicas a nivel de base de datos, triggers de seguridad y WebSockets Realtime nativos.",
+    icon: "⚡"
+  },
+  {
+    layer: "SMTP Alertas",
+    name: "Nodemailer",
+    version: "v8.0.7",
+    reason: "Encargado de notificaciones SMTP automatizadas e emails transaccionales en base a tareas cron y rutinas de base de datos.",
+    icon: "📧"
+  },
+  {
+    layer: "Despliegue & Edge",
+    name: "Vercel Platform",
+    version: "Cloud Deploy",
+    reason: "Infraestructura serverless global y continua que procesa rutas dinámicas Astro API en los servidores perimetrales de baja latencia.",
+    icon: "☁️"
+  }
+];
+---
+
+<div class="grid grid-cols-2 gap-4 avoid-break">
+  {techItems.map(tech => (
+    <div class="card border border-[#1E2E4A] hover:border-[#00E5FF] transition-all bg-[#0D162B] p-5 flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-start mb-3">
+          <span class="text-[9pt] font-mono tracking-wider text-[#00E5FF] uppercase bg-[#00E5FF]/10 px-2 py-0.5 rounded border border-[#00E5FF]/20">
+            {tech.layer}
+          </span>
+          <span class="text-xl">{tech.icon}</span>
+        </div>
+        <h3 class="text-base font-extrabold text-white mt-0 mb-1 flex items-baseline gap-2">
+          {tech.name} <span class="text-xs text-[#7A93B8] font-mono font-normal">{tech.version}</span>
+        </h3>
+        <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify mt-2">
+          {tech.reason}
+        </p>
+      </div>
+    </div>
+  ))}
+</div>

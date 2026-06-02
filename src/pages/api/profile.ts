@@ -10,7 +10,7 @@ export const PUT: APIRoute = async ({ request, cookies, locals }) => {
 
   try {
     const body = await request.json();
-    const { name, description, favorite_games, play_style, player_type_sought, selected_title, selected_border } = body;
+    const { name, description, favorite_games, play_style, player_type_sought, selected_title, selected_border, avatar_url } = body;
 
     const accessToken = cookies.get('sb-access-token')?.value;
     const supabase = createServerClient(accessToken);
@@ -23,6 +23,7 @@ export const PUT: APIRoute = async ({ request, cookies, locals }) => {
     if (player_type_sought !== undefined) updateData.player_type_sought = player_type_sought;
     if (selected_title !== undefined) updateData.selected_title = selected_title;
     if (selected_border !== undefined) updateData.selected_border = selected_border;
+    if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
 
     const { data, error } = await supabase
       .from('profiles')

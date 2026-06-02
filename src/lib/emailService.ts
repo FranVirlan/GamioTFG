@@ -125,7 +125,7 @@ function getEmailHTMLWrapper(title: string, bodyContent: string, ctaHtml = ''): 
       <div class="email-container">
         <div class="card">
           <div class="header">
-            <a href="https://gamio.com" class="logo">🎮 <span>Gamio</span></a>
+            <a href="https://gamio-tfg.vercel.app" class="logo">🎮 <span>Gamio</span></a>
           </div>
           <div class="content">
             ${bodyContent}
@@ -133,7 +133,7 @@ function getEmailHTMLWrapper(title: string, bodyContent: string, ctaHtml = ''): 
           </div>
           <div class="footer">
             <p style="font-size: 12px; margin: 0 0 10px 0; color: #64748B;">Recibiste este correo porque estás registrado en la comunidad de Gamio.</p>
-            <p style="font-size: 12px; margin: 0; color: #64748B;">© ${new Date().getFullYear()} Gamio. Todos los derechos reservados. <a href="https://gamio.com/contacto">Soporte técnico</a></p>
+            <p style="font-size: 12px; margin: 0; color: #64748B;">© ${new Date().getFullYear()} Gamio. Todos los derechos reservados. <a href="https://gamio-tfg.vercel.app/contacto">Soporte técnico</a></p>
           </div>
         </div>
       </div>
@@ -160,7 +160,7 @@ export async function sendWelcomeEmail(toEmail: string, username: string): Promi
 
   const ctaHtml = `
     <div class="cta-container">
-      <a href="https://gamio.com" class="btn-neon">Entrar a Gamio 🚀</a>
+      <a href="https://gamio-tfg.vercel.app" class="btn-neon">Entrar a Gamio 🚀</a>
     </div>
   `;
 
@@ -199,7 +199,7 @@ export async function sendDailyRewardEmail(toEmail: string, username: string): P
 
   const ctaHtml = `
     <div class="cta-container">
-      <a href="https://gamio.com/premios" class="btn-neon">Reclamar Recompensa 🎁</a>
+      <a href="https://gamio-tfg.vercel.app/premios" class="btn-neon">Reclamar Recompensa 🎁</a>
     </div>
   `;
 

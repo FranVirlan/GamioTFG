@@ -1,0 +1,94 @@
+---
+// src/components/pdf/Timeline.astro
+interface TimelineEvent {
+  phase: string;
+  weeks: string;
+  duration: string;
+  description: string;
+  milestone: string;
+  icon: string;
+}
+
+const events: TimelineEvent[] = [
+  {
+    phase: "1. Investigación y Viabilidad",
+    weeks: "Semanas 1 - 3",
+    duration: "3 Semanas",
+    description: "Análisis del problema de la toxicidad en SoloQ competitivos, delimitación de requerimientos funcionales y aprobación de viabilidad tecnológica de Astro SSR.",
+    milestone: "Especificación de Requisitos y Stack Aprobados",
+    icon: "🔍"
+  },
+  {
+    phase: "2. Diseño UI/UX y Estilos",
+    weeks: "Semanas 4 - 7",
+    duration: "4 Semanas",
+    description: "Creación de la identidad visual Cyberpunk Neon, mockups responsivos detallados y confección de la capa CSS y de tokens de diseño global.",
+    milestone: "Guía de Estilos y Estructura CSS Validada",
+    icon: "🎨"
+  },
+  {
+    phase: "3. Arquitectura y Modelado",
+    weeks: "Semanas 8 - 10",
+    duration: "3 Semanas",
+    description: "Diseño del modelo entidad-relación en base de datos Postgres, triggers de suspensión de cuentas y configuración inicial de Row Level Security (RLS).",
+    milestone: "Base de Datos Supabase Operativa",
+    icon: "⚙️"
+  },
+  {
+    phase: "4. Desarrollo Core y APIs",
+    weeks: "Semanas 11 - 18",
+    duration: "8 Semanas",
+    description: "Codificación modular de las 18 pantallas, integración de las islas de hidratación React en tiempo real para chat global/privado y endpoints API Astro serverless.",
+    milestone: "Funcionalidad Core al 100%",
+    icon: "💻"
+  },
+  {
+    phase: "5. Pruebas y QA de Seguridad",
+    weeks: "Semanas 19 - 21",
+    duration: "3 Semanas",
+    description: "Ejecución de la batería de pruebas de QA. Auditoría de inyecciones SQL maliciosas de perfiles baneados y corrección elástica de scrolls móviles.",
+    milestone: "Cero Bugs Críticos y Despliegue Verde",
+    icon: "🛡️"
+  },
+  {
+    phase: "6. Despliegue y Lanzamiento",
+    weeks: "Semanas 22 - 23",
+    duration: "2 Semanas",
+    description: "Lanzamiento oficial en la infraestructura perimetral de Vercel y Supabase. Configuración de tareas programadas Cron para avisos automáticos por Nodemailer.",
+    milestone: "Aplicación en Producción y Monitoreo Activo",
+    icon: "🚀"
+  }
+];
+---
+
+<div class="space-y-4 avoid-break">
+  {events.map((event, idx) => (
+    <div class="flex items-start gap-4 card border border-[#1E2E4A] bg-[#0D162B] p-5 relative overflow-hidden">
+      <!-- Decorative left bar indicating sequence -->
+      <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#00E5FF] to-[#7C3AED]"></div>
+      
+      <!-- Event Icon -->
+      <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-[#060B19] border border-[#1E2E4A] flex items-center justify-center text-lg shadow-[0_0_10px_rgba(0,0,0,0.3)]">
+        {event.icon}
+      </div>
+
+      <!-- Content -->
+      <div class="flex-grow space-y-1">
+        <div class="flex justify-between items-baseline">
+          <h3 class="text-sm font-extrabold text-white m-0">
+            {event.phase}
+          </h3>
+          <span class="text-[9pt] font-mono font-semibold text-[#00E5FF] bg-[#00E5FF]/10 px-2 py-0.5 rounded border border-[#00E5FF]/20">
+            {event.weeks} ({event.duration})
+          </span>
+        </div>
+        <p class="text-xs text-[#7A93B8] leading-relaxed mt-1 text-justify mb-2">
+          {event.description}
+        </p>
+        <div class="text-[8.5pt] text-[#EAF4FF] font-semibold flex items-center gap-1.5 border-t border-[#1E2E4A]/50 pt-1.5">
+          <span class="text-[#00E5FF]">★ Hito:</span> {event.milestone}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>

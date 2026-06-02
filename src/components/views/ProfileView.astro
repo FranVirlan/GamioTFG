@@ -39,6 +39,15 @@ const popularGames = [
   "Dead By Daylight", "Fortnite", "Apex Legends",
   "Overwatch 2", "Call of Duty: Warzone", "Rocket League", "EA FC 25"
 ];
+
+const defaultAvatars = [
+  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1563089145-599997674d42?w=150&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=150&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1566241477600-ac026ad43874?w=150&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1589254065878-42c9da997008?w=150&auto=format&fit=crop'
+];
 ---
 
 <div class="profile-view animate-fade-in-up">
@@ -176,6 +185,18 @@ const popularGames = [
       <div class="pv-form-group">
         <label for="edit-description">Descripción</label>
         <textarea id="edit-description" rows="3">{user.description}</textarea>
+      </div>
+
+      <div class="pv-form-group">
+        <label>Elige tu foto de perfil</label>
+        <div class="pv-avatars-grid">
+          {defaultAvatars.map((avatar, idx) => (
+            <label class="pv-avatar-option">
+              <input type="radio" name="edit-avatar" value={avatar} checked={user.avatarUrl === avatar} />
+              <img src={avatar} alt={`Avatar ${idx + 1}`} class="pv-avatar-img" />
+            </label>
+          ))}
+        </div>
       </div>
 
       <div class="pv-form-group">
@@ -409,6 +430,29 @@ const popularGames = [
     border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(0,240,255,0.12);
   }
 
+  /* Avatars grid in modal */
+  .pv-avatars-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.75rem; margin-top: 0.25rem; }
+  @media (max-width: 480px) {
+    .pv-avatars-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  }
+  .pv-avatar-option { cursor: pointer; display: block; position: relative; }
+  .pv-avatar-option input { display: none; }
+  .pv-avatar-img {
+    width: 100%; aspect-ratio: 1; border-radius: 50%;
+    border: 3px solid var(--color-border);
+    transition: all 0.2s ease;
+    object-fit: cover;
+  }
+  .pv-avatar-option:hover .pv-avatar-img {
+    transform: scale(1.05);
+    border-color: rgba(0, 240, 255, 0.4);
+  }
+  .pv-avatar-option input:checked + .pv-avatar-img {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 12px var(--color-primary);
+    transform: scale(1.05);
+  }
+
   /* Games grid in modal */
   .pv-games-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; }
   .pv-game-checkbox { cursor: pointer; }
@@ -609,9 +653,14 @@ const popularGames = [
   // ── Modal helpers ──
   function openModal(id: string) {
     document.getElementById(id)?.classList.remove('pv-hidden');
+    document.body.style.overflow = 'hidden';
   }
   function closeModal(id: string) {
     document.getElementById(id)?.classList.add('pv-hidden');
+    const openModals = document.querySelectorAll('.pv-modal-overlay:not(.pv-hidden)');
+    if (openModals.length === 0) {
+      document.body.style.overflow = '';
+    }
   }
 
   // Close buttons
@@ -703,12 +752,13 @@ const popularGames = [
       const favorite_games = Array.from(editForm.querySelectorAll('input[name="edit-games"]:checked')).map(el => (el as HTMLInputElement).value);
       const play_style = (editForm.querySelector('input[name="edit-play-style"]:checked') as HTMLInputElement)?.value || '';
       const player_type_sought = (editForm.querySelector('input[name="edit-player-type"]:checked') as HTMLInputElement)?.value || '';
+      const avatar_url = (editForm.querySelector('input[name="edit-avatar"]:checked') as HTMLInputElement)?.value || '';
 
       try {
         const res = await fetch('/api/profile', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, description, favorite_games, play_style, player_type_sought })
+          body: JSON.stringify({ name, description, favorite_games, play_style, player_type_sought, avatar_url })
         });
 
         if (res.ok) {

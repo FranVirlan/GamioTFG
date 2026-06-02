@@ -1,0 +1,47 @@
+---
+// src/components/pdf/ComparisonTable.astro
+---
+
+<div class="avoid-break my-4 overflow-hidden rounded-lg border border-[#1E2E4A]">
+  <table class="w-full border-collapse m-0">
+    <thead>
+      <tr class="bg-[#0D162B]">
+        <th class="text-[9.5pt] font-extrabold text-white border-b border-[#1E2E4A] py-3 px-4">Plataforma</th>
+        <th class="text-[9.5pt] font-extrabold text-white border-b border-[#1E2E4A] py-3 px-4">Buscador LFG</th>
+        <th class="text-[9.5pt] font-extrabold text-white border-b border-[#1E2E4A] py-3 px-4">Gamificación / Lealtad</th>
+        <th class="text-[9.5pt] font-extrabold text-white border-b border-[#1E2E4A] py-3 px-4">Rendimiento Móvil</th>
+        <th class="text-[9.5pt] font-extrabold text-white border-b border-[#1E2E4A] py-3 px-4">Moderación SQL</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="hover:bg-[#0D162B]/50 transition-colors">
+        <td class="font-bold text-white border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">Discord</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">❌ Ineficiente (Texto libre en canales)</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">❌ Ninguna (Solo Nitro premium de pago)</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">✅ Alto (App nativa)</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">❌ Moderación asíncrona manual</td>
+      </tr>
+      <tr class="hover:bg-[#0D162B]/50 transition-colors bg-[#060B19]/30">
+        <td class="font-bold text-white border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">Steam</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">❌ Limitado (Exclusivo PC / Ecosistema Steam)</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">✅ Media (Logros estéticos e inventario)</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">❌ Pobre (Interfaz pesada e incómoda)</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">❌ Reporte tardío con demoras de días</td>
+      </tr>
+      <tr class="hover:bg-[#0D162B]/50 transition-colors">
+        <td class="font-bold text-white border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">Reddit LFG</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">❌ Inexistente (Hilos de debate tradicionales)</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">❌ Baja (Sistema básico de Karma)</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">✅ Media (App móvil decente)</td>
+        <td class="border-b border-[#1E2E4A]/50 py-3 px-4 text-xs">❌ Asíncrona sujeta a moderadores</td>
+      </tr>
+      <tr class="hover:bg-[#0D162B]/50 transition-colors bg-[#00E5FF]/5">
+        <td class="font-bold text-[#00E5FF] border-b border-[#00E5FF]/20 py-3 px-4 text-xs flex items-center gap-1">Gamio 🎮</td>
+        <td class="border-b border-[#00E5FF]/20 py-3 px-4 text-xs text-[#EAF4FF] font-semibold">✅ Filtros paramétricos dinámicos</td>
+        <td class="border-b border-[#00E5FF]/20 py-3 px-4 text-xs text-[#EAF4FF] font-semibold">✅ Transaccional (Recompensas reales in-game)</td>
+        <td class="border-b border-[#00E5FF]/20 py-3 px-4 text-xs text-[#EAF4FF] font-semibold">✅ Excelente (Cero JS, islas reactivas, SSR)</td>
+        <td class="border-b border-[#00E5FF]/20 py-3 px-4 text-xs text-[#EAF4FF] font-semibold">✅ Blindado (Trigger SQL de baneo inmediato)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

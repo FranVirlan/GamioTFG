@@ -147,9 +147,14 @@ if (user) {
           }
 
           alertModal.classList.remove('alert-hidden');
+          document.body.style.overflow = 'hidden';
 
           const handleClose = () => {
             alertModal.classList.add('alert-hidden');
+            const openModals = document.querySelectorAll('.alert-modal-overlay:not(.alert-hidden), .pv-modal-overlay:not(.pv-hidden)');
+            if (openModals.length === 0) {
+              document.body.style.overflow = '';
+            }
             alertCloseBtn.removeEventListener('click', handleClose);
             resolve();
           };
@@ -166,16 +171,25 @@ if (user) {
           confirmIcon.textContent = icon;
           
           confirmModal.classList.remove('alert-hidden');
+          document.body.style.overflow = 'hidden';
 
           const handleCancel = () => {
             confirmModal.classList.add('alert-hidden');
             cleanup();
+            const openModals = document.querySelectorAll('.alert-modal-overlay:not(.alert-hidden), .pv-modal-overlay:not(.pv-hidden)');
+            if (openModals.length === 0) {
+              document.body.style.overflow = '';
+            }
             resolve(false);
           };
 
           const handleConfirm = () => {
             confirmModal.classList.add('alert-hidden');
             cleanup();
+            const openModals = document.querySelectorAll('.alert-modal-overlay:not(.alert-hidden), .pv-modal-overlay:not(.pv-hidden)');
+            if (openModals.length === 0) {
+              document.body.style.overflow = '';
+            }
             resolve(true);
           };
 

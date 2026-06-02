@@ -1,0 +1,27 @@
+---
+// src/components/pdf/KpiCard.astro
+interface Props {
+  value: string;
+  label: string;
+  sublabel?: string;
+  glow?: boolean;
+}
+
+const { value, label, sublabel, glow = false } = Astro.props;
+---
+
+<div class={`card flex flex-col justify-between rounded-xl p-6 bg-[#0D162B] border ${glow ? 'border-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.1)]' : 'border-[#1E2E4A]'}`}>
+  <div>
+    <h3 class="text-xs uppercase tracking-wider text-[#7A93B8] font-semibold mt-0 mb-2">
+      {label}
+    </h3>
+    <div class="text-4xl font-extrabold font-mono tracking-tight text-white leading-tight">
+      {value}
+    </div>
+  </div>
+  {sublabel && (
+    <div class="text-xs text-[#00E5FF] font-medium tracking-wide mt-3 border-t border-[#1E2E4A]/50 pt-2">
+      {sublabel}
+    </div>
+  )}
+</div>

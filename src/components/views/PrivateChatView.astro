@@ -24,7 +24,7 @@ const messages = messagesData || [];
 const accessToken = Astro.cookies.get('sb-access-token')?.value || '';
 ---
 
-<div class="private-chat-container" id="private-chat-root" data-conversation-id={conversationId} data-current-user={user?.id} data-access-token={accessToken}>
+<div class="private-chat-container" id="private-chat-root" data-conversation-id={conversationId} data-current-user={user?.id} data-access-token={accessToken} data-other-user-name={otherUser.name} data-other-user-avatar={otherUser.avatar_url || ''}>
   <header class="chat-header">
     <a href="/mensajes" class="back-button" title="Volver a la lista de mensajes">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -422,6 +422,9 @@ const accessToken = Astro.cookies.get('sb-access-token')?.value || '';
       }
     });
 
+    const otherUserName = root.dataset.otherUserName || 'Usuario';
+    const otherUserAvatar = root.dataset.otherUserAvatar || '';
+
     // Escuchar tiempo real
     const channel = supabase.channel(`private_msgs_${conversationId}`);
     
@@ -434,45 +437,34 @@ const accessToken = Astro.cookies.get('sb-access-token')?.value || '';
           table: 'private_messages',
           filter: `conversation_id=eq.${conversationId}` 
         },
-        async (payload) => {
+        (payload) => {
           const msg = payload.new;
           const isMine = msg.profile_id === currentUserId;
           
           // Ignorar mis propios mensajes porque ya se han pintado instantáneamente (Optimistic UI)
           if (isMine) return;
 
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name, avatar_url')
-            .eq('id', msg.profile_id)
-            .single();
-
           const time = new Date(msg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
           const div = document.createElement('div');
-          div.className = `message ${isMine ? 'message-mine' : 'message-other'}`;
+          div.className = `message message-other`;
 
-          let html = '';
-          if (!isMine) {
-            const avatar = profile?.avatar_url 
-              ? `<img src="${profile.avatar_url}" />` 
-              : `<span>${profile?.name?.charAt(0).toUpperCase() || '?'}</span>`;
-            html += `<div class="avatar-small">${avatar}</div>`;
-          }
-
+          const avatar = otherUserAvatar 
+            ? `<img src="${otherUserAvatar}" />` 
+            : `<span>${otherUserName.charAt(0).toUpperCase()}</span>`;
+          
+          let html = `<div class="avatar-small">${avatar}</div>`;
           html += `<div class="message-content">`;
-          if (!isMine) {
-            html += `
-              <div class="message-header-row" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 2px;">
-                <button class="chat-report-btn" data-reported-id="${msg.profile_id}" data-reported-name="${profile?.name || 'Usuario'}" data-message-content="${msg.content}" data-room="chat_privado" title="Reportar mensaje" style="background: transparent; border: none; color: var(--color-text-muted); cursor: pointer; padding: 2px 4px; border-radius: 4px; display: flex; align-items: center; gap: 2px; font-size: 0.72rem; transition: all 0.2s;">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
-                  </svg>
-                  Reportar
-                </button>
-              </div>
-            `;
-          }
+          html += `
+            <div class="message-header-row" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 2px;">
+              <button class="chat-report-btn" data-reported-id="${msg.profile_id}" data-reported-name="${otherUserName}" data-message-content="${msg.content}" data-room="chat_privado" title="Reportar mensaje" style="background: transparent; border: none; color: var(--color-text-muted); cursor: pointer; padding: 2px 4px; border-radius: 4px; display: flex; align-items: center; gap: 2px; font-size: 0.72rem; transition: all 0.2s;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+                </svg>
+                Reportar
+              </button>
+            </div>
+          `;
           html += `
             <div class="message-bubble">${msg.content}</div>
             <div class="message-time">${time}</div>

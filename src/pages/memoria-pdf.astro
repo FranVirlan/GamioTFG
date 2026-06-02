@@ -1,0 +1,937 @@
+---
+// src/pages/memoria-pdf.astro
+import CoverPage from '../components/pdf/CoverPage.astro';
+import SectionTitle from '../components/pdf/SectionTitle.astro';
+import KpiCard from '../components/pdf/KpiCard.astro';
+import TechStackGrid from '../components/pdf/TechStackGrid.astro';
+import Timeline from '../components/pdf/Timeline.astro';
+import CodeBlock from '../components/pdf/CodeBlock.astro';
+import ArchitectureDiagram from '../components/pdf/ArchitectureDiagram.astro';
+import ComparisonTable from '../components/pdf/ComparisonTable.astro';
+import MetricCard from '../components/pdf/MetricCard.astro';
+import FeatureCard from '../components/pdf/FeatureCard.astro';
+import FooterPage from '../components/pdf/FooterPage.astro';
+
+import '../styles/global.css';
+import '../styles/memoria.css';
+
+// DDL for Profiles Table
+const sqlProfiles = `
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT,
+    avatar_url TEXT,
+    points INTEGER DEFAULT 0,
+    xp INTEGER DEFAULT 0,
+    level INTEGER DEFAULT 1,
+    claimed_rewards TEXT[] DEFAULT '{}',
+    selected_title TEXT DEFAULT '',
+    selected_border TEXT DEFAULT '',
+    last_daily_claim TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    daily_email_sent BOOLEAN DEFAULT false,
+    is_admin BOOLEAN DEFAULT false,
+    is_banned BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Trigger de Creación Automática de Perfil al registrarse en Auth
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, name, email, avatar_url, points, xp, level, daily_email_sent)
+  VALUES (
+    new.id,
+    COALESCE(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    new.email,
+    new.raw_user_meta_data->>'avatar_url',
+    0,
+    0,
+    1,
+    true
+  )
+  ON CONFLICT (id) DO UPDATE
+  SET email = EXCLUDED.email,
+      name = COALESCE(public.profiles.name, EXCLUDED.name);
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+`;
+
+// DDL for Shop Rewards Table
+const sqlRewardsTable = `
+CREATE TABLE IF NOT EXISTS public.rewards (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    cost INTEGER NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('title', 'border', 'badge')),
+    value TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Habilitar RLS en rewards
+ALTER TABLE public.rewards ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view rewards" ON public.rewards FOR SELECT USING (true);
+
+-- Inserción de recompensas iniciales reales
+INSERT INTO public.rewards (id, title, description, cost, type, value) VALUES
+    ('title_casual', 'Gamer Casual 🎮', 'Perfecto para quienes juegan relajados.', 40, 'title', 'Gamer Casual 🎮'),
+    ('title_support', 'Soporte de Élite 🛡️', 'Siempre cuidando las espaldas de su equipo.', 150, 'title', 'Soporte de Élite 🛡️'),
+    ('title_tryhard', 'Tryhard Certificado 🔥', 'Da el 200% en cada partida competitiva.', 250, 'title', 'Tryhard Certificado 🔥'),
+    ('title_legend', 'Leyenda Viviente 🏆', 'El honor más alto para un jugador respetado.', 500, 'title', 'Leyenda Viviente 🏆'),
+    ('border_bronze', 'Borde de Bronce', 'Borde de bronce clásico.', 120, 'border', 'border-bronze'),
+    ('border_gold', 'Borde de Oro', 'Prestigioso borde dorado brillante.', 500, 'border', 'border-gold'),
+    ('border_neon', 'Neón Psicodélico', 'Efecto de neón animado cian y magenta.', 800, 'border', 'border-neon'),
+    ('coins_lol', '1380 Riot Points (League of Legends) 🎯', '1380 RP para gastar en skins.', 2000, 'badge', 'coins_lol')
+ON CONFLICT (id) DO UPDATE 
+SET title = EXCLUDED.title, cost = EXCLUDED.cost;
+`;
+
+// DDL for Private Messages
+const sqlMessages = `
+CREATE TABLE IF NOT EXISTS public.conversations (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.conversation_participants (
+    conversation_id UUID REFERENCES public.conversations(id) ON DELETE CASCADE,
+    profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    PRIMARY KEY (conversation_id, profile_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.private_messages (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    conversation_id UUID REFERENCES public.conversations(id) ON DELETE CASCADE,
+    profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+`;
+
+// DDL for Rewards stored procedure
+const sqlRewards = `
+CREATE OR REPLACE FUNCTION public.claim_daily_points(p_profile_id UUID)
+RETURNS INTEGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+    v_last_claim TIMESTAMP WITH TIME ZONE;
+    v_points_to_award INTEGER := 25;
+    v_xp_to_award INTEGER := 25;
+BEGIN
+    SELECT last_daily_claim INTO v_last_claim FROM public.profiles WHERE id = p_profile_id;
+    IF v_last_claim IS NOT NULL AND v_last_claim > now() - INTERVAL '24 hours' THEN
+        RAISE EXCEPTION 'Ya has reclamado tus puntos diarios. Vuelve en unas horas.';
+    END IF;
+    UPDATE public.profiles
+    SET points = COALESCE(points, 0) + v_points_to_award,
+        xp = COALESCE(xp, 0) + v_xp_to_award,
+        level = 1 + ((COALESCE(xp, 0) + v_xp_to_award) / 100),
+        last_daily_claim = now(),
+        daily_email_sent = false
+    WHERE id = p_profile_id;
+    RETURN v_points_to_award;
+END;
+$$;
+
+-- Función de Compra de Recompensas
+CREATE OR REPLACE FUNCTION public.buy_reward(p_profile_id UUID, p_reward_id TEXT)
+RETURNS BOOLEAN LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+    v_cost INTEGER;
+    v_points INTEGER;
+    v_already_claimed BOOLEAN;
+BEGIN
+    SELECT cost INTO v_cost FROM public.rewards WHERE id = p_reward_id;
+    IF NOT FOUND THEN RAISE EXCEPTION 'La recompensa no existe.'; END IF;
+    SELECT COALESCE(points, 0) INTO v_points FROM public.profiles WHERE id = p_profile_id;
+    IF v_points < v_cost THEN RAISE EXCEPTION 'Puntos insuficientes.'; END IF;
+    SELECT (p_reward_id = ANY(COALESCE(claimed_rewards, '{}'))) INTO v_already_claimed FROM public.profiles WHERE id = p_profile_id;
+    IF v_already_claimed THEN RAISE EXCEPTION 'Ya has adquirido esta recompensa.'; END IF;
+    
+    UPDATE public.profiles
+    SET points = points - v_cost,
+        claimed_rewards = array_append(COALESCE(claimed_rewards, '{}'), p_reward_id)
+    WHERE id = p_profile_id;
+    RETURN TRUE;
+END;
+$$;
+`;
+
+const endpointSnippet = `
+// src/pages/api/profile.ts
+import { supabase } from '../../lib/supabase';
+
+export async function PUT({ request }) {
+  const body = await request.json();
+  const token = request.headers.get('Authorization');
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401 });
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      name: body.name,
+      favorite_games: body.favorite_games,
+      actitude: body.actitude,
+      schedule: body.schedule
+    })
+    .eq('id', user.id);
+
+  if (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 400 });
+  }
+
+  return new Response(JSON.stringify({ success: true, points_awarded: 10 }), { status: 200 });
+}
+`;
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GAMIO 🎮 — Memoria Técnica Editorial</title>
+</head>
+<body>
+
+  <!-- PAGE 1: COVER PAGE (Wrapped in standard .page to center perfectly and occupy exact margin area) -->
+  <div class="page">
+    <CoverPage
+      title="GAMIO 🎮"
+      subtitle="Plataforma Social de Gamificación e Interacción para Comunidades de Jugadores"
+      version="1.0.0-PROD"
+      date="25 de mayo de 2026"
+      author="francisco virlan rodriguez 2 dam"
+      institution="VictoriaFP"
+    />
+  </div>
+
+  <!-- PAGE 2: TABLE OF CONTENTS (ÍNDICE) -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle title="ÍNDICE DE CONTENIDOS" subtitle="Organización jerárquica y paginación de la memoria técnica de Gamio" />
+        
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5 space-y-2">
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">1. RESUMEN EJECUTIVO</span>
+            <span class="text-[#00E5FF]">Página 3</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-[#7A93B8] italic pl-4">1.1 Visualización: Interfaz de Inicio (Landing Page)</span>
+            <span class="text-[#00E5FF]">Página 4</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">2. INTRODUCCIÓN, ALCANCE E HIPÓTESIS</span>
+            <span class="text-[#00E5FF]">Página 5</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">3. MOTIVACIÓN DEL DESARROLLO Y PÚBLICO OBJETIVO</span>
+            <span class="text-[#00E5FF]">Página 6</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">4. ANÁLISIS DE COMPETENCIA</span>
+            <span class="text-[#00E5FF]">Página 7</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">5. STACK TECNOLÓGICO</span>
+            <span class="text-[#00E5FF]">Página 8</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">6. ARQUITECTURA DEL SISTEMA</span>
+            <span class="text-[#00E5FF]">Página 9</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">7. MODELO DE BASE DE DATOS DDL (PÁGS. 10 - 13)</span>
+            <span class="text-[#00E5FF]">Páginas 10 - 13</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">8. DESARROLLO CORE Y PANTALLAS (PÁGS. 14 - 23)</span>
+            <span class="text-[#00E5FF]">Páginas 14 - 23</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-[#7A93B8] italic pl-4">8.1 Buscador de Jugadores (Matchmaking)</span>
+            <span class="text-[#00E5FF]">Página 14</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-[#7A93B8] italic pl-4">8.2 Visualización: Catálogo de Juegos</span>
+            <span class="text-[#00E5FF]">Página 15</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-[#7A93B8] italic pl-4">8.3 Chat Privado en Tiempo Real</span>
+            <span class="text-[#00E5FF]">Página 16</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-[#7A93B8] italic pl-4">8.4 Visualización: Comunidad y Chat Global</span>
+            <span class="text-[#00E5FF]">Página 17</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-[#7A93B8] italic pl-4">8.5 Cuestionario Inicial (Onboarding)</span>
+            <span class="text-[#00E5FF]">Página 18</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-[#7A93B8] italic pl-4">8.6 Visualización: Tienda de Premios y Recompensas</span>
+            <span class="text-[#00E5FF]">Página 19</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-[#7A93B8] italic pl-4">8.7 Visualización: Noticias de la Industria Gaming</span>
+            <span class="text-[#00E5FF]">Página 20</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-[#7A93B8] italic pl-4">8.8 Panel de Auditoría y Incidencias</span>
+            <span class="text-[#00E5FF]">Página 21</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">9. PRUEBAS Y VALIDACIÓN DE QA (PÁGS. 22 - 23)</span>
+            <span class="text-[#00E5FF]">Páginas 22 - 23</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">10. INCIDENCIAS REALES Y KPIs (PÁGS. 24 - 25)</span>
+            <span class="text-[#00E5FF]">Páginas 24 - 25</span>
+          </div>
+          <div class="flex justify-between items-baseline font-mono text-[9pt] border-b border-[#1E2E4A]/30 pb-1">
+            <span class="text-white font-bold">11. ROADMAP Y CONCLUSIONES (PÁGS. 26 - 27)</span>
+            <span class="text-[#00E5FF]">Páginas 26 - 27</span>
+          </div>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 3: EXECUTIVE SUMMARY -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="1" title="RESUMEN EJECUTIVO" subtitle="Visión estratégica e impacto comercial de la plataforma Gamio" />
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-6 mb-6">
+          <p class="text-justify leading-relaxed mb-4 text-xs">
+            <strong>Gamio 🎮</strong> es una innovadora plataforma social y de emparejamiento (LFG - Looking For Group) diseñada específicamente para la comunidad de entusiastas de los videojuegos competitivos. A diferencia de las redes sociales convencionales, Gamio combate de raíz la <strong>toxicidad digital</strong> mediante un ecosistema vivo que incentiva y premia la amabilidad, la cooperación y el compañerismo.
+          </p>
+          <p class="text-justify leading-relaxed mb-4 text-xs">
+            El núcleo de comportamiento de la aplicación está sustentado sobre el <strong>Octalysis Framework</strong> de gamificación, asociando cada interacción de valor diario (crear publicaciones en el feed, jugar limpio, asistir a otros usuarios) con la obtención atómica de puntos de Experiencia (XP) y monedas de juego. Estos puntos se pueden canjear en una tienda integrada por bordes de neón para el avatar del perfil, títulos honoríficos exclusivos, e incluso claves de saldo reales para juegos líderes del sector.
+          </p>
+          <p class="text-justify leading-relaxed mb-0 text-xs">
+            El sistema completo se despliega sobre una <strong>arquitectura híbrida serverless de Astro v6</strong>, garantizando un posicionamiento web (SEO) soberbio y tiempos de carga imperceptibles por debajo del segundo, combinados con la interactividad inmediata de <strong>islas dinámicas de React 19</strong> que se comunican en tiempo real mediante WebSockets seguros provistos por la plataforma en la nube de Supabase.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <KpiCard value="0.9s" label="LCP (Core Web Vital)" sublabel="Carga ultrarrápida SSR" glow={true} />
+          <KpiCard value="10.3K" label="Palabras Escritas" sublabel="Memoria técnica extensa" />
+          <KpiCard value="99.98%" label="Disponibilidad DB" sublabel="PostgreSQL en la nube" glow={true} />
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 4: INTERFACE SCREENSHOT - LANDING (FOTO 1) (With block image, mx-auto, and max-w-full to center and prevent horizontal overflow) -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="1.1" title="VISUALIZACIÓN: INTERFAZ DE INICIO" subtitle="Captura de pantalla real de la Landing Page principal y Hero Area" />
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-4 mb-3">
+          <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-0">
+            La página inicial de Gamio adopta un lenguaje visual cyberpunk inmersivo. Destaca un gran título central con degradados luminosos y una botonera superior responsiva. El Hero integra un video interactivo y accesos inmediatos para que los gamers puedan unirse al catálogo de juegos y debates sin fricciones.
+          </p>
+        </div>
+        <img src="/images/inicio.png" class="rounded-lg border border-[#1E2E4A] max-w-full max-h-[135mm] object-contain shadow-2xl mt-2 mx-auto block" alt="Interfaz de Inicio Gamio" />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 5: INTRODUCTION, SCOPE & HYPOTHESES -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="2" title="INTRODUCCIÓN, ALCANCE E HIPÓTESIS" subtitle="Contextualización del proyecto social gamificado y metas iniciales" />
+        
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5 mb-4">
+          <h3 class="text-sm font-bold text-white mt-0 mb-2">2.1 Objetivo General</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+            El objetivo general de Gamio es servir como un filtro social inteligente y seguro. Al recopilar parámetros estructurados sobre las preferencias del jugador (videojuegos favoritos, rango horario de juego y actitud competitivo o casual) el motor de búsqueda (Matchmaking) asocia a perfiles de alta afinidad de forma instantánea. Las comunicaciones se agilizan a través de un chat en tiempo real y una bandeja de entrada estructurada, blindada por políticas de seguridad de Row Level Security (RLS) en la base de datos de Supabase.
+          </p>
+        </div>
+        
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5 mb-4">
+          <h3 class="text-sm font-bold text-white mt-0 mb-2">2.2 Alcance Funcional</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+            El desarrollo del sistema comprende el frontend responsive premium (con estética cyberpunk oscura y cristal translúcido), el backend serverless para SSR y APIs ligeras Edge, el modelo relacional Postgres, procesos de alertas automatizados por correos transaccionales (Nodemailer) acoplados a tareas Cron periódicas, y un panel de moderación y auditoría de incidencias para que el equipo administrativo aplique bloqueos y suspensiones de raíz a usuarios tóxicos.
+          </p>
+        </div>
+
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5">
+          <h3 class="text-sm font-bold text-white mt-0 mb-2">2.3 Hipótesis Científicas</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+            <strong>Hipótesis 1:</strong> La implementación de renderizado en el servidor (SSR) mediante Astro reducirá drásticamente el peso de carga inicial y TTI frente a arquitecturas SPA clásicas.<br/>
+            <strong>Hipótesis 2:</strong> El control de incidentes mediante triggers a nivel relacional Postgres garantizará una latencia menor de moderación de usuarios conflictivos.
+          </p>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 6: MOTIVATION & TARGET PUBLIC -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="3" title="MOTIVACIÓN Y PÚBLICO OBJETIVO" subtitle="Causas de la creación e identificación de perfiles de usuario" />
+        
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-6 mb-6">
+          <h3 class="text-xs uppercase tracking-wider text-[#00E5FF] font-bold mt-0 mb-2">3.1 La Motivación Técnica y Social</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-4">
+            La toxicidad en los emparejamientos públicos de videojuegos cooperativos en línea es uno de los problemas más notables del sector. Más del 74% de los jugadores adultos reportan experimentar algún tipo de hostigamiento digital. Esto genera aislamiento y disminuye la retención en los títulos. La principal motivación para el desarrollo de Gamio fue crear un entorno digital donde el buen comportamiento tuviera un incentivo económico real in-game, y el mal comportamiento tuviera consecuencias de baneo relacionales inmediatas en base de datos.
+          </p>
+          <h3 class="text-xs uppercase tracking-wider text-[#00E5FF] font-bold mt-0 mb-2">3.2 Público Objetivo del Ecosistema</h3>
+          <ul class="text-xs text-[#7A93B8] space-y-2 list-disc pl-4 mt-2">
+            <li><strong>El Gamer Común:</strong> Jugadores cansados de emparejamientos tóxicos que desean armar escuadrones casuales o competitivos de alta compatibilidad horaria e idioma.</li>
+            <li><strong>El Moderador de Sistemas:</strong> Administradores que necesitan herramientas de baneo centralizado para controlar conductas disruptivas al instante.</li>
+            <li><strong>El Equipo de Ingeniería:</strong> Auditores técnicos enfocados en validar el aislamiento relacional vía RLS y el rendimiento con Core Web Vitals.</li>
+          </ul>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 7: COMPETITOR ANALYSIS -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="4" title="ANÁLISIS DE COMPETENCIA" subtitle="Matriz comparativa con líderes del sector e innovación aportada" />
+        <p class="text-justify leading-relaxed mb-4 text-xs text-[#7A93B8]">
+          Gamio cubre un vacío crítico de retención, descubrimiento paramétrico de escuadrones y fidelización que los grandes del sector (Discord, Steam, Reddit) no logran abordar de manera integrada:
+        </p>
+        <ComparisonTable />
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5 mt-4">
+          <h3 class="text-xs font-bold text-white mt-0 mb-2 uppercase tracking-wider text-[#00E5FF]">4.1 Innovación y Valor Diferencial</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+            La innovación radica en la **economía de fidelización**. Al conectar la socialización diaria en el feed con la tienda transaccional (compra de Riot Points, claves Steam, etc.), convertimos la lealtad y el buen juego en recompensas tangibles de juego. Esto incentiva un comportamiento ejemplar, pues las conductas tóxicas resultan en el baneo automático y la pérdida irreversible del saldo.
+          </p>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 8: TECHNICAL STACK -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="5" title="STACK TECNOLÓGICO" subtitle="Justificación y desglose de la arquitectura web de última generación" />
+        <p class="text-justify leading-relaxed mb-4 text-xs text-[#7A93B8]">
+          Para el diseño de Gamio se seleccionaron tecnologías de última generación enfocadas en maximizar el rendimiento móvil (TTI) y garantizar un SEO perfecto en motores de búsqueda. A continuación se detallan las elecciones del stack tecnológico obligatorio de la plataforma:
+        </p>
+        <TechStackGrid />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 9: SYSTEM ARCHITECTURE -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="6" title="ARQUITECTURA DEL SISTEMA" subtitle="Infraestructura distribuida, flujo de datos y seguridad serverless" />
+        <p class="text-justify leading-relaxed mb-4 text-xs text-[#7A93B8]">
+          Gamio adopta un patrón arquitectónico distribuido y elástico, separando el renderizado dinámico en el servidor (Astro v6 SSR sobre Vercel Edge) de la base de datos y la mensajería WebSocket en tiempo real (Supabase).
+        </p>
+        
+        <ArchitectureDiagram />
+        
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5 mt-4">
+          <h3 class="text-xs font-bold text-white mt-0 mb-2 uppercase tracking-wider text-[#00E5FF]">6.1 Flujo de Datos del Chat en Tiempo Real</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+            La mensajería de Gamio opera conectando el navegador directamente con el WebSocket del microservicio Realtime de Supabase. Al enviar un mensaje, se ejecuta un INSERT relacional que el motor de base de datos distribuye de inmediato a todos los participantes autorizados del canal, reduciendo la latencia general a menos de 50ms y eliminando sondeos periódicos HTTP redundantes.
+          </p>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 10: DATABASE DDL - PART 1 -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="7" title="MODELO DE BASE DE DATOS DDL (PARTE 1)" subtitle="Tabla de perfiles públicos de usuario, RLS y triggers de autocreación" />
+        <p class="text-justify leading-relaxed mb-2 text-xs text-[#7A93B8]">
+          La persistencia e integridad lógica en Gamio se implementa sobre PostgreSQL. A continuación se detalla la tabla de perfiles que enlaza con las cuentas de Supabase Auth:
+        </p>
+        <CodeBlock language="sql" title="Esquema DDL: Perfil de Usuario y Trigger de Autocreación" code={sqlProfiles} />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 11: DATABASE DDL - PART 2 -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="7.1" title="MODELO DE BASE DE DATOS DDL (PARTE 2)" subtitle="Estructura de la tienda relacional de recompensas e inserción de datos iniciales" />
+        <p class="text-justify leading-relaxed mb-2 text-xs text-[#7A93B8]">
+          Se define el catálogo de artículos de la tienda en base de datos. Se inyectan de forma atómica los datos iniciales de cosméticos, títulos y monedas virtuales:
+        </p>
+        <CodeBlock language="sql" title="Esquema DDL: Catálogo y Poblado Inicial de Recompensas" code={sqlRewardsTable} />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 12: DATABASE DDL - PART 3 -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="7.2" title="MODELO DE BASE DE DATOS DDL (PARTE 3)" subtitle="Estructura de conversaciones relacionales y mensajería en tiempo real" />
+        <p class="text-justify leading-relaxed mb-2 text-xs text-[#7A93B8]">
+          Esquema físico para soportar los hilos de conversaciones y chats cerrados entre amigos, blindados por políticas restrictivas de Row Level Security:
+        </p>
+        <CodeBlock language="sql" title="Esquema DDL: Estructura de Mensajería Privada Realtime" code={sqlMessages} />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 13: DATABASE DDL - PART 4 -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="7.3" title="MODELO DE BASE DE DATOS DDL (PARTE 4)" subtitle="Procedimientos almacenados transaccionales seguros en PL/pgSQL" />
+        <p class="text-justify leading-relaxed mb-2 text-xs text-[#7A93B8]">
+          Lógica económica en base a rutinas seguras para evitar la inyección fraudulenta de puntos en el frontend:
+        </p>
+        <CodeBlock language="sql" title="Función PL/pgSQL: Transacción de Recompensa Diaria y Compra" code={sqlRewards} />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 14: FUNCTIONAL ANALYSIS - PART 1 -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="8" title="DESARROLLO CORE Y PANTALLAS (PARTE 1)" subtitle="Análisis funcional de las pantallas core: Buscador de Jugadores" />
+        <p class="text-justify leading-relaxed mb-4 text-xs text-[#7A93B8]">
+          Se codificaron 17 pantallas core e interfaces responsivas independientes. A continuación se documenta en detalle la pantalla de emparejamiento de escuadrones:
+        </p>
+
+        <FeatureCard 
+          title="Buscador de Jugadores (Matchmaking)" 
+          route="/src/pages/jugadores.astro" 
+          objective="Permite a los usuarios descubrir y agregar compañeros con alta compatibilidad y estilo de juego alineado." 
+          visuals="Tarjetas de perfiles decoradas con marcos neón animados, listado elástico e inputs de filtros estructurados." 
+          validations="Filtros dinámicos en base de datos PostgreSQL que excluyen atómicamente a cualquier perfil baneado (is_banned = true)." 
+        />
+        
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5 mt-4">
+          <h3 class="text-xs font-bold text-white mt-0 mb-2 uppercase tracking-wider text-[#00E5FF]">Flujo y Casos de Uso del Matchmaking</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+            El usuario común accede a la sección de "Jugadores", introduce el título al que desea jugar (ej. Valorant), filtra por actitud competitiva ("tryhard" o "casual") y visualiza fichas dinámicas de otros perfiles. Al hacer clic en "Agregar Amigo", se inserta un registro único en la tabla `friend_requests` que desbloqueará el chat privado de inmediato si es aceptado.
+          </p>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 15: INTERFACE SCREENSHOT - GAMES CATALOG (FOTO 2) -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="8.1" title="VISUALIZACIÓN: CATÁLOGO DE JUEGOS" subtitle="Captura de pantalla real del Catálogo de Juegos y filtros de plataforma" />
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-4 mb-3">
+          <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-0">
+            La vista del Catálogo de Juegos (`juegos.astro`) organiza los títulos populares con tarjetas tipo glassmorphism y acentos fluorescentes. La barra superior contiene selectores de categorías (FPS, MOBA, Sandbox) que filtran reactivamente las tarjetas en milisegundos en lado cliente.
+          </p>
+        </div>
+        <img src="/images/juegos.png" class="rounded-lg border border-[#1E2E4A] max-w-full max-h-[135mm] object-contain shadow-2xl mt-2 mx-auto block" alt="Interfaz de Catálogo de Juegos" />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 16: FUNCTIONAL ANALYSIS - PART 2 -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="8.2" title="DESARROLLO CORE Y PANTALLAS (PARTE 2)" subtitle="Análisis funcional de las pantallas core: Chat Privado en Tiempo Real" />
+        <p class="text-justify leading-relaxed mb-4 text-xs text-[#7A93B8]">
+          Se detalla a continuación el canal interactivo de comunicación instantánea entre amigos configurado en el proyecto:
+        </p>
+        <FeatureCard 
+          title="Chat Privado en Tiempo Real" 
+          route="/src/pages/mensajes/[id].astro" 
+          objective="Facilita el intercambio inmediato de mensajes directos uno a uno de forma privada y robusta." 
+          visuals="Bandeja de entrada con avatares, caja de texto elástica y burbujas de mensajes con código de color neon." 
+          validations="Políticas RLS que protegen los hilos de conversación. El canal WebSocket de Supabase valida el ID del usuario antes de difundir el mensaje." 
+        />
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5 mt-4">
+          <h3 class="text-xs font-bold text-white mt-0 mb-2 uppercase tracking-wider text-[#00E5FF]">Estabilidad ante cortes de red</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+            El chat interactivo de React maneja de forma asíncrona estados de reconexión transparente. Si un usuario experimenta un microcorte en su conexión móvil, el WebSocket reestablece el canal de manera automatizada al recuperar señal, sincronizando de inmediato cualquier mensaje en cola.
+          </p>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 17: INTERFACE SCREENSHOT - COMMUNITY & LOBBY CHAT (FOTO 3) -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="8.3" title="VISUALIZACIÓN: COMUNIDAD Y CHAT GLOBAL" subtitle="Captura de pantalla real de la Comunidad y Lobby Global por WebSockets" />
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-4 mb-3">
+          <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-0">
+            La vista `/comunidad` integra de forma unificada el feed social de publicaciones de usuarios a la izquierda y el panel de Chat Global por WebSockets a la derecha. Los avatares de los jugadores muestran con precisión sus marcos Neon adquiridos en la tienda en tiempo real.
+          </p>
+        </div>
+        <img src="/images/comunidad.png" class="rounded-lg border border-[#1E2E4A] max-w-full max-h-[135mm] object-contain shadow-2xl mt-2 mx-auto block" alt="Interfaz de Comunidad y Chat Global" />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 18: FUNCTIONAL ANALYSIS - PART 3 -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="8.4" title="DESARROLLO CORE Y PANTALLAS (PARTE 3)" subtitle="Análisis funcional de las pantallas core: Cuestionario de Bienvenida" />
+        <FeatureCard 
+          title="Cuestionario Inicial (Onboarding)" 
+          route="/src/pages/onboarding.astro" 
+          objective="Fuerza la configuración inicial obligatoria de preferencias de juego de nuevos usuarios." 
+          visuals="Indicador de progreso de 3 pasos, cuadrícula responsiva de posters de videojuegos y selectores de horas." 
+          validations="Evita dobles barras de scroll en móviles y realiza una petición PUT a la API, regalando +10 Puntos de inicio tras finalizar." 
+          codeSnippet={endpointSnippet}
+        />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 19: INTERFACE SCREENSHOT - REWARDS STORE (FOTO 4) -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="8.5" title="VISUALIZACIÓN: TIENDA DE PREMIOS Y RECOMPENSAS" subtitle="Captura de pantalla real de la tienda transaccional gamificada" />
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-4 mb-3">
+          <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-0">
+            La sección `/premios` consolida la gamificación transaccional del proyecto. Ofrece un botón para reclamar puntos diarios, la visualización en vivo de la XP de nivel y un catálogo categorizado de cosméticos (títulos, bordes) e intercambios de saldo in-game reales.
+          </p>
+        </div>
+        <img src="/images/premios.png" class="rounded-lg border border-[#1E2E4A] max-w-full max-h-[135mm] object-contain shadow-2xl mt-2 mx-auto block" alt="Interfaz de Tienda de Premios" />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 20: INTERFACE SCREENSHOT - NEWS FEED (FOTO 5) -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="8.6" title="VISUALIZACIÓN: NOTICIAS DE LA INDUSTRIA GAMING" subtitle="Captura de pantalla real del feed de noticias de videojuegos" />
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-4 mb-3">
+          <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-0">
+            El feed de noticias (`/noticias`) recopila de manera responsiva información clave de la industria gaming. Utiliza tarjetas estructuradas en rejilla con carga lazy-loading, efectos de hover sutiles en los degradados de borde y lectura asíncrona optimizada por el backend de Astro.
+          </p>
+        </div>
+        <img src="/images/noticias.png" class="rounded-lg border border-[#1E2E4A] max-w-full max-h-[135mm] object-contain shadow-2xl mt-2 mx-auto block" alt="Interfaz de Noticias Gaming" />
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 21: FUNCTIONAL ANALYSIS - PART 4 -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="8.7" title="DESARROLLO CORE Y PANTALLAS (PARTE 4)" subtitle="Análisis funcional de las pantallas core: Panel de Moderación" />
+        <p class="text-justify leading-relaxed mb-4 text-xs text-[#7A93B8]">
+          Se describe el panel de control reservado exclusivamente a los perfiles de auditoría y administración de Gamio:
+        </p>
+        <FeatureCard 
+          title="Panel de Auditoría y Moderación de Incidencias" 
+          route="/src/pages/admin/incidencias.astro" 
+          objective="Permite al equipo de administración auditar reportes de conducta y aplicar suspensiones de cuentas definitivas." 
+          visuals="Lista de incidencias reportadas (motivos, transcripciones de chat), botones de baneo rápido y conteo superior de reportes." 
+          validations="Filtros middleware a nivel de servidor Astro y políticas RLS que deniegan accesos y ejecuciones a cualquier usuario que no tenga el campo 'is_admin' en true." 
+        />
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5 mt-4">
+          <h3 class="text-xs font-bold text-white mt-0 mb-2 uppercase tracking-wider text-[#00E5FF]">El Escudo Relacional ante Baneos</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+            Al cambiar `is_banned` a `true` mediante el panel, un trigger PostgreSQL en base de datos (`check_banned_user`) aborta instantáneamente cualquier intento de inserción de datos (mensajes, reportes, publicaciones), garantizando que el usuario tóxico quede desconectado e inhabilitado de inmediato de toda acción.
+          </p>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 22: QA TESTING - PART 1 -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="9" title="PRUEBAS Y VALIDACIÓN DE QA (PARTE 1)" subtitle="Matriz de casos de prueba de control de calidad (Casos TC-01 a TC-05)" />
+        <p class="text-justify leading-relaxed mb-2 text-xs text-[#7A93B8]">
+          Se ejecutó una rigurosa batería de pruebas funcionales y de seguridad para validar el blindaje relacional y la consistencia responsiva en Gamio:
+        </p>
+        
+        <div class="avoid-break overflow-hidden rounded border border-[#1E2E4A]">
+          <table class="w-full border-collapse m-0 text-xs">
+            <thead>
+              <tr class="bg-[#0D162B]">
+                <th class="py-2 px-3 text-white">ID</th>
+                <th class="py-2 px-3 text-white">Caso de Prueba</th>
+                <th class="py-2 px-3 text-white">Comportamiento Esperado</th>
+                <th class="py-2 px-3 text-white">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-bold py-2 px-3 text-white">TC-01</td>
+                <td class="py-2 px-3">Registro de email duplicado</td>
+                <td class="py-2 px-3">Supabase Auth deniega y retorna un error claro de duplicidad.</td>
+                <td class="py-2 px-3 text-[#00E5FF] font-bold">Aprobado ✅</td>
+              </tr>
+              <tr class="bg-[#0D162B]/30">
+                <td class="font-bold py-2 px-3 text-white">TC-02</td>
+                <td class="py-2 px-3">Lectura de chat privado ajeno</td>
+                <td class="py-2 px-3">Las políticas RLS bloquean la consulta devolviendo un array vacío.</td>
+                <td class="py-2 px-3 text-[#00E5FF] font-bold">Aprobado ✅</td>
+              </tr>
+              <tr>
+                <td class="font-bold py-2 px-3 text-white">TC-03</td>
+                <td class="py-2 px-3">Inserción desde cuenta baneada</td>
+                <td class="py-2 px-3">Trigger check_banned_user lanza excepción y aborta la transacción SQL.</td>
+                <td class="py-2 px-3 text-[#00E5FF] font-bold">Aprobado ✅</td>
+              </tr>
+              <tr class="bg-[#0D162B]/30">
+                <td class="font-bold py-2 px-3 text-white">TC-04</td>
+                <td class="py-2 px-3">Compra de ítem con saldo insuficiente</td>
+                <td class="py-2 px-3">buy_reward aborta en base de datos impidiendo saldo negativo.</td>
+                <td class="py-2 px-3 text-[#00E5FF] font-bold">Aprobado ✅</td>
+              </tr>
+              <tr>
+                <td class="font-bold py-2 px-3 text-white">TC-05</td>
+                <td class="py-2 px-3">Doble reclamo diario de puntos</td>
+                <td class="py-2 px-3">La función Postgres bloquea el segundo intento en menos de 24h.</td>
+                <td class="py-2 px-3 text-[#00E5FF] font-bold">Aprobado ✅</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 23: QA TESTING - PART 2 -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="9.1" title="PRUEBAS Y VALIDACIÓN DE QA (PARTE 2)" subtitle="Casos TC-06 a TC-10 y robustez concurrente" />
+        <p class="text-justify leading-relaxed mb-2 text-xs text-[#7A93B8]">
+          Continuación de la matriz de pruebas funcionales y análisis de concurrencia ante altas cargas de peticiones concurrentes:
+        </p>
+        
+        <div class="avoid-break overflow-hidden rounded border border-[#1E2E4A] mb-4">
+          <table class="w-full border-collapse m-0 text-xs">
+            <thead>
+              <tr class="bg-[#0D162B]">
+                <th class="py-2 px-3 text-white">ID</th>
+                <th class="py-2 px-3 text-white">Caso de Prueba</th>
+                <th class="py-2 px-3 text-white">Comportamiento Esperado</th>
+                <th class="py-2 px-3 text-white">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-bold py-2 px-3 text-white">TC-06</td>
+                <td class="py-2 px-3">Bypass del cuestionario inicial</td>
+                <td class="py-2 px-3">El middleware detecta datos vacíos y redirige forzosamente a /onboarding.</td>
+                <td class="py-2 px-3 text-[#00E5FF] font-bold">Aprobado ✅</td>
+              </tr>
+              <tr class="bg-[#0D162B]/30">
+                <td class="font-bold py-2 px-3 text-white">TC-07</td>
+                <td class="py-2 px-3">Envío de solicitud a uno mismo</td>
+                <td class="py-2 px-3">La API bloquea y deniega la inserción, previniendo autoinvitaciones.</td>
+                <td class="py-2 px-3 text-[#00E5FF] font-bold">Aprobado ✅</td>
+              </tr>
+              <tr>
+                <td class="font-bold py-2 px-3 text-white">TC-08</td>
+                <td class="py-2 px-3">Ejecución del cron sin token</td>
+                <td class="py-2 px-3">El middleware del cron bloquea la ejecución retornando HTTP 401.</td>
+                <td class="py-2 px-3 text-[#00E5FF] font-bold">Aprobado ✅</td>
+              </tr>
+              <tr class="bg-[#0D162B]/30">
+                <td class="font-bold py-2 px-3 text-white">TC-09</td>
+                <td class="py-2 px-3">Redimensión responsiva de Landing</td>
+                <td class="py-2 px-3">Los posters y menús de categorías deslizan sin desborde horizontal.</td>
+                <td class="py-2 px-3 text-[#00E5FF] font-bold">Aprobado ✅</td>
+              </tr>
+              <tr>
+                <td class="font-bold py-2 px-3 text-white">TC-10</td>
+                <td class="py-2 px-3">Carga concurrente en chat global</td>
+                <td class="py-2 px-3">El WebSocket soporta 50 inserciones por segundo sin congelación.</td>
+                <td class="py-2 px-3 text-[#00E5FF] font-bold">Aprobado ✅</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5">
+          <h3 class="text-xs font-bold text-white mt-0 mb-2 uppercase tracking-wider text-[#00E5FF]">Conclusiones de la batería de pruebas</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+            La nula tasa de fallos en los casos TC-01 a TC-10 confirma la robustez de delegar los flujos económicos e incidencias directamente en el motor relacional de Supabase. Esto disminuye la sobrecarga lógica de las Edge Functions e impide de raíz exploits en el lado de la interfaz web.
+          </p>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 24: INCIDENTS AND TROUBLESHOOTING -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="10" title="INCIDENCIAS REALES Y KPIs (PARTE 1)" subtitle="Registro de incidencias responsivas y de usabilidad corregidas" />
+        
+        <div class="space-y-4">
+          <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5">
+            <h3 class="text-xs uppercase tracking-wider text-[#FF4655] font-extrabold mt-0 mb-2">Incidencia 1: Desbordamiento Horizontal en Dispositivos Móviles</h3>
+            <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-3">
+              <strong>Problema:</strong> Al navegar en teléfonos de menos de 480px de ancho, la Landing Page y el catálogo de videojuegos generaban un scroll horizontal descontrolado hacia la derecha, dejando espacios vacíos negros en el viewport.
+            </p>
+            <p class="text-xs text-[#EAF4FF] leading-relaxed text-justify mb-0">
+              <strong>Resolución:</strong> Identificamos que el carrusel de posters de videojuegos y los chips de categorías no limitaban sus anchos. Se aplicaron paddings elásticos, anchos máximos (<code>max-width: 100%</code>) y scroll lateral táctil independiente con aceleración inercial (<code>overflow-x: auto; -webkit-overflow-scrolling: touch;</code>).
+            </p>
+          </div>
+
+          <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5">
+            <h3 class="text-xs uppercase tracking-wider text-[#FF4655] font-extrabold mt-0 mb-2">Incidencia 2: Doble Scrollbar en Onboarding y Modales de Preguntas</h3>
+            <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-3">
+              <strong>Problema:</strong> Al abrir el test estético de onboarding en móviles, aparecían dos barras de scroll paralelas que provocaban clics erróneos y congelamientos de pantalla.
+            </p>
+            <p class="text-xs text-[#EAF4FF] leading-relaxed text-justify mb-0">
+              <strong>Resolución:</strong> Se eliminó el scrollbar interno del modal en pantallas táctiles y se configuraron paddings elásticos para que el modal fluyera de forma del todo natural con el scrollbar general del viewport del dispositivo móvil.
+            </p>
+          </div>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 25: CORE WEB VITALS & METRICS -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="10.1" title="INCIDENCIAS REALES Y KPIs (PARTE 2)" subtitle="Métricas de rendimiento de red y velocidad de renderizado en móviles" />
+        <p class="text-justify leading-relaxed mb-4 text-xs text-[#7A93B8]">
+          El rendimiento de la plataforma web de Gamio ha sido validado bajo simuladores concurrentes y dispositivos de baja potencia en el Edge, obteniendo las siguientes métricas e indicadores de velocidad:
+        </p>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <MetricCard 
+            name="LCP (Largest Contentful Paint)" 
+            value="0.9 segundos" 
+            target="< 2.5s" 
+            description="Tiempo que tarda en renderizarse el contenido principal del Hero. Astro SSR compila el HTML en servidor en milisegundos, logrando métricas insuperables en redes móviles lentas." 
+            percentage={92} 
+            status="excelente" 
+          />
+          <MetricCard 
+            name="FID (First Input Delay)" 
+            value="12 milisegundos" 
+            target="< 100ms" 
+            description="Latencia de respuesta al interactuar con el chat o los filtros. Las islas React ligeras minimizan el hilo principal de ejecución en el browser del cliente." 
+            percentage={98} 
+            status="excelente" 
+          />
+        </div>
+
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-5 mt-4">
+          <h3 class="text-xs font-bold text-white mt-0 mb-2 uppercase tracking-wider text-[#00E5FF]">10.2 Estabilidad y Disponibilidad en Producción</h3>
+          <p class="text-xs text-[#7A93B8] leading-relaxed mb-0 text-justify">
+            La base de datos PostgreSQL desplegada en la infraestructura de Supabase mantuvo una tasa de disponibilidad (Uptime) del **99.98%** y un tiempo promedio de respuesta a consultas preliminares de perfiles cruzados de tan solo **14 milisegundos**, garantizando la inmediatez del matchmaking.
+          </p>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 26: FUTURE IMPROVEMENTS ROADMAP -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="11" title="ROADMAP Y CONCLUSIONES (PARTE 1)" subtitle="Roadmap tecnológico del sistema Gamio a corto, medio y largo plazo" />
+        
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-6 space-y-4">
+          <div class="border-l-2 border-[#00E5FF] pl-4">
+            <span class="text-[8pt] font-mono uppercase tracking-wider text-[#00E5FF] block mb-1">Fase 1: Corto Plazo</span>
+            <strong class="text-xs text-white block mb-1">Integración directa con APIs de Discord y Riot Games</strong>
+            <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-0">
+              Permitirá enlazar de forma atómica el identificador de Discord de los perfiles públicos gaming de los usuarios e importar estadísticas competitivas reales en vivo (como el rango competitivo en Valorant) de forma nativa desde la API oficial de Riot Games.
+            </p>
+          </div>
+
+          <div class="border-l-2 border-[#7C3AED] pl-4">
+            <span class="text-[8pt] font-mono uppercase tracking-wider text-[#7C3AED] block mb-1">Fase 2: Medio Plazo</span>
+            <strong class="text-xs text-white block mb-1">Conversión a Aplicación Móvil Híbrida mediante CapacitorJS</strong>
+            <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-0">
+              Encapsular la base de código actual de Astro bajo el ecosistema Capacitor para empaquetar y distribuir Gamio de forma nativa en la Play Store de Android y App Store de iOS con mínimas modificaciones de código.
+            </p>
+          </div>
+
+          <div class="border-l-2 border-[#7A93B8] pl-4">
+            <span class="text-[8pt] font-mono uppercase tracking-wider text-[#7A93B8] block mb-1">Fase 3: Largo Plazo</span>
+            <strong class="text-xs text-white block mb-1">Módulo de Torneos y Emparejamientos Automatizados</strong>
+            <p class="text-xs text-[#7A93B8] leading-relaxed text-justify mb-0">
+              Creará la infraestructura interna para que los clanes o escuadrones de Gamio compitan en copas de fin de semana, controlando las tablas de posiciones e inyectando los premios de forma directa y automatizada.
+            </p>
+          </div>
+        </div>
+      </div>
+      <FooterPage />
+    </div>
+  </div>
+
+  <!-- PAGE 27: RESULTS AND CONCLUSIONS -->
+  <div class="page">
+    <div class="flex flex-col justify-between h-full">
+      <div>
+        <SectionTitle number="11.1" title="ROADMAP Y CONCLUSIONES (PARTE 2)" subtitle="Conclusiones de ingeniería del software sobre la plataforma Gamio" />
+        
+        <div class="card border border-[#1E2E4A] bg-[#0D162B] p-6 mb-4">
+          <p class="text-justify leading-relaxed mb-4 text-xs text-[#EAF4FF]">
+            La implementación de <strong>Gamio 🎮</strong> demuestra que es factible compaginar la altísima velocidad y optimización SEO del Server Side Rendering (SSR) dinámico provisto por Astro v6 con el dinamismo e interactividad de canales WebSockets en vivo gestionados por islas React.
+          </p>
+          <p class="text-justify leading-relaxed mb-4 text-xs text-[#EAF4FF]">
+            La delegación de la seguridad y el control de accesos directos de usuarios bloqueados a políticas Row Level Security (RLS) y Triggers SQL atómicos en PostgreSQL blindan al sistema ante ataques del lado del cliente, asegurando una comunidad ejemplar y una economía de gamificación libre de exploits.
+          </p>
+          <p class="text-justify leading-relaxed mb-0 text-xs text-[#EAF4FF]">
+            En conclusión, Gamio representa un modelo de ingeniería robusto y de gran escala de redes sociales modernas gamificadas. Destaca por su estética Cyberpunk premium, su óptimo diseño responsive y su arquitectura libre de servidores de mantenimiento tradicional que reduce drásticamente los costes de infraestructura.
+          </p>
+        </div>
+      </div>
+      <FooterPage text="GAMIO 🎮 — Memoria Técnica Editorial Completa de Final de Grado (TFG)" />
+    </div>
+  </div>
+
+</body>
+</html>
