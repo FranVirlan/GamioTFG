@@ -29,7 +29,7 @@ const gamesList = [
   <div class="relative min-h-screen bg-[#0A0E17] text-slate-100 overflow-hidden font-sans selection:bg-cyan-500 selection:text-black">
     
     <!-- 🎴 HERO SECTION -->
-    <section id="hero" class="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden">
+    <section id="hero" class="relative overflow-hidden">
       <!-- Background elements -->
       <div class="pointer-events-none absolute inset-0 grid-bg" aria-hidden="true"></div>
       
@@ -52,11 +52,11 @@ const gamesList = [
           </p>
           
           <div class="flex flex-wrap items-center justify-center gap-4 animate-fade-in-up">
-            <a href="/signup" class="px-8 py-4 bg-gradient-to-r from-cyan-400 to-indigo-500 hover:from-cyan-300 hover:to-indigo-400 text-slate-950 font-bold rounded-full shadow-[0_0_25px_rgba(6,182,212,0.45)] hover:shadow-[0_0_35px_rgba(6,182,212,0.7)] hover:-translate-y-0.5 transition-all duration-300 uppercase text-xs tracking-wider inline-flex items-center gap-2">
+            <a href="/signup" class="btn-primary hover:scale-[1.02] transition-transform shadow-[0_0_20px_rgba(108,58,255,0.4)] flex items-center gap-2">
               Comenzar gratis
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 12h14"></path></svg>
             </a>
-            <a href="#contacto-demo" class="px-8 py-4 bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800 hover:border-slate-700 text-slate-200 font-semibold rounded-full hover:-translate-y-0.5 transition-all duration-300 text-xs tracking-wider inline-flex items-center gap-2">
+            <a href="#contacto-demo" class="btn-secondary hover:scale-[1.02] transition-transform">
               Solicitar Demo B2B
             </a>
           </div>
@@ -698,6 +698,17 @@ const gamesList = [
 <style>
   /* ── 💠 Custom Styles matching reference ── */
   
+  #hero {
+    padding-top: 140px;
+    padding-bottom: 80px;
+  }
+  @media (min-width: 768px) {
+    #hero {
+      padding-top: 200px;
+      padding-bottom: 120px;
+    }
+  }
+
   .grid-bg {
     position: absolute;
     inset: 0;
