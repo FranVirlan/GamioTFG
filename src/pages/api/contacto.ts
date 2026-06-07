@@ -73,9 +73,9 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Enviar correo de notificación al administrador (de forma asíncrona no bloqueante)
+    // Enviar correo de notificación al administrador (aseguramos await para evitar que Vercel termine la función antes de enviarlo)
     try {
-      sendB2BLeadEmail('iscovr3@gmail.com', name, email, company, message);
+      await sendB2BLeadEmail('iscovr3@gmail.com', name, email, company, message);
     } catch (mailErr) {
       console.error('Error al enviar notificación de correo B2B:', mailErr);
     }
