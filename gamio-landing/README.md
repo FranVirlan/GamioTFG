@@ -35,7 +35,7 @@ Puedes subir esta landing de forma rápida e independiente utilizando la **CLI d
 ---
 
 ## 🔗 Personalización de Enlaces
-Si tu aplicación real utiliza una URL diferente a `https://gamiotfg.vercel.app`, puedes cambiarla fácilmente:
+Si tu aplicación real utiliza una URL diferente a `https://gamio-tfg.vercel.app`, puedes cambiarla fácilmente:
 1. Abre el archivo `index.html`.
 2. Busca los atributos `href="..."` de los botones de **Acceder** y **Registrarse**.
 3. Reemplázalos por la URL del dominio real de tu aplicación.
