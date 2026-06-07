@@ -219,3 +219,60 @@ export async function sendDailyRewardEmail(toEmail: string, username: string): P
     return false;
   }
 }
+
+/**
+ * Envía un correo con la solicitud de una demo B2B al administrador.
+ */
+export async function sendB2BLeadEmail(
+  adminEmail: string,
+  name: string,
+  email: string,
+  company: string | null,
+  message: string
+): Promise<boolean> {
+  const transporter = createTransporter();
+  if (!transporter) return false;
+
+  const subject = `💼 Nueva solicitud de Demo B2B - Gamio: ${company || name}`;
+  
+  const bodyContent = `
+    <h2>¡Hola, Administrador!</h2>
+    <p>Se ha recibido una nueva solicitud de información / Demo B2B desde la landing page:</p>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px;">
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #1E293B; font-weight: bold; color: #FFFFFF; width: 120px;">Nombre:</td>
+        <td style="padding: 10px; border-bottom: 1px solid #1E293B; color: #94A3B8;">${name}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #1E293B; font-weight: bold; color: #FFFFFF;">Email:</td>
+        <td style="padding: 10px; border-bottom: 1px solid #1E293B; color: #94A3B8;"><a href="mailto:${email}" style="color: #00F0FF; text-decoration: none;">${email}</a></td>
+      </tr>
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #1E293B; font-weight: bold; color: #FFFFFF;">Empresa/Fondo:</td>
+        <td style="padding: 10px; border-bottom: 1px solid #1E293B; color: #94A3B8;">${company || 'No especificada'}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #1E293B; font-weight: bold; color: #FFFFFF; vertical-align: top;">Mensaje:</td>
+        <td style="padding: 10px; border-bottom: 1px solid #1E293B; color: #94A3B8; white-space: pre-wrap;">${message}</td>
+      </tr>
+    </table>
+    <p>Por favor, ponte en contacto con el solicitante en el menor tiempo posible para agendar la demo.</p>
+  `;
+
+  const html = getEmailHTMLWrapper(subject, bodyContent);
+
+  try {
+    await transporter.sendMail({
+      from: `"Gamio B2B" <${EMAIL_USER}>`,
+      to: adminEmail,
+      subject,
+      html
+    });
+    console.log(`📧 Correo B2B enviado correctamente a: ${adminEmail}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Error al enviar correo B2B a ${adminEmail}:`, error);
+    return false;
+  }
+}
+

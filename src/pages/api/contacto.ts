@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createServerClient } from '../../lib/supabase';
+import { sendB2BLeadEmail } from '../../lib/emailService';
 
 // Headers CORS comunes para permitir peticiones desde el dominio de la landing
 const corsHeaders = {
@@ -72,6 +73,13 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    // Enviar correo de notificación al administrador (de forma asíncrona no bloqueante)
+    try {
+      sendB2BLeadEmail('iscovr3@gmail.com', name, email, company, message);
+    } catch (mailErr) {
+      console.error('Error al enviar notificación de correo B2B:', mailErr);
+    }
+
     return new Response(
       JSON.stringify({ success: true, message: '¡Solicitud recibida correctamente!' }),
       { status: 200, headers: corsHeaders }
@@ -84,3 +92,4 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 };
+
