@@ -1,6 +1,6 @@
 ---
 /**
- * UserCard.astro — Card vertical de usuario para matchmaking con estadísticas de Tracker.gg
+ * UserCard.astro — Card horizontal de usuario para matchmaking con estadísticas de Tracker.gg y botón inferior
  */
 
 interface Props {
@@ -50,17 +50,17 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
   data-region={region}
   data-games={games?.join(',') || ''}
 >
-  <!-- Cabecera de la tarjeta: Avatar, Nombre, Nivel y Badge de Rango -->
-  <div class="user-card-header">
-    <div class="user-card-avatar-container">
+  <!-- Sección horizontal principal: Avatar a la izquierda, Info a la derecha -->
+  <div class="user-card-top-row">
+    <div class="user-card-avatar-wrapper">
       <div class="user-card-avatar">
         {name.charAt(0).toUpperCase()}
         {online && <span class="online-dot user-online-dot"></span>}
       </div>
     </div>
 
-    <div class="user-card-user-info">
-      <div class="user-card-name-row">
+    <div class="user-card-info-content">
+      <div class="user-card-name-header">
         <h3 class="user-card-name" title={name}>{name}</h3>
         {gameStats?.verified ? (
           <span class="verified-rank-badge" title={`Cuenta verificada de ${gameStats.game}`}>
@@ -78,52 +78,49 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
         <span class="meta-separator">•</span>
         <span class="user-card-region tag tag-blue">{region}</span>
       </div>
-    </div>
-  </div>
 
-  <!-- Sección de estadísticas autenticadas de Tracker.gg -->
-  {gameStats && (
-    <div class="user-card-tracker-box">
-      {gameStats.handle && (
-        <div class="tracker-handle-info" title={`${gameStats.handle} (${gameStats.platform || 'Oficial'})`}>
-          <span class="tracker-handle-icon">🎮</span>
-          <span class="tracker-handle-text">{gameStats.handle}</span>
-          {gameStats.platform && <span class="tracker-platform-tag">{gameStats.platform}</span>}
+      {gameStats && (
+        <div class="user-card-tracker-box">
+          {gameStats.handle && (
+            <div class="tracker-handle-info" title={`${gameStats.handle} (${gameStats.platform || 'Oficial'})`}>
+              <span class="tracker-handle-icon">🎮</span>
+              <span class="tracker-handle-text">{gameStats.handle}</span>
+              {gameStats.platform && <span class="tracker-platform-tag">{gameStats.platform}</span>}
+            </div>
+          )}
+
+          <div class="tracker-stats-row">
+            {gameStats.kdRatio && (
+              <span class="stat-pill stat-kd" title="K/D Ratio en Tracker.gg">
+                ⚡ K/D {gameStats.kdRatio}
+              </span>
+            )}
+            {gameStats.winRate && (
+              <span class="stat-pill stat-win" title="Porcentaje de Victorias">
+                🏆 {gameStats.winRate} Win
+              </span>
+            )}
+            {gameStats.trackerUrl && (
+              <a href={gameStats.trackerUrl} target="_blank" rel="noopener noreferrer" class="stat-pill stat-tracker-link" title="Ver perfil en Tracker.gg">
+                📊 Tracker ↗
+              </a>
+            )}
+          </div>
         </div>
       )}
 
-      <div class="tracker-stats-row">
-        {gameStats.kdRatio && (
-          <div class="tracker-stat-item">
-            <span class="stat-lbl">K/D</span>
-            <span class="stat-val kd-val">{gameStats.kdRatio}</span>
-          </div>
-        )}
-        {gameStats.winRate && (
-          <div class="tracker-stat-item">
-            <span class="stat-lbl">VICTORIAS</span>
-            <span class="stat-val win-val">{gameStats.winRate}</span>
-          </div>
-        )}
-        {gameStats.trackerUrl && (
-          <a href={gameStats.trackerUrl} target="_blank" rel="noopener noreferrer" class="tracker-direct-link" title="Ver estadísticas completas en Tracker.gg">
-            <span>Tracker.gg</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-          </a>
-        )}
+      <div class="user-card-games">
+        {games.slice(0, 3).map((g) => (
+          <span class="game-chip">{g}</span>
+        ))}
       </div>
     </div>
-  )}
+  </div>
 
-  <!-- Pie de la tarjeta: Chips de juegos y Botón Ver Perfil -->
-  <div class="user-card-footer">
-    <div class="user-card-games">
-      {games.slice(0, 2).map((g) => (
-        <span class="game-chip">{g}</span>
-      ))}
-    </div>
-    <a href={`/perfil?usuario=${encodeURIComponent(name)}`} class="btn-primary btn-sm profile-link-btn">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+  <!-- Botón "Ver perfil" en la parte inferior ocupando todo el ancho -->
+  <div class="user-card-bottom-actions">
+    <a href={`/perfil?usuario=${encodeURIComponent(name)}`} class="btn-primary full-width-profile-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
         <circle cx="12" cy="7" r="4"></circle>
       </svg>
@@ -136,7 +133,7 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
   .user-card {
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
+    gap: 1rem;
     padding: 1.25rem;
     background: var(--color-surface-card);
     border: 1px solid var(--color-border);
@@ -155,27 +152,27 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
     transform: translateY(-2px);
   }
 
-  /* ── Header ── */
-  .user-card-header {
+  /* ── Horizontal Top Row: Avatar on Left, Content on Right ── */
+  .user-card-top-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.85rem;
     width: 100%;
   }
 
-  .user-card-avatar-container {
+  .user-card-avatar-wrapper {
     flex-shrink: 0;
   }
 
   .user-card-avatar {
-    width: 46px;
-    height: 46px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: white;
     position: relative;
@@ -188,15 +185,15 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
     right: 0;
   }
 
-  .user-card-user-info {
+  .user-card-info-content {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.4rem;
     min-width: 0;
     flex: 1;
   }
 
-  .user-card-name-row {
+  .user-card-name-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -271,19 +268,20 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
     background: rgba(11, 15, 26, 0.6);
     border: 1px solid rgba(0, 240, 255, 0.18);
     border-radius: var(--radius-md);
-    padding: 0.65rem 0.85rem;
+    padding: 0.5rem 0.75rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.4rem;
     width: 100%;
     box-sizing: border-box;
+    margin: 0.15rem 0;
   }
 
   .tracker-handle-info {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    font-size: 0.82rem;
+    gap: 0.35rem;
+    font-size: 0.8rem;
     min-width: 0;
     width: 100%;
   }
@@ -316,76 +314,52 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
   .tracker-stats-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    flex-wrap: wrap;
     width: 100%;
-    padding-top: 0.35rem;
-    border-top: 1px dashed rgba(255, 255, 255, 0.08);
   }
 
-  .tracker-stat-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-  }
-
-  .stat-lbl {
-    font-size: 0.62rem;
+  .stat-pill {
+    padding: 0.18rem 0.5rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    color: var(--color-text-muted);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .stat-val {
-    font-size: 0.9rem;
-    font-weight: 800;
-    font-family: var(--font-heading);
-  }
-
-  .kd-val {
-    color: #f59e0b;
-  }
-
-  .win-val {
-    color: #4ade80;
-  }
-
-  .tracker-direct-link {
+    border-radius: var(--radius-full);
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.3rem 0.65rem;
-    font-size: 0.75rem;
-    font-weight: 700;
+    gap: 0.25rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .stat-kd {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .stat-win {
+    background: rgba(34, 197, 94, 0.12);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .stat-tracker-link {
+    background: rgba(0, 240, 255, 0.12);
     color: var(--color-primary-light);
-    background: rgba(0, 240, 255, 0.1);
-    border: 1px solid rgba(0, 240, 255, 0.25);
-    border-radius: var(--radius-sm);
+    border: 1px solid rgba(0, 240, 255, 0.3);
     text-decoration: none;
     transition: all 0.2s ease;
-    white-space: nowrap;
     margin-left: auto;
   }
 
-  .tracker-direct-link:hover {
-    background: rgba(0, 240, 255, 0.22);
-    border-color: var(--color-primary);
+  .stat-tracker-link:hover {
+    background: rgba(0, 240, 255, 0.25);
     color: #fff;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 240, 255, 0.2);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
   }
 
-  /* ── Footer ── */
-  .user-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    width: 100%;
-    margin-top: 0.15rem;
-  }
-
+  /* ── Game Chips ── */
   .user-card-games {
     display: flex;
     gap: 0.35rem;
@@ -404,15 +378,29 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
     white-space: nowrap;
   }
 
-  .profile-link-btn {
-    text-decoration: none;
-    display: inline-flex;
+  /* ── Full Width Bottom Button ── */
+  .user-card-bottom-actions {
+    width: 100%;
+    margin-top: 0.2rem;
+  }
+
+  .full-width-profile-btn {
+    width: 100%;
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.85rem !important;
-    font-size: 0.8rem !important;
-    white-space: nowrap;
-    flex-shrink: 0;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem !important;
+    font-size: 0.88rem !important;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .full-width-profile-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 240, 255, 0.25);
   }
 </style>
