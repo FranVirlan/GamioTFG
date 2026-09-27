@@ -73,14 +73,26 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
         <span class="user-card-level">Nv. {level}</span>
         <span class="meta-separator">•</span>
         <span class="user-card-region tag tag-blue">{region}</span>
-        {gameStats && (
-          <>
-            <span class="meta-separator">•</span>
-            {gameStats.kdRatio && <span class="stat-tag">K/D {gameStats.kdRatio}</span>}
-            {gameStats.winRate && <span class="stat-tag">{gameStats.winRate} Win</span>}
-          </>
-        )}
       </div>
+
+      {gameStats && (
+        <div class="user-card-tracker-box">
+          {gameStats.handle && (
+            <div class="tracker-handle-info">
+              <span class="tracker-handle-text">🆔 <strong>{gameStats.handle}</strong> {gameStats.platform ? `(${gameStats.platform})` : ''}</span>
+            </div>
+          )}
+          <div class="tracker-stats-pills">
+            {gameStats.kdRatio && <span class="t-pill t-kd" title="K/D Ratio en Tracker.gg">⚡ K/D {gameStats.kdRatio}</span>}
+            {gameStats.winRate && <span class="t-pill t-win" title="Victorias en Tracker.gg">🏆 {gameStats.winRate} Win</span>}
+            {gameStats.trackerUrl && (
+              <a href={gameStats.trackerUrl} target="_blank" rel="noopener noreferrer" class="t-pill t-link" title="Ver perfil en Tracker.gg">
+                📊 Tracker.gg ↗
+              </a>
+            )}
+          </div>
+        </div>
+      )}
 
       <div class="user-card-games">
         {games.slice(0, 3).map((game) => (
@@ -211,6 +223,71 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
     gap: 0.4rem;
     font-size: 0.78rem;
     color: var(--color-text-muted);
+  }
+
+  .user-card-tracker-box {
+    margin: 0.2rem 0;
+    padding: 0.4rem 0.6rem;
+    background: rgba(0, 240, 255, 0.04);
+    border: 1px solid rgba(0, 240, 255, 0.18);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .tracker-handle-info {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+
+  .tracker-handle-text strong {
+    color: var(--color-primary-light);
+  }
+
+  .tracker-stats-pills {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  .t-pill {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    line-height: 1.2;
+  }
+
+  .t-kd {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .t-win {
+    background: rgba(34, 197, 94, 0.12);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .t-link {
+    background: rgba(0, 240, 255, 0.12);
+    color: var(--color-primary-light);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .t-link:hover {
+    background: rgba(0, 240, 255, 0.25);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
   }
 
   .user-card-level {

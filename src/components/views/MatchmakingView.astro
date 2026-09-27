@@ -61,12 +61,12 @@ function getCommunityPlayersForGame(gameName: string) {
   const icon = iconMap[g] || 'https://api.iconify.design/simple-icons:epicgames.svg?color=%2300f0ff';
 
   const templates = [
-    { name: 'AlexPro_99', handle: 'AlexPro_99', level: 88, rank: 'radiant', region: 'EUW', platform: 'Epic Games' },
-    { name: 'Viper_Striker', handle: 'Viper_Striker', level: 74, rank: 'master', region: 'EUW', platform: 'Steam' },
-    { name: 'Kiko_Gamer', handle: 'Kiko_Gamer', level: 62, rank: 'diamond', region: 'NA', platform: 'PlayStation' },
-    { name: 'Luna_Esports', handle: 'Luna_Esports#EUW', level: 55, rank: 'platinum', region: 'EUW', platform: 'Riot Games' },
-    { name: 'Shadow_N7', handle: 'Shadow_N7', level: 43, rank: 'gold', region: 'LATAM', platform: 'Xbox Live' },
-    { name: 'MasterKey_ES', handle: 'MasterKey_ES', level: 91, rank: 'radiant', region: 'EUW', platform: 'Epic Games' }
+    { name: 'AlexPro_99', handle: 'AlexPro_99', level: 88, rank: 'radiant', region: 'EUW', platform: 'Epic Games', kdRatio: '2.15', winRate: '64.2%', rankName: 'Top / Radiant' },
+    { name: 'Viper_Striker', handle: 'Viper_Striker', level: 74, rank: 'master', region: 'EUW', platform: 'Steam', kdRatio: '1.85', winRate: '58.0%', rankName: 'Master / Élite' },
+    { name: 'Kiko_Gamer', handle: 'Kiko_Gamer', level: 62, rank: 'diamond', region: 'NA', platform: 'PlayStation', kdRatio: '1.42', winRate: '51.5%', rankName: 'Diamante II' },
+    { name: 'Luna_Esports', handle: 'Luna_Esports#EUW', level: 55, rank: 'platinum', region: 'EUW', platform: 'Riot Games', kdRatio: '1.65', winRate: '55.4%', rankName: 'Platino I' },
+    { name: 'Shadow_N7', handle: 'Shadow_N7', level: 43, rank: 'gold', region: 'LATAM', platform: 'Xbox Live', kdRatio: '1.20', winRate: '49.0%', rankName: 'Oro III' },
+    { name: 'MasterKey_ES', handle: 'MasterKey_ES', level: 91, rank: 'radiant', region: 'EUW', platform: 'Epic Games', kdRatio: '2.40', winRate: '68.5%', rankName: 'Radiant / Top' }
   ];
 
   return templates.map(t => ({
@@ -81,8 +81,10 @@ function getCommunityPlayersForGame(gameName: string) {
       handle: t.handle,
       platform: t.platform,
       region: t.region,
-      rankName: 'Tracker.gg',
+      rankName: t.rankName || 'Tracker.gg',
       rankIcon: icon,
+      kdRatio: t.kdRatio,
+      winRate: t.winRate,
       trackerUrl: buildTrackerGgUrl(gameName, t.handle, t.platform),
       verified: true,
       updatedAt: new Date().toISOString()

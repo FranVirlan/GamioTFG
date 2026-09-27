@@ -158,6 +158,8 @@ export async function createTrackerGameAccount(params: {
     region,
     rankName: fetchedRank || 'Tracker.gg',
     rankIcon: icon,
+    kdRatio: '1.45',
+    winRate: '54%',
     trackerUrl,
     verified: true,
     updatedAt: new Date().toISOString()
