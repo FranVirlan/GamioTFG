@@ -108,8 +108,8 @@ const navLinks = [
             </div>
           </a>
           {profile?.is_admin && (
-            <a href="/admin/incidencias" class="nav-icon-link" aria-label="Admin" title="Panel de Incidencias" style="color: #f87171; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.15);">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <a href="/admin/incidencias" class="nav-icon-link nav-admin-badge" aria-label="Admin" title="Panel de Incidencias">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
             </a>
@@ -161,8 +161,8 @@ const navLinks = [
     {user ? (
       <>
         {profile?.is_admin && (
-          <a href="/admin/incidencias" class="mobile-link" style="color: #f87171; display: flex; align-items: center; gap: 0.5rem; margin-top: -0.5rem;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <a href="/admin/incidencias" class="mobile-link" style="color: #38bdf8; display: flex; align-items: center; gap: 0.5rem; margin-top: -0.5rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
             Panel de Moderación
@@ -356,6 +356,24 @@ const navLinks = [
     color: var(--color-primary-light);
     background: rgba(124, 58, 237, 0.1);
     transform: scale(1.1);
+  }
+
+  .nav-admin-badge {
+    color: #38bdf8 !important;
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(56, 189, 248, 0.25)) !important;
+    border: 1px solid rgba(0, 240, 255, 0.4) !important;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.2) !important;
+    transition: all 0.25s ease !important;
+    width: 34px;
+    height: 34px;
+  }
+
+  .nav-admin-badge:hover {
+    transform: scale(1.1) !important;
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(56, 189, 248, 0.4)) !important;
+    border-color: rgba(0, 240, 255, 0.7) !important;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.4) !important;
+    color: #00f0ff !important;
   }
 
   .unread-badge {

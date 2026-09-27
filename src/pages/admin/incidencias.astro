@@ -44,8 +44,12 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
 <MainLayout title="Auditoría de Incidencias y Moderación — Gamio 🛡️">
   <section class="admin-page">
     <div class="admin-header animate-fade-in-up">
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <span style="font-size: 2.2rem;">🛡️</span>
+      <div style="display: flex; align-items: center; gap: 0.85rem;">
+        <div class="admin-shield-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
         <div>
           <h1>Panel de Incidencias</h1>
           <p>Auditoría de conducta y control de suspensiones de la comunidad</p>
@@ -185,6 +189,20 @@ const pendingCount = reports.filter(r => r.status === 'pending').length;
     gap: 1.5rem;
     border-bottom: 1px solid var(--color-border);
     padding-bottom: 1.5rem;
+  }
+
+  .admin-shield-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(56, 189, 248, 0.28));
+    border: 1px solid rgba(0, 240, 255, 0.45);
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #38bdf8;
+    flex-shrink: 0;
   }
 
   .admin-header h1 {
