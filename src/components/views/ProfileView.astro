@@ -476,7 +476,7 @@ const defaultAvatars = [
 
       <div class="pv-modal-footer">
         <button type="button" class="btn-secondary" data-close="connect-game-modal">Cancelar</button>
-        <button type="submit" class="btn-primary" id="submit-connect-game-btn">⚡ Obtener Estadísticas Reales</button>
+        <button type="submit" class="btn-primary" id="submit-connect-game-btn">⚡ Vincular y Obtener Stats</button>
       </div>
     </form>
   </div>
@@ -634,7 +634,16 @@ const defaultAvatars = [
     color: var(--color-accent-light); box-shadow: 0 0 12px rgba(108,58,255,0.15);
   }
 
-  .pv-modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); }
+  .pv-modal-footer { display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); width: 100%; flex-wrap: wrap; }
+  .pv-modal-footer .btn-primary,
+  .pv-modal-footer .btn-secondary,
+  .pv-modal-footer .btn-danger {
+    padding: 0.65rem 1.25rem !important;
+    font-size: 0.88rem !important;
+    flex: 0 1 auto;
+    min-width: 0;
+    text-align: center;
+  }
 
   /* Settings specific */
   .pv-settings-section { display: flex; flex-direction: column; gap: 1rem; }

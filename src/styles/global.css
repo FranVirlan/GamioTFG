@@ -831,10 +831,38 @@ a {
 .pv-modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.75rem;
   margin-top: 0.5rem;
   padding-top: 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.pv-modal-footer .btn-primary,
+.pv-modal-footer .btn-secondary,
+.pv-modal-footer .btn-accent,
+.pv-modal-footer .btn-danger {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.88rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: center;
+}
+
+@media (max-width: 520px) {
+  .pv-modal-footer {
+    flex-direction: column-reverse;
+    gap: 0.6rem;
+  }
+  .pv-modal-footer .btn-primary,
+  .pv-modal-footer .btn-secondary,
+  .pv-modal-footer .btn-accent,
+  .pv-modal-footer .btn-danger {
+    width: 100%;
+    flex: 1 1 100%;
+  }
 }
 
 /* Redesigned Submit Ban/Report buttons inside modal */
