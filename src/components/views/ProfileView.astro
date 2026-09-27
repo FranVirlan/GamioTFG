@@ -24,6 +24,7 @@ interface Props {
     playStyle?: string;
     playerTypeSought?: string;
   };
+  gameAccounts?: Record<string, any>;
 }
 
 const { 
@@ -31,6 +32,7 @@ const {
   friendStatus = 'none',
   friendRequestId = null,
   friendsList = [],
+  gameAccounts = {},
   user
 } = Astro.props;
 
@@ -159,6 +161,82 @@ const defaultAvatars = [
       </div>
     </div>
   )}
+
+  <!-- Cuentas de Juego & Estadísticas Reales -->
+  <div class="profile-game-accounts">
+    <div class="game-accounts-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+      <h3 style="margin: 0; font-family: var(--font-heading); font-size: 1.3rem;">🎮 Cuentas de Juego & Estadísticas Reales</h3>
+      {isOwnProfile && (
+        <button class="btn-primary" id="connect-game-account-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+          ⚡ Vincular Cuenta de Juego
+        </button>
+      )}
+    </div>
+
+    {Object.keys(gameAccounts).length === 0 ? (
+      <div class="empty-state" style="padding: 2.5rem; text-align: center;">
+        <p style="margin-bottom: 1rem; color: var(--color-text-secondary);">Aún no se han vinculado cuentas de juego para mostrar estadísticas autenticadas.</p>
+        {isOwnProfile && (
+          <button class="btn-secondary" id="connect-game-account-empty-btn" style="font-size: 0.9rem;">
+            + Vincular mi primera cuenta (Riot, Epic, Steam...)
+          </button>
+        )}
+      </div>
+    ) : (
+      <div class="game-accounts-grid">
+        {Object.entries(gameAccounts).map(([gameName, acc]) => (
+          <div class="game-account-card">
+            <div class="ga-card-header">
+              <div class="ga-game-badge">
+                <span class="ga-game-name">{acc.game || gameName}</span>
+                {acc.verified && <span class="ga-verified-tag">✓ Verificado</span>}
+              </div>
+              {isOwnProfile && (
+                <button class="btn-unlink-game" data-game={gameName} title="Desvincular esta cuenta">
+                  ×
+                </button>
+              )}
+            </div>
+
+            <div class="ga-card-body">
+              <div class="ga-rank-info">
+                {acc.rankIcon ? (
+                  <img src={acc.rankIcon} alt={acc.rankName} class="ga-rank-icon" />
+                ) : (
+                  <div class="ga-rank-icon-placeholder">🏆</div>
+                )}
+                <div>
+                  <h4 class="ga-rank-name">{acc.rankName || 'Unranked'}</h4>
+                  <p class="ga-handle">{acc.handle} {acc.region ? `(${acc.region})` : ''}</p>
+                </div>
+              </div>
+
+              <div class="ga-stats-row">
+                {acc.rating && (
+                  <div class="ga-stat">
+                    <span class="ga-stat-val">{acc.rating}</span>
+                    <span class="ga-stat-lbl">Rating / ELO</span>
+                  </div>
+                )}
+                {acc.kdRatio && (
+                  <div class="ga-stat">
+                    <span class="ga-stat-val">{acc.kdRatio}</span>
+                    <span class="ga-stat-lbl">K/D Ratio</span>
+                  </div>
+                )}
+                {acc.winRate && (
+                  <div class="ga-stat">
+                    <span class="ga-stat-val">{acc.winRate}</span>
+                    <span class="ga-stat-lbl">Victorias</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
 
   <!-- Juegos Recientes -->
   <div class="profile-recent">
@@ -356,6 +434,55 @@ const defaultAvatars = [
   </div>
 </div>
 
+<!-- ══════════ MODAL: Vincular Cuenta de Juego ══════════ -->
+{isOwnProfile && (
+<div id="connect-game-modal" class="pv-modal-overlay pv-hidden">
+  <div class="pv-modal-content animate-fade-in-up">
+    <div class="pv-modal-header">
+      <h3>🎮 Vincular Cuenta de Juego</h3>
+      <button class="pv-close-btn" data-close="connect-game-modal">&times;</button>
+    </div>
+    <form id="connect-game-form" class="pv-form">
+      <div class="pv-form-group">
+        <label for="connect-game-select">Selecciona el juego</label>
+        <select id="connect-game-select" class="pv-select" style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font-sans); color: var(--color-text-primary); background: rgba(11,15,26,0.6); border: 1px solid var(--color-border); border-radius: var(--radius-sm); outline: none;" required>
+          <option value="Valorant">Valorant (Riot Games)</option>
+          <option value="League of Legends">League of Legends (Riot Games)</option>
+          <option value="Fortnite">Fortnite (Epic Games)</option>
+          <option value="Apex Legends">Apex Legends (EA Games)</option>
+          <option value="Counter-Strike 2">Counter-Strike 2 (Steam)</option>
+          <option value="Rocket League">Rocket League (Epic / Steam)</option>
+          <option value="Call of Duty: Warzone">Call of Duty: Warzone (Activision)</option>
+          <option value="EA FC 25">EA FC 25 (EA Sports)</option>
+        </select>
+      </div>
+
+      <div class="pv-form-group">
+        <label for="connect-handle-input" id="handle-label">Riot ID (ejemplo: Mixwell#EUW)</label>
+        <input type="text" id="connect-handle-input" placeholder="Nombre#Tag o Usuario" required />
+        <small id="handle-hint" style="color: var(--color-text-muted); font-size: 0.8rem; margin-top: 0.2rem;">Introduce tu Riot ID completo incluyendo el signo # y el Tag (ej: Sova#1234).</small>
+      </div>
+
+      <div class="pv-form-group" id="region-group">
+        <label for="connect-region-select">Región de juego</label>
+        <select id="connect-region-select" class="pv-select" style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font-sans); color: var(--color-text-primary); background: rgba(11,15,26,0.6); border: 1px solid var(--color-border); border-radius: var(--radius-sm); outline: none;">
+          <option value="EUW">EUW / Europa</option>
+          <option value="NA">NA / Norteamérica</option>
+          <option value="LATAM">LATAM / América Latina</option>
+          <option value="AP">AP / Asia-Pacífico</option>
+          <option value="KR">KR / Corea</option>
+        </select>
+      </div>
+
+      <div class="pv-modal-footer">
+        <button type="button" class="btn-secondary" data-close="connect-game-modal">Cancelar</button>
+        <button type="submit" class="btn-primary" id="submit-connect-game-btn">⚡ Obtener Estadísticas Reales</button>
+      </div>
+    </form>
+  </div>
+</div>
+)}
+
 <style>
   /* ── Profile Layout ── */
   .profile-view { display: flex; flex-direction: column; gap: 2rem; width: 100%; }
@@ -390,6 +517,28 @@ const defaultAvatars = [
   .game-tag { background: rgba(0,240,255,0.1); color: var(--color-primary-light); border: 1px solid rgba(0,240,255,0.2); }
   .style-tag { background: rgba(108,58,255,0.1); color: var(--color-accent-light); border: 1px solid rgba(108,58,255,0.2); }
   .sought-tag { background: rgba(255,60,172,0.1); color: var(--color-secondary-light); border: 1px solid rgba(255,60,172,0.2); }
+
+  /* ── Game Accounts ── */
+  .profile-game-accounts { background: var(--color-surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1.5rem; margin-top: 0.5rem; }
+  .game-accounts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.25rem; }
+  .game-account-card { background: rgba(11, 15, 26, 0.6); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1.25rem; transition: all 0.2s ease; display: flex; flex-direction: column; gap: 1rem; }
+  .game-account-card:hover { border-color: var(--color-primary); box-shadow: 0 0 20px rgba(0, 240, 255, 0.1); }
+  .ga-card-header { display: flex; justify-content: space-between; align-items: center; }
+  .ga-game-badge { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .ga-game-name { font-weight: 700; font-size: 1.05rem; color: var(--color-text-primary); font-family: var(--font-heading); }
+  .ga-verified-tag { padding: 0.2rem 0.6rem; font-size: 0.72rem; font-weight: 700; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); color: #4ade80; border-radius: 100px; text-transform: uppercase; }
+  .btn-unlink-game { background: transparent; border: none; color: var(--color-text-muted); font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 0.2rem 0.4rem; border-radius: 4px; transition: all 0.2s; }
+  .btn-unlink-game:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+  .ga-card-body { display: flex; flex-direction: column; gap: 1rem; }
+  .ga-rank-info { display: flex; align-items: center; gap: 1rem; }
+  .ga-rank-icon { width: 48px; height: 48px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.3)); }
+  .ga-rank-icon-placeholder { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; background: rgba(255,255,255,0.05); border-radius: 50%; }
+  .ga-rank-name { font-family: var(--font-heading); font-size: 1.15rem; margin: 0 0 0.2rem 0; color: var(--color-primary-light); }
+  .ga-handle { font-size: 0.85rem; color: var(--color-text-secondary); margin: 0; }
+  .ga-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.65rem; border-radius: var(--radius-sm); text-align: center; }
+  .ga-stat { display: flex; flex-direction: column; }
+  .ga-stat-val { font-weight: 700; font-size: 0.95rem; color: var(--color-text-primary); }
+  .ga-stat-lbl { font-size: 0.68rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 0.1rem; }
 
   /* ── Recent ── */
   .profile-recent h3 { margin-bottom: 1rem; font-family: var(--font-heading); }
@@ -913,5 +1062,108 @@ const defaultAvatars = [
         acceptReqBtn.disabled = false;
       }
     }
+  });
+
+  // ── Open Connect Game Account Modal ──
+  const openConnectModal = () => openModal('connect-game-modal');
+  document.getElementById('connect-game-account-btn')?.addEventListener('click', openConnectModal);
+  document.getElementById('connect-game-account-empty-btn')?.addEventListener('click', openConnectModal);
+
+  // ── Dynamic Form Hints for Game Selection ──
+  const gameSelect = document.getElementById('connect-game-select') as HTMLSelectElement;
+  const handleLabel = document.getElementById('handle-label');
+  const handleInput = document.getElementById('connect-handle-input') as HTMLInputElement;
+  const handleHint = document.getElementById('handle-hint');
+
+  gameSelect?.addEventListener('change', () => {
+    const selectedGame = gameSelect.value;
+    if (selectedGame === 'Valorant' || selectedGame === 'League of Legends') {
+      if (handleLabel) handleLabel.textContent = 'Riot ID (ejemplo: Mixwell#EUW)';
+      if (handleInput) handleInput.placeholder = 'Nombre#Tag';
+      if (handleHint) handleHint.textContent = 'Introduce tu Riot ID completo incluyendo el signo # y el Tag (ej: Sova#1234).';
+    } else if (selectedGame === 'Fortnite' || selectedGame === 'Rocket League') {
+      if (handleLabel) handleLabel.textContent = 'Epic Games Username';
+      if (handleInput) handleInput.placeholder = 'Usuario de Epic Games';
+      if (handleHint) handleHint.textContent = 'Introduce tu nombre de usuario público en la plataforma Epic Games.';
+    } else if (selectedGame === 'Apex Legends') {
+      if (handleLabel) handleLabel.textContent = 'EA / Origin Handle';
+      if (handleInput) handleInput.placeholder = 'Gamertag o ID de EA';
+      if (handleHint) handleHint.textContent = 'Introduce tu identificador de cuenta EA, Origin, PSN o Xbox.';
+    } else if (selectedGame === 'Counter-Strike 2') {
+      if (handleLabel) handleLabel.textContent = 'Steam ID / Vanity URL';
+      if (handleInput) handleInput.placeholder = 'Steam ID64 o Alias';
+      if (handleHint) handleHint.textContent = 'Introduce tu identificador único de Steam o nombre personalizado de perfil.';
+    } else {
+      if (handleLabel) handleLabel.textContent = 'Gamertag o ID de Jugador';
+      if (handleInput) handleInput.placeholder = 'Tu Nick / ID de usuario';
+      if (handleHint) handleHint.textContent = 'Introduce tu nombre de usuario oficial en el juego.';
+    }
+  });
+
+  // ── Submit Connect Game Account ──
+  const connectGameForm = document.getElementById('connect-game-form') as HTMLFormElement;
+  if (connectGameForm) {
+    connectGameForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submit-connect-game-btn') as HTMLButtonElement;
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⚡ Consultando API de Estadísticas...';
+
+      const game = gameSelect.value;
+      const handle = handleInput.value.trim();
+      const region = (document.getElementById('connect-region-select') as HTMLSelectElement)?.value || 'EUW';
+
+      try {
+        const res = await fetch('/api/game-accounts/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ game, handle, region })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert(`¡Éxito! Cuenta de ${game} vinculada correctamente. Estadísticas reales obtenidas.`);
+          window.location.reload();
+        } else {
+          alert('Error al vincular cuenta: ' + (data.error || 'No se pudo verificar la cuenta de juego.'));
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      } catch (err) {
+        alert('Error conectando con el servidor de estadísticas.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+  }
+
+  // ── Unlink Game Account Buttons ──
+  document.querySelectorAll('.btn-unlink-game').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const gameName = (btn as HTMLElement).dataset.game;
+      if (!gameName) return;
+
+      if (!confirm(`¿Seguro que deseas desvincular tu cuenta de ${gameName}?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/game-accounts/disconnect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ game: gameName })
+        });
+
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          const data = await res.json();
+          alert('Error: ' + (data.error || 'No se pudo desvincular.'));
+        }
+      } catch (err) {
+        alert('Error conectando con el servidor.');
+      }
+    });
   });
 </script>

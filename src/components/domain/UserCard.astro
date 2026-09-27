@@ -7,13 +7,24 @@
 interface Props {
   name: string;
   level: number;
-  rank: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
+  rank: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | string;
   games: string[];
   region: string;
   online?: boolean;
+  gameStats?: {
+    game?: string;
+    handle?: string;
+    rankName?: string;
+    rankIcon?: string;
+    rankTier?: string;
+    rating?: string;
+    kdRatio?: string;
+    winRate?: string;
+    verified?: boolean;
+  } | null;
 }
 
-const { name, level, rank, games, region, online = true } = Astro.props;
+const { name, level, rank, games, region, online = true, gameStats = null } = Astro.props;
 
 const rankLabels: Record<string, string> = {
   bronze: '🥉 Bronce',
@@ -21,14 +32,17 @@ const rankLabels: Record<string, string> = {
   gold: '🥇 Oro',
   platinum: '💎 Platino',
   diamond: '👑 Diamante',
+  master: '🔥 Master / Élite',
+  radiant: '⚡ Radiant / Top',
 };
 
-const rankLabel = rankLabels[rank] || rankLabels.bronze;
+const displayRankLabel = gameStats?.rankName || rankLabels[rank] || rankLabels.bronze;
+const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked';
 ---
 
 <div 
   class="user-card js-matchmaking-card"
-  data-rank={rank?.toLowerCase() || 'unranked'}
+  data-rank={displayRankTier}
   data-region={region}
   data-games={games?.join(',') || ''}
 >
@@ -40,13 +54,30 @@ const rankLabel = rankLabels[rank] || rankLabels.bronze;
     <div class="user-card-info">
       <div class="user-card-name-row">
         <span class="user-card-name">{name}</span>
-        <span class={`badge badge-${rank}`}>{rankLabel}</span>
+        {gameStats?.verified ? (
+          <span class="verified-rank-badge" title={`Cuenta verificada de ${gameStats.game}`}>
+            {gameStats.rankIcon && <img src={gameStats.rankIcon} alt="" class="card-rank-icon" />}
+            <span>{displayRankLabel}</span>
+            <span class="v-check">✓</span>
+          </span>
+        ) : (
+          <span class={`badge badge-${rank}`}>{displayRankLabel}</span>
+        )}
       </div>
+
       <div class="user-card-meta">
         <span class="user-card-level">Nv. {level}</span>
         <span class="meta-separator">•</span>
         <span class="user-card-region tag tag-blue">{region}</span>
+        {gameStats && (
+          <>
+            <span class="meta-separator">•</span>
+            {gameStats.kdRatio && <span class="stat-tag">K/D {gameStats.kdRatio}</span>}
+            {gameStats.winRate && <span class="stat-tag">{gameStats.winRate} Win</span>}
+          </>
+        )}
       </div>
+
       <div class="user-card-games">
         {games.slice(0, 3).map((game) => (
           <span class="game-chip">{game}</span>
@@ -128,6 +159,35 @@ const rankLabel = rankLabels[rank] || rankLabels.bronze;
     font-weight: 600;
     font-size: 0.95rem;
     color: var(--color-text-primary);
+  }
+
+  .verified-rank-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: var(--color-primary-light);
+    border-radius: var(--radius-full);
+  }
+
+  .card-rank-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+  }
+
+  .v-check {
+    color: #4ade80;
+    font-weight: 800;
+  }
+
+  .stat-tag {
+    color: var(--color-accent-light);
+    font-weight: 600;
   }
 
   .user-card-meta {

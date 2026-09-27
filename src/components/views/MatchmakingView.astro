@@ -11,18 +11,26 @@ interface Props {
 }
 
 const { game } = Astro.props;
+const currentUser = Astro.locals.user;
 
-// Obtener perfiles reales de la DB
+// Obtener perfiles reales de la DB con game_accounts
 const { data: dbProfiles } = await supabase.from('profiles').select('*').limit(100);
 
-const allPlayers = (dbProfiles || []).map(profile => ({
-  name: profile.name || 'Jugador',
-  level: profile.level || 1,
-  rank: 'unranked' as any, // Sin rango por defecto, evitando aleatoriedad falsa
-  games: profile.favorite_games || [], // Usar los juegos reales, sin inventar
-  region: 'EUW',
-  online: true // Asumimos online por ahora, sin falsear con random
-}));
+const currentUserProfile = dbProfiles?.find(p => p.id === currentUser?.id);
+const hasLinkedCurrentGame = currentUserProfile?.game_accounts?.[game] ? true : false;
+
+const allPlayers = (dbProfiles || []).map(profile => {
+  const linkedAccount = profile.game_accounts?.[game] || null;
+  return {
+    name: profile.name || 'Jugador',
+    level: profile.level || 1,
+    rank: linkedAccount?.rankTier || 'unranked',
+    games: profile.favorite_games || [],
+    region: linkedAccount?.region || 'EUW',
+    online: true,
+    gameStats: linkedAccount
+  };
+});
 
 // Filtrar para que SOLO salgan los jugadores que realmente tengan este juego en favoritos
 const filteredPlayers = allPlayers.filter(p => p.games.some((g: string) => {
@@ -37,6 +45,19 @@ const shuffledPlayers = filteredPlayers.sort(() => 0.5 - Math.random());
 ---
 
 <div class="matchmaking-view animate-fade-in-up">
+  {!hasLinkedCurrentGame && (
+    <div class="connect-game-banner">
+      <div class="banner-content">
+        <span class="banner-icon">⚡</span>
+        <div>
+          <h4>¿Juegas a {game}?</h4>
+          <p>Vincula tu cuenta de juego en tu perfil para mostrar tu rango autenticado y estadísticas reales en la búsqueda de jugadores.</p>
+        </div>
+      </div>
+      <a href="/perfil" class="btn-primary btn-sm" style="text-decoration: none; white-space: nowrap;">⚡ Vincular mi cuenta</a>
+    </div>
+  )}
+
   <div class="matchmaking-header">
     <div class="header-content">
       <h2>Jugadores de <span class="gradient-text">{game}</span></h2>
@@ -46,6 +67,8 @@ const shuffledPlayers = filteredPlayers.sort(() => 0.5 - Math.random());
     <div class="filters">
       <select class="filter-select" id="filter-rank">
         <option value="">Rango: Todos</option>
+        <option value="radiant">Radiant / Top</option>
+        <option value="master">Master / Élite</option>
         <option value="diamond">Diamante</option>
         <option value="platinum">Platino</option>
         <option value="gold">Oro</option>
@@ -70,6 +93,7 @@ const shuffledPlayers = filteredPlayers.sort(() => 0.5 - Math.random());
         games={player.games}
         region={player.region}
         online={player.online}
+        gameStats={player.gameStats}
       />
     ))}
   </div>
@@ -80,6 +104,42 @@ const shuffledPlayers = filteredPlayers.sort(() => 0.5 - Math.random());
 </div>
 
 <style>
+  .connect-game-banner {
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.12), rgba(124, 58, 237, 0.15));
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .banner-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .banner-icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .banner-content h4 {
+    margin: 0 0 0.2rem 0;
+    font-size: 1.1rem;
+    color: var(--color-text-primary);
+    font-family: var(--font-heading);
+  }
+
+  .banner-content p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--color-text-secondary);
+  }
+
   .matchmaking-view {
     display: flex;
     flex-direction: column;

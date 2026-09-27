@@ -90,13 +90,14 @@ const profileData = {
   favoriteGames: displayProfile.favorite_games || [],
   playStyle: displayProfile.play_style || '',
   playerTypeSought: displayProfile.player_type_sought || '',
+  gameAccounts: displayProfile.game_accounts || {},
 };
 ---
 
 
 <MainLayout title={`Perfil de ${profileData.name} — Gamio 🎮`}>
   <div class="dashboard-content animate-fade-in-up">
-    <ProfileView user={profileData} isOwnProfile={isOwnProfile} friendStatus={friendStatus} friendRequestId={friendRequestId} friendsList={friendsList} />
+    <ProfileView user={profileData} isOwnProfile={isOwnProfile} friendStatus={friendStatus} friendRequestId={friendRequestId} friendsList={friendsList} gameAccounts={profileData.gameAccounts} />
   </div>
 </MainLayout>
 
