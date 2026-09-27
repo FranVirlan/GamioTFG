@@ -78,14 +78,15 @@ export function buildTrackerGgUrl(game: string, handle: string, platform?: strin
   const platformSlug = resolveTrackerPlatformSlug(game, platform);
   const g = game.toLowerCase();
 
-  if (g.includes('valorant')) {
+  // IMPORTANTE: Evaluar 'rocket' ANTES que 'league' para evitar que 'Rocket League' coincida con 'League of Legends'
+  if (g.includes('rocket')) {
+    return `https://tracker.gg/rocket-league/profile/${platformSlug}/${encodedHandle}/overview`;
+  } else if (g.includes('valorant')) {
     return `https://tracker.gg/valorant/profile/riot/${cleanHandle.replace('#', '%23')}/overview`;
-  } else if (g.includes('league') || g.includes('lol')) {
+  } else if (g.includes('league of legends') || g === 'lol' || (g.includes('league') && !g.includes('rocket'))) {
     return `https://tracker.gg/lol/profile/riot/${cleanHandle.replace('#', '%23')}/overview`;
   } else if (g.includes('fortnite')) {
     return `https://tracker.gg/fortnite/profile/${platformSlug}/${encodedHandle}/overview`;
-  } else if (g.includes('rocket')) {
-    return `https://tracker.gg/rocket-league/profile/${platformSlug}/${encodedHandle}/overview`;
   } else if (g.includes('apex')) {
     return `https://tracker.gg/apex/profile/${platformSlug}/${encodedHandle}/overview`;
   } else if (g.includes('counter-strike') || g.includes('cs2') || g.includes('csgo')) {
@@ -120,10 +121,10 @@ export async function createTrackerGameAccount(params: {
   const gKey = game.toLowerCase();
   let icon = DEFAULT_GAME_ICONS[gKey];
   if (!icon) {
-    if (gKey.includes('valorant')) icon = DEFAULT_GAME_ICONS['valorant'];
-    else if (gKey.includes('league') || gKey.includes('lol')) icon = DEFAULT_GAME_ICONS['league of legends'];
+    if (gKey.includes('rocket')) icon = DEFAULT_GAME_ICONS['rocket league'];
+    else if (gKey.includes('valorant')) icon = DEFAULT_GAME_ICONS['valorant'];
+    else if (gKey.includes('league of legends') || gKey.includes('lol')) icon = DEFAULT_GAME_ICONS['league of legends'];
     else if (gKey.includes('fortnite')) icon = DEFAULT_GAME_ICONS['fortnite'];
-    else if (gKey.includes('rocket')) icon = DEFAULT_GAME_ICONS['rocket league'];
     else if (gKey.includes('apex')) icon = DEFAULT_GAME_ICONS['apex legends'];
     else if (gKey.includes('cs') || gKey.includes('counter')) icon = DEFAULT_GAME_ICONS['counter-strike 2'];
     else icon = DEFAULT_GAME_ICONS['valorant'];
@@ -165,11 +166,11 @@ export async function createTrackerGameAccount(params: {
 
 function getTrnGameSlug(game: string): string {
   const g = game.toLowerCase();
+  if (g.includes('rocket')) return 'rocket-league';
   if (g.includes('valorant')) return 'valorant';
-  if (g.includes('league') || g.includes('lol')) return 'lol';
+  if (g.includes('league of legends') || g.includes('lol')) return 'lol';
   if (g.includes('fortnite')) return 'fortnite';
   if (g.includes('apex')) return 'apex';
   if (g.includes('counter') || g.includes('cs2')) return 'csgo';
-  if (g.includes('rocket')) return 'rocket-league';
   return 'valorant';
 }
