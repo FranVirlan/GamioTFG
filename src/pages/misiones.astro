@@ -1,0 +1,636 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import { supabase } from '../lib/supabase';
+
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+// Obtener datos del perfil del usuario
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('id', user.id)
+  .single();
+
+if (!profile) {
+  return new Response('Perfil no encontrado', { status: 404 });
+}
+
+// Validar check-in diario
+let isDailyClaimed = false;
+let nextClaimText = '';
+if (profile.last_daily_claim) {
+  const lastClaim = new Date(profile.last_daily_claim);
+  const diffTime = Math.abs(new Date().getTime() - lastClaim.getTime());
+  const diffHours = diffTime / (1000 * 60 * 60);
+  if (diffHours < 24) {
+    isDailyClaimed = true;
+    const timeRemaining = 24 - diffHours;
+    const hours = Math.floor(timeRemaining);
+    const minutes = Math.floor((timeRemaining - hours) * 60);
+    nextClaimText = `Disponible en ${hours}h ${minutes}m`;
+  }
+}
+
+const completedMissions: string[] = profile.completed_missions || [];
+const hasLinkedAccounts = Object.keys(profile.game_accounts || {}).length > 0;
+const hasFavoriteGames = (profile.favorite_games || []).length > 0;
+
+const missionsList = [
+  {
+    id: 'm_tracker_link',
+    title: '⚡ Vinculación Oficial Tracker.gg',
+    description: 'Vincula tu primera cuenta oficial de juego (Riot ID, Epic Games, Steam...) a tu perfil de Gamio.',
+    rewardPoints: 50,
+    rewardXp: 50,
+    category: 'Oficial',
+    isAutoMet: hasLinkedAccounts,
+    actionUrl: '/perfil',
+    actionText: '⚡ Vincular Cuenta'
+  },
+  {
+    id: 'm_daily_checkin',
+    title: '🎁 Recompensa Diaria de Conexión',
+    description: 'Conéctate cada 24 horas a Gamio y reclama tus puntos y experiencia diarios.',
+    rewardPoints: 25,
+    rewardXp: 25,
+    category: 'Diario',
+    isAutoMet: isDailyClaimed,
+    isDaily: true
+  },
+  {
+    id: 'm_profile_setup',
+    title: '🎮 Configuración de Perfil Gamer',
+    description: 'Define tus juegos favoritos y estilo de juego en tu perfil para mejorar tus coincidencias.',
+    rewardPoints: 30,
+    rewardXp: 30,
+    category: 'Perfil',
+    isAutoMet: hasFavoriteGames,
+    actionUrl: '/perfil',
+    actionText: '✏️ Editar Perfil'
+  },
+  {
+    id: 'm_community_post',
+    title: '💬 Creador de la Comunidad',
+    description: 'Comparte una publicación o imagen con la comunidad de jugadores.',
+    rewardPoints: 35,
+    rewardXp: 35,
+    category: 'Social',
+    isAutoMet: true, // Disponible para reclamar si el usuario participa
+    actionUrl: '/comunidad',
+    actionText: '💬 Ir a Comunidad'
+  },
+  {
+    id: 'm_matchmaking_explorer',
+    title: '⚔️ Explorador del Matchmaking',
+    description: 'Navega por el buscador de jugadores y encuentra compañeros para tu escuadrón.',
+    rewardPoints: 30,
+    rewardXp: 30,
+    category: 'Exploración',
+    isAutoMet: true,
+    actionUrl: '/juegos',
+    actionText: '🎮 Ver Juegos'
+  },
+  {
+    id: 'm_team_friends',
+    title: '👥 Escuadrón Gamio',
+    description: 'Envía una solicitud de amistad o añade a un compañero a tu lista de amigos.',
+    rewardPoints: 40,
+    rewardXp: 40,
+    category: 'Social',
+    isAutoMet: true,
+    actionUrl: '/comunidad',
+    actionText: '👥 Buscar Amigos'
+  }
+];
+
+const totalMissions = missionsList.length;
+const completedCount = missionsList.filter(m => completedMissions.includes(m.id) || (m.isDaily && isDailyClaimed)).length;
+---
+
+<MainLayout title="Centro de Misiones y Desafíos Gaming — Gamio 🎯">
+  <div class="missions-dashboard animate-fade-in-up">
+    
+    <!-- Header Banner -->
+    <div class="missions-header glass-card">
+      <div class="header-content">
+        <div class="header-title-box">
+          <span class="header-icon">🎯</span>
+          <div>
+            <h1>Centro de Misiones Gaming</h1>
+            <p>Completa desafíos diarios y de comunidad para ganar <strong>Puntos Gamio</strong> y subir de nivel.</p>
+          </div>
+        </div>
+
+        <div class="header-stats-panel">
+          <div class="h-stat-box">
+            <span class="h-stat-val text-points">✨ <span id="user-points-val">{profile.points || 0}</span></span>
+            <span class="h-stat-lbl">Puntos Gamio</span>
+          </div>
+          <div class="h-stat-box border-left">
+            <span class="h-stat-val text-primary">🏆 Nv. <span id="user-level-val">{profile.level || 1}</span></span>
+            <span class="h-stat-lbl">Nivel Gamer</span>
+          </div>
+          <div class="h-stat-box border-left">
+            <span class="h-stat-val text-accent">{completedCount}/{totalMissions}</span>
+            <span class="h-stat-lbl">Completadas</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- XP Progress Bar -->
+      <div class="xp-banner-bar">
+        <div class="xp-text-row">
+          <span>XP Total: <strong><span id="user-xp-val">{profile.xp || 0}</span> XP</strong></span>
+          <span>Próximo nivel en <strong><span id="user-xp-needed">{100 - ((profile.xp || 0) % 100)}</span> XP</strong></span>
+        </div>
+        <div class="xp-progress-container">
+          <div class="xp-progress-bar" id="xp-progress-bar" style={`width: ${(profile.xp || 0) % 100}%`}></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secciones de Misiones -->
+    <div class="missions-section">
+      <div class="section-title-row">
+        <h2>Desafíos Disponibles</h2>
+        <span class="sub-tag">Puntos canjeables en la Tienda de Premios 💎</span>
+      </div>
+
+      <div class="missions-grid">
+        {missionsList.map((m) => {
+          const isClaimed = completedMissions.includes(m.id) || (m.isDaily && isDailyClaimed);
+          
+          return (
+            <div class={`mission-card glass-card ${isClaimed ? 'mission-claimed' : ''}`}>
+              <div class="mission-top">
+                <span class="mission-category">{m.category}</span>
+                <div class="mission-rewards">
+                  <span class="rw-tag rw-points">✨ +{m.rewardPoints} Pts</span>
+                  <span class="rw-tag rw-xp">⚡ +{m.rewardXp} XP</span>
+                </div>
+              </div>
+
+              <div class="mission-body">
+                <h3 class="mission-title">{m.title}</h3>
+                <p class="mission-desc">{m.description}</p>
+              </div>
+
+              <div class="mission-footer">
+                {isClaimed ? (
+                  <button class="btn-mission btn-claimed" disabled>
+                    ✓ Reclamado
+                  </button>
+                ) : m.isDaily ? (
+                  <button id="claim-daily-btn" class="btn-mission btn-claim-now">
+                    🎁 Reclamar Diario (+{m.rewardPoints} Pts)
+                  </button>
+                ) : m.isAutoMet ? (
+                  <button 
+                    class="btn-mission btn-claim-now js-claim-mission" 
+                    data-mission-id={m.id}
+                    data-points={m.rewardPoints}
+                    data-xp={m.rewardXp}
+                  >
+                    🎉 Reclamar (+{m.rewardPoints} Pts)
+                  </button>
+                ) : (
+                  <a href={m.actionUrl || '#'} class="btn-mission btn-action">
+                    {m.actionText || 'Ir a la Misión'}
+                  </a>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    <!-- Banner hacia la Tienda de Premios -->
+    <div class="store-banner-card glass-card">
+      <div class="store-banner-content">
+        <span class="banner-emoji">💎</span>
+        <div>
+          <h3>¿Qué hacer con tus Puntos Gamio?</h3>
+          <p>Visita la Tienda de Premios y canjea tus puntos por bordes de avatar exclusivos, títulos de perfil y monedas de juego oficiales (RP, VP, Pavos...).</p>
+        </div>
+      </div>
+      <a href="/premios" class="btn-primary" style="text-decoration: none; white-space: nowrap;">🛍️ Ir a la Tienda de Premios</a>
+    </div>
+
+  </div>
+</MainLayout>
+
+<style>
+  .missions-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    width: 100%;
+  }
+
+  /* ── Header ── */
+  .missions-header {
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(0, 240, 255, 0.08));
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .header-title-box {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .header-icon {
+    font-size: 3rem;
+    line-height: 1;
+    filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4));
+  }
+
+  .header-title-box h1 {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    margin: 0 0 0.3rem 0;
+    background: linear-gradient(135deg, #00F0FF, #FF3CAC, #6C3AFF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header-title-box p {
+    color: var(--color-text-secondary);
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .header-stats-panel {
+    display: flex;
+    align-items: center;
+    background: rgba(11, 15, 26, 0.6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.25rem;
+  }
+
+  .h-stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1.25rem;
+  }
+
+  .h-stat-box.border-left {
+    border-left: 1px solid var(--color-border);
+  }
+
+  .h-stat-val {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+
+  .text-points { color: #FFB800; text-shadow: 0 0 10px rgba(255, 184, 0, 0.3); }
+  .text-primary { color: var(--color-primary-light); }
+  .text-accent { color: var(--color-secondary-light); }
+
+  .h-stat-lbl {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.1rem;
+  }
+
+  /* XP Bar */
+  .xp-banner-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .xp-text-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+  }
+
+  .xp-progress-container {
+    height: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 100px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .xp-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    border-radius: 100px;
+    transition: width 0.4s ease;
+    box-shadow: 0 0 12px var(--color-primary);
+  }
+
+  /* ── Grid ── */
+  .section-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .section-title-row h2 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    margin: 0;
+  }
+
+  .sub-tag {
+    font-size: 0.88rem;
+    color: var(--color-primary-light);
+    font-weight: 600;
+  }
+
+  .missions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: 1.5rem;
+  }
+
+  .mission-card {
+    background: rgba(11, 15, 26, 0.6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.25rem;
+    transition: all 0.25s ease;
+  }
+
+  .mission-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0, 240, 255, 0.1);
+  }
+
+  .mission-card.mission-claimed {
+    opacity: 0.7;
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+
+  .mission-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .mission-category {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    background: rgba(124, 58, 237, 0.15);
+    color: var(--color-accent-light);
+    border: 1px solid rgba(124, 58, 237, 0.3);
+  }
+
+  .mission-rewards {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .rw-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  .rw-points {
+    background: rgba(255, 184, 0, 0.15);
+    color: #FFB800;
+    border: 1px solid rgba(255, 184, 0, 0.3);
+  }
+
+  .rw-xp {
+    background: rgba(0, 240, 255, 0.15);
+    color: var(--color-primary-light);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+  }
+
+  .mission-title {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    margin: 0 0 0.4rem 0;
+    color: var(--color-text-primary);
+  }
+
+  .mission-desc {
+    font-size: 0.88rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .mission-footer {
+    width: 100%;
+  }
+
+  .btn-mission {
+    width: 100%;
+    padding: 0.75rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    box-sizing: border-box;
+  }
+
+  .btn-claim-now {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    border: none;
+    color: white;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+  }
+
+  .btn-claim-now:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+  }
+
+  .btn-action {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+  }
+
+  .btn-action:hover {
+    background: rgba(0, 240, 255, 0.12);
+    border-color: var(--color-primary);
+    color: var(--color-primary-light);
+  }
+
+  .btn-claimed {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+    cursor: default;
+  }
+
+  /* ── Store Banner ── */
+  .store-banner-card {
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(255, 60, 172, 0.12), rgba(124, 58, 237, 0.15));
+    border: 1px solid rgba(255, 60, 172, 0.3);
+    border-radius: var(--radius-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .store-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .banner-emoji {
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+
+  .store-banner-content h3 {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    margin: 0 0 0.3rem 0;
+  }
+
+  .store-banner-content p {
+    color: var(--color-text-secondary);
+    margin: 0;
+    font-size: 0.92rem;
+    max-width: 650px;
+  }
+
+  @media (max-width: 768px) {
+    .missions-dashboard { padding: 1rem; }
+    .missions-header { padding: 1.25rem; }
+    .header-content { flex-direction: column; align-items: flex-start; }
+    .header-stats-panel { width: 100%; justify-content: space-around; padding: 0.75rem 0.5rem; }
+    .h-stat-box { padding: 0 0.5rem; }
+    .store-banner-card { flex-direction: column; align-items: stretch; text-align: center; }
+    .store-banner-content { flex-direction: column; }
+  }
+</style>
+
+<script>
+  // Reclamar Misión Normal
+  document.querySelectorAll('.js-claim-mission').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const buttonEl = btn as HTMLButtonElement;
+      const missionId = buttonEl.dataset.missionId;
+      const points = parseInt(buttonEl.dataset.points || '0', 10);
+      const xp = parseInt(buttonEl.dataset.xp || '0', 10);
+
+      if (!missionId) return;
+
+      const originalText = buttonEl.textContent;
+      buttonEl.disabled = true;
+      buttonEl.textContent = 'Procesando...';
+
+      try {
+        const res = await fetch('/api/rewards/claim-mission', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mission_id: missionId, points, xp })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          // Actualizar UI
+          const pointsEl = document.getElementById('user-points-val');
+          const levelEl = document.getElementById('user-level-val');
+          const xpEl = document.getElementById('user-xp-val');
+          const xpNeededEl = document.getElementById('user-xp-needed');
+          const progressBarEl = document.getElementById('xp-progress-bar');
+
+          if (pointsEl) pointsEl.textContent = String(data.points);
+          if (levelEl) levelEl.textContent = String(data.level);
+          if (xpEl) xpEl.textContent = String(data.xp);
+          if (xpNeededEl) xpNeededEl.textContent = String(100 - (data.xp % 100));
+          if (progressBarEl) progressBarEl.style.width = `${data.xp % 100}%`;
+
+          // Cambiar botón
+          buttonEl.classList.remove('btn-claim-now');
+          buttonEl.classList.add('btn-claimed');
+          buttonEl.textContent = '✓ Reclamado';
+
+          alert(`🎉 ¡Misión Completada! Has ganado +${points} Puntos Gamio y +${xp} XP.`);
+        } else {
+          alert('Error: ' + (data.error || 'No se pudo reclamar la misión.'));
+          buttonEl.disabled = false;
+          buttonEl.textContent = originalText;
+        }
+      } catch (err) {
+        alert('Error de conexión con el servidor.');
+        buttonEl.disabled = false;
+        buttonEl.textContent = originalText;
+      }
+    });
+  });
+
+  // Reclamar Diario
+  const claimDailyBtn = document.getElementById('claim-daily-btn');
+  claimDailyBtn?.addEventListener('click', async () => {
+    const buttonEl = claimDailyBtn as HTMLButtonElement;
+    buttonEl.disabled = true;
+    buttonEl.textContent = 'Procesando...';
+
+    try {
+      const res = await fetch('/api/rewards/claim-daily', { method: 'POST' });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        alert('🎉 ¡Recompensa diaria reclamada! Has ganado +25 Puntos Gamio y +25 XP.');
+        window.location.reload();
+      } else {
+        alert('Error: ' + (data.error || 'No se pudo reclamar la recompensa diaria.'));
+        buttonEl.disabled = false;
+      }
+    } catch (err) {
+      alert('Error de conexión.');
+      buttonEl.disabled = false;
+    }
+  });
+</script>
