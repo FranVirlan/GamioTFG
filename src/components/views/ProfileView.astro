@@ -201,7 +201,7 @@ const defaultAvatars = [
             <div class="ga-card-body">
               <div class="ga-rank-info">
                 {acc.rankIcon ? (
-                  <img src={acc.rankIcon} alt={acc.rankName || gameName} class="ga-rank-icon" />
+                  <img src={acc.rankIcon} alt={acc.rankName || gameName} class="ga-rank-icon" onerror="this.style.display='none'" />
                 ) : (
                   <div class="ga-rank-icon-placeholder">🎮</div>
                 )}

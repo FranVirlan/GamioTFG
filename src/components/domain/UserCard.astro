@@ -36,7 +36,11 @@ const rankLabels: Record<string, string> = {
   radiant: '⚡ Radiant / Top',
 };
 
-const displayRankLabel = gameStats?.rankName || rankLabels[rank] || rankLabels.bronze;
+let rawRankLabel = gameStats?.rankName || rankLabels[rank] || rankLabels.bronze;
+if (rawRankLabel === 'Verificado en Tracker.gg') {
+  rawRankLabel = 'Tracker.gg';
+}
+const displayRankLabel = rawRankLabel;
 const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked';
 ---
 
@@ -56,8 +60,8 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
         <span class="user-card-name">{name}</span>
         {gameStats?.verified ? (
           <span class="verified-rank-badge" title={`Cuenta verificada de ${gameStats.game}`}>
-            {gameStats.rankIcon && <img src={gameStats.rankIcon} alt="" class="card-rank-icon" />}
-            <span>{displayRankLabel}</span>
+            {gameStats.rankIcon && <img src={gameStats.rankIcon} alt="" class="card-rank-icon" onerror="this.style.display='none'" />}
+            <span class="v-rank-text">{displayRankLabel}</span>
             <span class="v-check">✓</span>
           </span>
         ) : (
@@ -172,17 +176,28 @@ const displayRankTier = gameStats?.rankTier || rank?.toLowerCase() || 'unranked'
     border: 1px solid rgba(0, 240, 255, 0.3);
     color: var(--color-primary-light);
     border-radius: var(--radius-full);
+    white-space: nowrap;
+    max-width: 100%;
+    flex-shrink: 0;
+  }
+
+  .v-rank-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .card-rank-icon {
     width: 16px;
     height: 16px;
     object-fit: contain;
+    flex-shrink: 0;
   }
 
   .v-check {
     color: #4ade80;
     font-weight: 800;
+    flex-shrink: 0;
   }
 
   .stat-tag {

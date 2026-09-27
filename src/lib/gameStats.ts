@@ -16,16 +16,16 @@ export interface GameAccountStats {
   updatedAt: string;
 }
 
-// Iconos oficiales por defecto para cada juego
+// Iconos oficiales por defecto para cada juego (SVG de alta disponibilidad)
 const DEFAULT_GAME_ICONS: Record<string, string> = {
-  'valorant': 'https://vgraphs.com/images/ranks/radiant-rank.png',
-  'league of legends': 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-emblems/challenger.png',
-  'fortnite': 'https://images.fortnite-api.com/v2/stats/fortnite.png',
-  'apex legends': 'https://trackercdn.com/cdn/apex.tracker.gg/ranks/diamond3.png',
-  'counter-strike 2': 'https://trackercdn.com/cdn/csgo/ranks/sfmc.png',
-  'rocket league': 'https://trackercdn.com/cdn/rocket-league/ranks/grandchampion.png',
-  'call of duty: warzone': 'https://trackercdn.com/cdn/warzone/icons/rank-50.png',
-  'ea fc 25': 'https://trackercdn.com/cdn/fifa/fut/clubs/1.png'
+  'valorant': 'https://api.iconify.design/simple-icons:valorant.svg?color=%23ff4655',
+  'league of legends': 'https://api.iconify.design/simple-icons:leagueoflegends.svg?color=%23c8aa6e',
+  'fortnite': 'https://api.iconify.design/simple-icons:fortnite.svg?color=%2300f0ff',
+  'apex legends': 'https://api.iconify.design/simple-icons:ea.svg?color=%23ff0000',
+  'counter-strike 2': 'https://api.iconify.design/simple-icons:counterstrike.svg?color=%23de9b35',
+  'rocket league': 'https://api.iconify.design/simple-icons:epicgames.svg?color=%2300f0ff',
+  'call of duty: warzone': 'https://api.iconify.design/simple-icons:activision.svg?color=%23ffffff',
+  'ea fc 25': 'https://api.iconify.design/simple-icons:ea.svg?color=%2300f0ff'
 };
 
 /**
@@ -156,7 +156,7 @@ export async function createTrackerGameAccount(params: {
     handle: cleanHandle,
     platform: platformName,
     region,
-    rankName: fetchedRank || 'Verificado en Tracker.gg',
+    rankName: fetchedRank || 'Tracker.gg',
     rankIcon: icon,
     trackerUrl,
     verified: true,
