@@ -449,6 +449,13 @@ const defaultAvatars = [
         <small id="handle-hint" style="color: var(--color-text-muted); font-size: 0.8rem; margin-top: 0.2rem;">Introduce tu Riot ID completo incluyendo el signo # y el Tag (ej: Sova#1234).</small>
       </div>
 
+      <div class="pv-form-group" id="platform-group">
+        <label for="connect-platform-select">Plataforma / Red de Cuenta</label>
+        <select id="connect-platform-select" class="pv-select" style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font-sans); color: var(--color-text-primary); background: rgba(11,15,26,0.6); border: 1px solid var(--color-border); border-radius: var(--radius-sm); outline: none;">
+          <option value="riot">Riot Games</option>
+        </select>
+      </div>
+
       <div class="pv-form-group" id="region-group">
         <label for="connect-region-select">Región de juego</label>
         <select id="connect-region-select" class="pv-select" style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: var(--font-sans); color: var(--color-text-primary); background: rgba(11,15,26,0.6); border: 1px solid var(--color-border); border-radius: var(--radius-sm); outline: none;">
@@ -1066,36 +1073,85 @@ const defaultAvatars = [
   document.getElementById('connect-game-account-btn')?.addEventListener('click', openConnectModal);
   document.getElementById('connect-game-account-empty-btn')?.addEventListener('click', openConnectModal);
 
-  // ── Dynamic Form Hints for Game Selection ──
+  // ── Dynamic Form Hints and Platform Options for Game Selection ──
   const gameSelect = document.getElementById('connect-game-select') as HTMLSelectElement;
+  const platformSelect = document.getElementById('connect-platform-select') as HTMLSelectElement;
   const handleLabel = document.getElementById('handle-label');
   const handleInput = document.getElementById('connect-handle-input') as HTMLInputElement;
   const handleHint = document.getElementById('handle-hint');
 
-  gameSelect?.addEventListener('change', () => {
+  function updateGameFormOptions() {
+    if (!gameSelect || !platformSelect) return;
     const selectedGame = gameSelect.value;
+    platformSelect.innerHTML = '';
+
     if (selectedGame === 'Valorant' || selectedGame === 'League of Legends') {
+      platformSelect.innerHTML = `
+        <option value="riot">Riot Games</option>
+      `;
       if (handleLabel) handleLabel.textContent = 'Riot ID (ejemplo: Mixwell#EUW)';
       if (handleInput) handleInput.placeholder = 'Nombre#Tag';
       if (handleHint) handleHint.textContent = 'Introduce tu Riot ID completo incluyendo el signo # y el Tag (ej: Sova#1234).';
-    } else if (selectedGame === 'Fortnite' || selectedGame === 'Rocket League') {
-      if (handleLabel) handleLabel.textContent = 'Epic Games Username';
-      if (handleInput) handleInput.placeholder = 'Usuario de Epic Games';
-      if (handleHint) handleHint.textContent = 'Introduce tu nombre de usuario público en la plataforma Epic Games.';
+    } else if (selectedGame === 'Fortnite') {
+      platformSelect.innerHTML = `
+        <option value="epic">Epic Games</option>
+        <option value="psn">PlayStation Network (PSN)</option>
+        <option value="xbl">Xbox Live</option>
+      `;
+      if (handleLabel) handleLabel.textContent = 'Usuario de Epic Games / PSN / Xbox';
+      if (handleInput) handleInput.placeholder = 'Usuario de Epic Games o Gamertag';
+      if (handleHint) handleHint.textContent = 'Introduce tu nombre de usuario público registrado en Epic Games o consola.';
+    } else if (selectedGame === 'Rocket League') {
+      platformSelect.innerHTML = `
+        <option value="epic">Epic Games</option>
+        <option value="steam">Steam</option>
+        <option value="psn">PlayStation Network (PSN)</option>
+        <option value="xbl">Xbox Live</option>
+      `;
+      if (handleLabel) handleLabel.textContent = 'ID de Epic Games / Steam / Consola';
+      if (handleInput) handleInput.placeholder = 'Usuario de Epic Games o Steam ID';
+      if (handleHint) handleHint.textContent = 'Introduce tu usuario de Epic Games, ID de Steam o Gamertag.';
     } else if (selectedGame === 'Apex Legends') {
+      platformSelect.innerHTML = `
+        <option value="origin">EA / Origin (PC)</option>
+        <option value="psn">PlayStation Network (PSN)</option>
+        <option value="xbl">Xbox Live</option>
+      `;
       if (handleLabel) handleLabel.textContent = 'EA / Origin Handle';
       if (handleInput) handleInput.placeholder = 'Gamertag o ID de EA';
       if (handleHint) handleHint.textContent = 'Introduce tu identificador de cuenta EA, Origin, PSN o Xbox.';
     } else if (selectedGame === 'Counter-Strike 2') {
+      platformSelect.innerHTML = `
+        <option value="steam">Steam</option>
+      `;
       if (handleLabel) handleLabel.textContent = 'Steam ID / Vanity URL';
       if (handleInput) handleInput.placeholder = 'Steam ID64 o Alias';
       if (handleHint) handleHint.textContent = 'Introduce tu identificador único de Steam o nombre personalizado de perfil.';
+    } else if (selectedGame === 'Call of Duty: Warzone') {
+      platformSelect.innerHTML = `
+        <option value="atvi">Activision ID (Nombre#1234)</option>
+        <option value="battlenet">Battle.net</option>
+        <option value="psn">PlayStation Network (PSN)</option>
+        <option value="xbl">Xbox Live</option>
+      `;
+      if (handleLabel) handleLabel.textContent = 'Activision ID / Gamertag';
+      if (handleInput) handleInput.placeholder = 'Nombre#1234 o ID';
+      if (handleHint) handleHint.textContent = 'Introduce tu Activision ID completo con # y los números finales.';
     } else {
+      platformSelect.innerHTML = `
+        <option value="origin">EA Sports / Origin</option>
+        <option value="psn">PlayStation Network</option>
+        <option value="xbl">Xbox Live</option>
+      `;
       if (handleLabel) handleLabel.textContent = 'Gamertag o ID de Jugador';
       if (handleInput) handleInput.placeholder = 'Tu Nick / ID de usuario';
       if (handleHint) handleHint.textContent = 'Introduce tu nombre de usuario oficial en el juego.';
     }
-  });
+  }
+
+  gameSelect?.addEventListener('change', updateGameFormOptions);
+  // Run once initially
+  updateGameFormOptions();
 
   // ── Submit Connect Game Account ──
   const connectGameForm = document.getElementById('connect-game-form') as HTMLFormElement;
@@ -1105,17 +1161,18 @@ const defaultAvatars = [
       const submitBtn = document.getElementById('submit-connect-game-btn') as HTMLButtonElement;
       const originalText = submitBtn.textContent;
       submitBtn.disabled = true;
-      submitBtn.textContent = '⚡ Consultando API de Estadísticas...';
+      submitBtn.textContent = '⚡ Vinculando con Tracker.gg...';
 
       const game = gameSelect.value;
       const handle = handleInput.value.trim();
+      const platform = platformSelect?.value || 'epic';
       const region = (document.getElementById('connect-region-select') as HTMLSelectElement)?.value || 'EUW';
 
       try {
         const res = await fetch('/api/game-accounts/connect', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ game, handle, region })
+          body: JSON.stringify({ game, handle, platform, region })
         });
 
         const data = await res.json();
