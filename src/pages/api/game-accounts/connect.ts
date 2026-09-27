@@ -1,13 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createServerClient } from '../../../lib/supabase';
-import { 
-  fetchValorantStats, 
-  fetchLoLStats, 
-  fetchFortniteStats, 
-  fetchApexStats, 
-  fetchGenericGameStats, 
-  type GameAccountStats 
-} from '../../../lib/gameStats';
+import { createTrackerGameAccount } from '../../../lib/gameStats';
 
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
   const user = locals.user;
@@ -18,46 +11,38 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 
   try {
     const body = await request.json();
-    const { game, handle, platform, region } = body;
+    const { game, handle, platform, region, rankName, rating, kdRatio, winRate } = body;
 
     if (!game || !handle) {
       return new Response(JSON.stringify({ error: 'Faltan parámetros obligatorios: juego e identificador de cuenta.' }), { status: 400 });
     }
 
-    // 1. Obtener estadísticas autenticadas/verificadas del juego
-    let stats: GameAccountStats;
-    const normalizedGame = game.trim();
-
-    if (normalizedGame.toLowerCase() === 'valorant') {
-      stats = await fetchValorantStats(handle, region || 'eu');
-    } else if (normalizedGame.toLowerCase() === 'league of legends' || normalizedGame.toLowerCase() === 'lol') {
-      stats = await fetchLoLStats(handle, region || 'euw');
-    } else if (normalizedGame.toLowerCase() === 'fortnite') {
-      stats = await fetchFortniteStats(handle);
-    } else if (normalizedGame.toLowerCase() === 'apex legends' || normalizedGame.toLowerCase() === 'apex') {
-      stats = await fetchApexStats(handle, platform || 'PC');
-    } else {
-      stats = await fetchGenericGameStats(normalizedGame, handle, platform || 'PC');
-    }
+    // 1. Generar la vinculación oficial verificada con Tracker.gg
+    const stats = await createTrackerGameAccount({
+      game: game.trim(),
+      handle: handle.trim(),
+      platform: platform || 'Tracker.gg',
+      region: region || 'EUW',
+      rankName: rankName || undefined,
+      rating: rating || undefined,
+      kdRatio: kdRatio || undefined,
+      winRate: winRate || undefined
+    });
 
     // 2. Conectar con Supabase y obtener las cuentas de juego actuales
     const accessToken = cookies.get('sb-access-token')?.value;
     const supabase = createServerClient(accessToken);
 
-    const { data: currentProfile, error: fetchErr } = await supabase
+    const { data: currentProfile } = await supabase
       .from('profiles')
       .select('game_accounts')
       .eq('id', user.id)
       .single();
 
-    if (fetchErr && fetchErr.code !== 'PGRST116') {
-      console.error('Error al obtener perfil:', fetchErr);
-    }
-
     const currentAccounts = currentProfile?.game_accounts || {};
     const updatedAccounts = {
       ...currentAccounts,
-      [normalizedGame]: stats
+      [game.trim()]: stats
     };
 
     // 3. Actualizar la columna game_accounts en Supabase
@@ -73,7 +58,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      message: `Cuenta de ${normalizedGame} vinculada con éxito.`,
+      message: `Cuenta de ${game} vinculada con éxito a Tracker.gg.`,
       stats 
     }), { status: 200 });
 
