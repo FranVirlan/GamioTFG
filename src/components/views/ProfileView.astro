@@ -189,7 +189,7 @@ const defaultAvatars = [
             <div class="ga-card-header">
               <div class="ga-game-badge">
                 <span class="ga-game-name">{acc.game || gameName}</span>
-                {acc.verified && <span class="ga-verified-tag">✓ Verificado</span>}
+                {acc.verified && <span class="ga-verified-tag">✓ Tracker.gg Verificado</span>}
               </div>
               {isOwnProfile && (
                 <button class="btn-unlink-game" data-game={gameName} title="Desvincular esta cuenta">
@@ -201,45 +201,22 @@ const defaultAvatars = [
             <div class="ga-card-body">
               <div class="ga-rank-info">
                 {acc.rankIcon ? (
-                  <img src={acc.rankIcon} alt={acc.rankName} class="ga-rank-icon" />
+                  <img src={acc.rankIcon} alt={acc.rankName || gameName} class="ga-rank-icon" />
                 ) : (
-                  <div class="ga-rank-icon-placeholder">🏆</div>
+                  <div class="ga-rank-icon-placeholder">🎮</div>
                 )}
                 <div>
-                  <h4 class="ga-rank-name">{acc.rankName || 'Unranked'}</h4>
-                  <p class="ga-handle">{acc.handle} {acc.region ? `(${acc.region})` : ''}</p>
+                  <h4 class="ga-rank-name">{acc.handle}</h4>
+                  <p class="ga-handle">{acc.platform || 'Oficial'} {acc.region ? `(${acc.region})` : ''}</p>
                 </div>
               </div>
 
-              <div class="ga-stats-row">
-                {acc.rating && (
-                  <div class="ga-stat">
-                    <span class="ga-stat-val">{acc.rating}</span>
-                    <span class="ga-stat-lbl">Rating / ELO</span>
-                  </div>
-                )}
-                {acc.kdRatio && (
-                  <div class="ga-stat">
-                    <span class="ga-stat-val">{acc.kdRatio}</span>
-                    <span class="ga-stat-lbl">K/D Ratio</span>
-                  </div>
-                )}
-                {acc.winRate && (
-                  <div class="ga-stat">
-                    <span class="ga-stat-val">{acc.winRate}</span>
-                    <span class="ga-stat-lbl">Victorias</span>
-                  </div>
-                )}
+              <div class="ga-tracker-direct-container" style="margin-top: 0.5rem;">
+                <a href={acc.trackerUrl || `https://tracker.gg`} target="_blank" rel="noopener noreferrer" class="btn-primary btn-block" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: linear-gradient(135deg, var(--color-secondary), var(--color-primary-dark)); font-size: 0.88rem; padding: 0.75rem;">
+                  <span>📊 Ver Estadísticas en Tracker.gg</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </a>
               </div>
-
-              {acc.trackerUrl && (
-                <div class="ga-tracker-footer" style="margin-top: 0.75rem; text-align: right;">
-                  <a href={acc.trackerUrl} target="_blank" rel="noopener noreferrer" class="ga-tracker-btn">
-                    <span>Ver en Tracker.gg</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                  </a>
-                </div>
-              )}
             </div>
           </div>
         ))}
@@ -483,30 +460,9 @@ const defaultAvatars = [
         </select>
       </div>
 
-      <div class="pv-form-group">
-        <label for="connect-rank-input">Rango Real en Tracker.gg</label>
-        <input type="text" id="connect-rank-input" placeholder="Ej: Diamante II, Inmortal, Platino I, Oro III, Challenger..." />
-        <small style="color: var(--color-text-muted); font-size: 0.78rem;">Indica tu rango competitivo actual oficial.</small>
-      </div>
-
-      <div class="pv-form-row" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem;">
-        <div class="pv-form-group">
-          <label for="connect-rating-input" style="font-size: 0.78rem;">Rating / RR</label>
-          <input type="text" id="connect-rating-input" placeholder="Ej: 65 RR" />
-        </div>
-        <div class="pv-form-group">
-          <label for="connect-kd-input" style="font-size: 0.78rem;">K/D Ratio</label>
-          <input type="text" id="connect-kd-input" placeholder="Ej: 1.25" />
-        </div>
-        <div class="pv-form-group">
-          <label for="connect-winrate-input" style="font-size: 0.78rem;">% Victorias</label>
-          <input type="text" id="connect-winrate-input" placeholder="Ej: 56%" />
-        </div>
-      </div>
-
       <div class="pv-modal-footer">
         <button type="button" class="btn-secondary" data-close="connect-game-modal">Cancelar</button>
-        <button type="submit" class="btn-primary" id="submit-connect-game-btn">⚡ Vincular con Tracker.gg</button>
+        <button type="submit" class="btn-primary" id="submit-connect-game-btn">⚡ Conectar con Tracker.gg</button>
       </div>
     </form>
   </div>
@@ -1154,16 +1110,12 @@ const defaultAvatars = [
       const game = gameSelect.value;
       const handle = handleInput.value.trim();
       const region = (document.getElementById('connect-region-select') as HTMLSelectElement)?.value || 'EUW';
-      const rankName = (document.getElementById('connect-rank-input') as HTMLInputElement)?.value.trim() || '';
-      const rating = (document.getElementById('connect-rating-input') as HTMLInputElement)?.value.trim() || '';
-      const kdRatio = (document.getElementById('connect-kd-input') as HTMLInputElement)?.value.trim() || '';
-      const winRate = (document.getElementById('connect-winrate-input') as HTMLInputElement)?.value.trim() || '';
 
       try {
         const res = await fetch('/api/game-accounts/connect', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ game, handle, region, rankName, rating, kdRatio, winRate })
+          body: JSON.stringify({ game, handle, region })
         });
 
         const data = await res.json();

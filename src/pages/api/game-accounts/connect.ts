@@ -11,22 +11,18 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 
   try {
     const body = await request.json();
-    const { game, handle, platform, region, rankName, rating, kdRatio, winRate } = body;
+    const { game, handle, platform, region } = body;
 
     if (!game || !handle) {
       return new Response(JSON.stringify({ error: 'Faltan parámetros obligatorios: juego e identificador de cuenta.' }), { status: 400 });
     }
 
-    // 1. Generar la vinculación oficial verificada con Tracker.gg
+    // 1. Generar la vinculación oficial con Tracker.gg
     const stats = await createTrackerGameAccount({
       game: game.trim(),
       handle: handle.trim(),
-      platform: platform || 'Tracker.gg',
-      region: region || 'EUW',
-      rankName: rankName || undefined,
-      rating: rating || undefined,
-      kdRatio: kdRatio || undefined,
-      winRate: winRate || undefined
+      platform: platform || undefined,
+      region: region || 'EUW'
     });
 
     // 2. Conectar con Supabase y obtener las cuentas de juego actuales
@@ -64,6 +60,6 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 
   } catch (err: any) {
     console.error('Error en /api/game-accounts/connect:', err);
-    return new Response(JSON.stringify({ error: err.message || 'Error al conectar con el servidor de estadísticas.' }), { status: 500 });
+    return new Response(JSON.stringify({ error: err.message || 'Error al conectar con el servidor.' }), { status: 500 });
   }
 };
